@@ -13,7 +13,7 @@ export default defineNuxtConfig({
     '@formkit/auto-animate',
     '@nuxtjs/tailwindcss',
     '@nuxt/image',
-    'radix-vue',
+    'radix-vue/nuxt',
     '@nuxtjs/color-mode',
     '@nuxtjs/robots',
     '@pinia-plugin-persistedstate/nuxt',
