@@ -188,8 +188,8 @@ export default {
 
     <!-- SliderRange for zoom -->
     <div class="flex flex-col items-center absolute bottom-[51px] left-[0px] translate-x-[30px] bg-white dark:bg-black border-2 hover:border-zinc-300 dark:border-zinc-950 dark:hover:border-zinc-800 rounded p-2">
-      <Icon name="si:zoom-in-duotone" @click.stop="zoomIn" class="h-5 w-5 text-black dark:text-white cursor-pointer" />
-      <SliderRoot
+      <Icon icon="si:zoom-in-duotone" @click.stop="zoomIn" class="h-5 w-5 text-black dark:text-white cursor-pointer" />
+      <ui-slider-root
         v-model="sliderValue"
         class="relative flex items-center justify-center select-none touch-none h-[200px] w-3 my-3"
         :min="minScale"
@@ -199,19 +199,19 @@ export default {
         @update:modelValue="handleSliderDrag"
         orientation="vertical"
       >
-        <SliderTrack class="relative grow rounded-full h-full bg-zinc-300 dark:bg-zinc-800" style="max-width: 9px;">
-          <SliderRange class="absolute rounded-full h-full" />
-        </SliderTrack>
-        <SliderThumb
+        <ui-slider-track class="relative grow rounded-full h-full bg-zinc-300 dark:bg-zinc-800" style="max-width: 9px;">
+          <ui-slider-range class="absolute rounded-full h-full" />
+        </ui-slider-track>
+        <ui-slider-thumb
           class="block w-5 h-5 bg-zinc-950 dark:bg-zinc-300 hover:bg-zinc-900 dark:hover:bg-zinc-200 shadow-none focus:shadow-none rounded-full outline-none cursor-ns-resize"
           aria-label="Volume"
           :title="`${(currentZoomPercent * 100).toFixed(2)}%`"
         />
-      </SliderRoot>
+      </ui-slider-root>
       <Icon name="si:zoom-out-duotone" @click.stop="zoomOut" class="h-5 w-5 text-black dark:text-white cursor-pointer" />
     </div>
     <div class="flex items-center absolute bottom-[12px] left-[0px] translate-x-[30px] bg-white dark:bg-black border-2 hover:border-zinc-300 dark:border-zinc-950 dark:hover:border-zinc-800 rounded py-1 px-2 cursor-pointer">
-      <Icon name="radix-icons:reset" @click.stop="resetZoomAndPan" class="h-5 w-5 text-black dark:text-white" />
+      <Icon icon="radix-icons:reset" @click.stop="resetZoomAndPan" class="h-5 w-5 text-black dark:text-white" />
     </div>
   </div>
 </template>
