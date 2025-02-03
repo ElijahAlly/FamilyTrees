@@ -1,5 +1,5 @@
 <script lang="ts">
-import { Icon } from '@iconify/vue'
+import { Icon } from '@iconify/vue';
 import { useFamilyStore } from '@/stores/family';
 import { useDraggableZoneStore } from '@/stores/draggableZone';
 import Panzoom, { type PanzoomObject } from '@panzoom/panzoom';
@@ -188,7 +188,7 @@ export default {
 
     <!-- SliderRange for zoom -->
     <div class="flex flex-col items-center absolute bottom-[51px] left-[0px] translate-x-[30px] bg-white dark:bg-black border-2 hover:border-zinc-300 dark:border-zinc-950 dark:hover:border-zinc-800 rounded p-2">
-      <Icon icon="si:zoom-in-duotone" @click.stop="zoomIn" class="h-5 w-5 text-black dark:text-white cursor-pointer" />
+      <Icon name="iconamoon:zoom-in-duotone" @click.stop="zoomIn" class="h-5 w-5 text-black dark:text-white cursor-pointer" />
       <ui-slider-root
         v-model="sliderValue"
         class="relative flex items-center justify-center select-none touch-none h-[200px] w-3 my-3"
@@ -208,10 +208,10 @@ export default {
           :title="`${(currentZoomPercent * 100).toFixed(2)}%`"
         />
       </ui-slider-root>
-      <Icon name="si:zoom-out-duotone" @click.stop="zoomOut" class="h-5 w-5 text-black dark:text-white cursor-pointer" />
+      <Icon name="iconamoon:zoom-out-duotone" @click.stop="zoomOut" class="h-5 w-5 text-black dark:text-white cursor-pointer" />
     </div>
     <div class="flex items-center absolute bottom-[12px] left-[0px] translate-x-[30px] bg-white dark:bg-black border-2 hover:border-zinc-300 dark:border-zinc-950 dark:hover:border-zinc-800 rounded py-1 px-2 cursor-pointer">
-      <Icon icon="radix-icons:reset" @click.stop="resetZoomAndPan" class="h-5 w-5 text-black dark:text-white" />
+      <Icon name="carbon:zoom-reset" @click.stop="resetZoomAndPan" class="h-5 w-5 text-black dark:text-white" />
     </div>
   </div>
 </template>
