@@ -2,15 +2,17 @@
   "name": "nuxt-app",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": "20.17.0",
+    "npm": "10.8.2"
+  },
   "scripts": {
     "build": "nuxt build",
     "dev": "nuxt dev",
-    "predev": "node --loader ts-node/esm scripts/generate-auto-styles.ts",
+    "predev": "cross-env NODE_ENV=development node --loader ts-node/esm --no-warnings scripts/generate-auto-styles.ts",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
-    "generate:styles": "node --loader ts-node/esm scripts/generate-auto-styles.ts",
-    "prepare": "yarn generate:styles",
     "clean": "rimraf node_modules .nuxt dist .output"
   },
   "dependencies": {
@@ -45,6 +47,7 @@
     "@types/node": "^20",
     "@types/three": "^0.172.0",
     "@vue/eslint-config-prettier": "^10.2.0",
+    "cross-env": "^7.0.3",
     "eslint": "^9.19.0",
     "eslint-plugin-vue": "^9.32.0",
     "formidable": "^3.5.2",
