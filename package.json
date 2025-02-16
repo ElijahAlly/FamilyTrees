@@ -3,8 +3,8 @@
   "private": true,
   "type": "module",
   "engines": {
-    "node": "18.x",
-    "pnpm": ">=8.0.0"
+    "node": ">=18.x <21",
+    "yarn": ">=1.22.0"
   },
   "scripts": {
     "build": "nuxt build",
