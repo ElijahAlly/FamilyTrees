@@ -1,0 +1,13 @@
+{
+  "builds": [
+    {
+      "src": "nuxt.config.ts",
+      "use": "@nuxtjs/vercel-builder"
+    }
+  ],
+  "build": {
+    "env": {
+      "NODE_ENV": "production"
+    }
+  }
+}
