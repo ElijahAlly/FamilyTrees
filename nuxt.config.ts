@@ -6,12 +6,6 @@ export default defineNuxtConfig({
   devtools: { 
     enabled: true
   },
-  hooks: process.env.NODE_ENV === 'development' ? {
-    'prepare:types': async () => {
-      const { generateAutoStyles } = await import('./scripts/generate-auto-styles')
-      await generateAutoStyles()
-    }
-  } : undefined,
   css: ['~/assets/css/main.css'],
   modules: [
     '@nuxtjs/supabase',
@@ -28,9 +22,8 @@ export default defineNuxtConfig({
   ],
   plugins: [
     '~/plugins/ui',
-    process.env.NODE_ENV === 'development' ? '~/plugins/auto-style' : undefined,
     '~/plugins/console.client'
-  ].filter((plugin): plugin is string => Boolean(plugin)),
+  ],
   tres: {
     devtools: true,
     // glsl: true, // for shaders
