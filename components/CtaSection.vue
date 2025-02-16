@@ -1,5 +1,11 @@
+<script setup lang="ts">
+import type { AutoStyleClass } from '@/types/auto-styles';
+
+const autoStyleClass: AutoStyleClass = 'cta-section-as';
+</script>
+
 <template>
-    <section class="w-full py-20 bg-gradient-to-br dark:bg-gradient-to-b from-zinc-900 via-zinc-800 to-neutral-900 dark:from-zinc-950 dark:to-neutral-900">
+    <section class="w-full py-20 bg-gradient-to-br dark:bg-gradient-to-b from-zinc-900 via-zinc-800 to-neutral-900 dark:from-zinc-950 dark:to-neutral-900" :class="autoStyleClass">
         <div class="container mx-auto px-4">
             <div class="max-w-4xl mx-auto text-center">
                 <h2 class="text-4xl md:text-5xl font-bold text-zinc-100 mb-6">

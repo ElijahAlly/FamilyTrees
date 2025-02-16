@@ -1,4 +1,6 @@
-<script setup>
+<script setup lang="ts">
+import type { AutoStyleClass } from '@/types/auto-styles';
+const autoStyleClass: AutoStyleClass = 'testimonials-section-as';
 import { computed } from 'vue';
 import { Icon } from '@iconify/vue';
 
@@ -14,7 +16,7 @@ const testimonials = computed(() => [
 </script>
 
 <template>
-    <section class="w-full py-20 bg-white dark:bg-zinc-950">
+    <section class="w-full py-20 bg-white dark:bg-zinc-950" :class="autoStyleClass">
         <div class="container mx-auto px-4">
             <div class="max-w-6xl mx-auto">
                 <div class="text-center mb-16">

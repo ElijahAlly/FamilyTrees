@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { AutoStyleClass } from '@/types/auto-styles';
+const autoStyleClass: AutoStyleClass = 'draggable-section-as';
 import { computed } from 'vue'
 import { useDraggableZoneStore } from '@/stores/draggableZone'
 
@@ -12,7 +14,7 @@ const computedClass = computed(() => `relative h-[88vh] w-full flex flex-col ite
 </script>
 
 <template>
-  <div :class="[computedClass]" :style="{ backgroundColor: curBackgroundColor.hex }">
+  <div :class="[computedClass, autoStyleClass]" :style="{ backgroundColor: curBackgroundColor.hex }">
     <TreeViewSettingsSidebar />
     <PersonInfoSidebar />
     <slot></slot>

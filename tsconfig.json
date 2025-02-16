@@ -1,13 +1,13 @@
 {
-  // https://nuxt.com/docs/guide/concepts/typescript
   "extends": "./.nuxt/tsconfig.json",
   "compilerOptions": {
     "target": "esnext",
     "module": "esnext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "strict": true,
     "jsx": "preserve",
     "sourceMap": true,
+    "allowJs": true,
     "resolveJsonModule": true,
     "esModuleInterop": true,
     "lib": [
@@ -18,7 +18,8 @@
       "node",
       "vite/client",
       "@nuxt/types",
-      "@nuxtjs/supabase"
+      "@nuxtjs/supabase",
+      "@types/formidable"
     ],
     "paths": {
       "@/*": [
@@ -32,5 +33,4 @@
       ],
     },
   },
-  "moduleResolution": "Node",
 }

@@ -4,7 +4,13 @@ import glsl from 'vite-plugin-glsl';
 export default defineNuxtConfig({
   compatibilityDate: '2024-04-03',
   devtools: { 
-    enabled: false
+    enabled: true
+  },
+  hooks: {
+    'prepare:types': async () => {
+      const { generateAutoStyles } = await import('./scripts/generate-auto-styles')
+      await generateAutoStyles()
+    }
   },
   css: ['~/assets/css/main.css'],
   modules: [
@@ -18,24 +24,47 @@ export default defineNuxtConfig({
     '@nuxtjs/robots',
     '@pinia-plugin-persistedstate/nuxt',
     '@nuxt/icon',
-    '@tresjs/nuxt',
+    '@tresjs/nuxt'
   ],
   plugins: [
-    '~/plugins/ui.ts',
-  ],
+    '~/plugins/ui',
+    process.env.NODE_ENV === 'development' ? '~/plugins/auto-style' : undefined,
+    '~/plugins/console.client'
+  ].filter((plugin): plugin is string => Boolean(plugin)),
   tres: {
     devtools: true,
     // glsl: true, // for shaders
   },
   vue: {
     compilerOptions: {
+      hmr: false, // disables hot reloading after changing a file (sometimes lol) // * auto-style
       isCustomElement: (tag: string) =>
         tag.startsWith('Tres') ||
-        ['OrbitControls'].includes(tag)
+        ['OrbitControls'].includes(tag),
     }
   },
   vite: {
-    plugins: [glsl()]
+    plugins: [glsl()],
+    define: {
+      __VUE_PROD_DEVTOOLS__: true,
+    },
+    build: {
+      sourcemap: true
+    },
+    // vue: {
+    //   template: {
+    //     compilerOptions: {
+    //       nodeTransforms: [
+    //         (node) => {
+    //           console.log('Node transform:', node)
+    //         }
+    //       ]
+    //     }
+    //   }
+    // }
+  },
+  experimental: {
+    componentIslands: true,
   },
   runtimeConfig: {
     public: {

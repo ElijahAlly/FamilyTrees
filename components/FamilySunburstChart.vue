@@ -1,3 +1,9 @@
+<script setup lang="ts">
+import type { AutoStyleClass } from '@/types/auto-styles';
+
+const autoStyleClass: AutoStyleClass = 'family-sunburst-chart-as';
+</script>
+
 <script lang="ts" setup>
 import * as echarts from 'echarts';
 
@@ -119,7 +125,7 @@ import * as echarts from 'echarts';
 </script>
 
 <template>
-    <div>
+    <div :class="autoStyleClass">
         <!-- <div id="sunburst-chart" v-if="draggableZoneStore.curDisplayType === 'arcticons:graphene-os'" class="w-[60vw] h-[60vh]"> -->
     </div>
 </template>

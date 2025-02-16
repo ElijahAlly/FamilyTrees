@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { AutoStyleClass } from '@/types/auto-styles';
+const autoStyleClass: AutoStyleClass = 'button-as';
 import { computed } from 'vue';
 
 type Variant = 'default' | 'destructive' | 'outline' | 'ghost' | 'transparent' | 'submit' | 'active';
@@ -81,7 +83,7 @@ const buttonClasses = computed(() => {
 
 <template>
     <button
-        :class="buttonClasses"
+        :class="[buttonClasses, autoStyleClass]"
         :disabled="disabled"
         @click="(event) => emit('click', event)"
     >

@@ -1,0 +1,88 @@
+/**
+ * Auto-generated types for auto-style system
+ * DO NOT EDIT DIRECTLY
+ */
+
+/**
+ * Valid component names for auto-style system
+ */
+export type ValidComponentName =
+    | 'AppFooter'
+    | 'AutoStyleWrapper'
+    | 'CtaSection'
+    | 'DiscoverSplit'
+    | 'DraggableSection'
+    | 'FamilyResults'
+    | 'FamilySunburstChart'
+    | 'FamilyTree'
+    | 'FamilyTreeDropdown'
+    | 'FamilyTreePersonNode'
+    | 'FeaturesGrid'
+    | 'HeroSection'
+    | 'Navbar'
+    | 'NavigationMenu'
+    | 'NavigationMenuListItem'
+    | 'PersonInfoSidebar'
+    | 'PricingTiers'
+    | 'ProductShowcase'
+    | 'SearchFamilyTrees'
+    | 'TeamSection'
+    | 'TestimonialsSection'
+    | 'ThemeToggler'
+    | 'TreeViewSettingsSidebar'
+    | 'UploadPictures'
+    | 'UserCard'
+    | 'VisitPersonLink'
+    | 'index'
+    | 'Button'
+    | 'default'
+    | '[familyId]'
+    | '[personId]'
+    | 'app'
+    | 'callback'
+    | 'create'
+    | 'discover'
+    | 'index'
+    | 'signup';
+
+/**
+ * Valid auto-style class names
+ */
+export type AutoStyleClass =
+    | 'app-footer-as'
+    | 'auto-style-wrapper-as'
+    | 'cta-section-as'
+    | 'discover-split-as'
+    | 'draggable-section-as'
+    | 'family-results-as'
+    | 'family-sunburst-chart-as'
+    | 'family-tree-as'
+    | 'family-tree-dropdown-as'
+    | 'family-tree-person-node-as'
+    | 'features-grid-as'
+    | 'hero-section-as'
+    | 'navbar-as'
+    | 'navigation-menu-as'
+    | 'navigation-menu-list-item-as'
+    | 'person-info-sidebar-as'
+    | 'pricing-tiers-as'
+    | 'product-showcase-as'
+    | 'search-family-trees-as'
+    | 'team-section-as'
+    | 'testimonials-section-as'
+    | 'theme-toggler-as'
+    | 'tree-view-settings-sidebar-as'
+    | 'upload-pictures-as'
+    | 'user-card-as'
+    | 'visit-person-link-as'
+    | 'index-as'
+    | 'button-as'
+    | 'default-as'
+    | '[family-id]-as'
+    | '[person-id]-as'
+    | 'app-as'
+    | 'callback-as'
+    | 'create-as'
+    | 'discover-as'
+    | 'index-as'
+    | 'signup-as';

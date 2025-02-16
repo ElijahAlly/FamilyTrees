@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { AutoStyleClass } from '@/types/auto-styles';
+const autoStyleClass: AutoStyleClass = 'family-tree-dropdown-as';
 import FamilyTreeDropdown from './FamilyTreeDropdown.vue';
 import { type FamilyTreeNodeType } from '@/types/family';
 
@@ -11,7 +13,7 @@ const { treeNode } = defineProps({
 </script>
 
 <template>
-    <div v-if="treeNode" class="border border-transparent rounded-md p-1">
+    <div v-if="treeNode" class="border border-transparent rounded-md p-1" :class="autoStyleClass">
         <p class="my-2 select-none dark:text-white">
             {{treeNode.level === 1 ? 'Eldest: ' : ''}}
             <VisitPersonLink :person="treeNode.member"/>

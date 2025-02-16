@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { AutoStyleClass } from '@/types/auto-styles';
+const autoStyleClass: AutoStyleClass = 'family-results-as';
 import { Icon } from '@iconify/vue'
 import { useFamilyStore } from '@/stores/family';
 import { type FamilyTreeNodeType } from '@/types/family';
@@ -16,7 +18,7 @@ onMounted(() => {
 </script>
 
 <template>
-    <div class="relative w-full h-full my-3 flex flex-col items-center">
+    <div class="relative w-full h-full my-3 flex flex-col items-center" :class="autoStyleClass">
         <div v-if="familyStore.family && familyStore.searchedForFamily" class="absolute top-0 left-0 flex items-center justify-center h-56 w-full">
             <Icon
                 icon="eos-icons:bubble-loading"

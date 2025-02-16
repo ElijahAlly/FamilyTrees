@@ -1,5 +1,5 @@
 <script lang="ts">
-import { Icon } from '@iconify/vue';
+import type { AutoStyleClass } from '@/types/auto-styles';
 import { useFamilyStore } from '@/stores/family';
 import { useDraggableZoneStore } from '@/stores/draggableZone';
 import Panzoom, { type PanzoomObject } from '@panzoom/panzoom';
@@ -7,6 +7,8 @@ import { useWatchFamilyStore } from '@/composables/useWatchFamilyStore';
 
 export default {
   setup() {
+    const autoStyleClass: AutoStyleClass = '[family-id]-as';
+
     const familyStore = useFamilyStore();
     const { curentFamilyTree } = storeToRefs(familyStore);
     
@@ -33,7 +35,8 @@ export default {
       maxScale,
       currentZoomPercent,
       curentFamilyTree,
-      curDisplayType
+      curDisplayType,
+      autoStyleClass
     }
   },
   mounted() {
@@ -172,7 +175,7 @@ export default {
 </script>
 
 <template>
-  <div class="relative min-h-[88vh] max-h-[88vh] w-full overflow-hidden border-t border-zinc-400 dark:border-zinc-600">
+  <div class="relative min-h-[88vh] max-h-[88vh] w-full overflow-hidden border-t border-zinc-400 dark:border-zinc-600" :class="autoStyleClass">
     <DraggableSection>
       <div
         ref="treeContainer"

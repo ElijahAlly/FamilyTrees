@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { AutoStyleClass } from '@/types/auto-styles';
+const autoStyleClass: AutoStyleClass = 'pricing-tiers-as';
 const plans = [
     {
         name: 'Just Looking',
@@ -40,7 +42,7 @@ const plans = [
 </script>
 
 <template>
-    <section class="w-full py-20 bg-zinc-50 dark:bg-zinc-900">
+    <section class="w-full py-20 bg-zinc-50 dark:bg-zinc-900" :class="autoStyleClass">
         <div class="container mx-auto px-4">
             <div class="max-w-6xl mx-auto">
                 <div class="text-center mb-16">

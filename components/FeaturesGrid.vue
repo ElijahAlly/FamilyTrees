@@ -1,4 +1,6 @@
-<script setup>
+<script setup lang="ts">
+import type { AutoStyleClass } from '@/types/auto-styles';
+const autoStyleClass: AutoStyleClass = 'features-grid-as';
 const features = [
     {
         title: 'Lightning Fast',
@@ -10,7 +12,7 @@ const features = [
 </script>
 
 <template>
-    <section class="w-full py-20 bg-zinc-100 dark:bg-zinc-950">
+    <section class="w-full py-20 bg-zinc-100 dark:bg-zinc-950" :class="autoStyleClass">
         <div class="container mx-auto px-4">
             <div class="max-w-6xl mx-auto">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-8">

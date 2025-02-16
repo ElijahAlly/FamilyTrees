@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { AutoStyleClass } from '@/types/auto-styles';
 import { Icon } from '@iconify/vue'
 import GalaxyGenerator from './content/galaxy-generator/index.vue';
 
@@ -9,11 +10,14 @@ const isGalaxyAnimationPaused = ref(false);
 const startExploring = () => {
     router.push('/discover');
 };
+
+const autoStyleClass: AutoStyleClass = 'hero-section-as';
 </script>
 
 <template>
     <div 
-        class="relative h-[420px] w-full overflow-hidden bg-gradient-to-t from-zinc-50 to-zinc-100 dark:from-zinc-900 dark:to-zinc-950 border-b border-zinc-200 dark:border-zinc-700"
+        :class="autoStyleClass"
+        class="hero-section-as relative h-[420px] w-full overflow-hidden bg-gradient-to-t from-zinc-50 to-zinc-100 dark:from-zinc-900 dark:to-zinc-950 border-b border-zinc-200 dark:border-zinc-700"
         @mouseenter="isHoveringHero = true"
         @mouseleave="isHoveringHero = false"
     >

@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { AutoStyleClass } from '@/types/auto-styles';
+const autoStyleClass: AutoStyleClass = 'callback-as';
 import { useAuthStore } from '@/stores/auth';
 
 const auth = useAuthStore();
@@ -25,7 +27,7 @@ onMounted(async () => {
 </script>
 
 <template>
-    <div class="container mx-auto p-8">
+    <div class="container mx-auto p-8" :class="autoStyleClass">
         <div class="card p-8 text-center space-y-4">
             <div v-if="error" class="bg-red-50 p-4 rounded-lg">
                 <p class="text-red-500 font-medium">{{ error }}</p>

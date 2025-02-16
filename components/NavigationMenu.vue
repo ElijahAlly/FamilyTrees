@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { AutoStyleClass } from '@/types/auto-styles';
+const autoStyleClass: AutoStyleClass = 'navigation-menu-as';
 import { Icon } from '@iconify/vue'
 import { ref } from 'vue';
 import { useAuthStore } from '@/stores/auth';
@@ -20,7 +22,7 @@ const handleLogout = async () => {
 </script>
 
 <template>
-    <NavigationMenuRoot v-model="currentTrigger" class="relative z-[1] flex w-full justify-center bg-transparent">
+    <NavigationMenuRoot v-model="currentTrigger" class="relative z-[1] flex w-full justify-center bg-transparent" :class="autoStyleClass">
         <NavigationMenuList
             class="center shadow-blackA7 m-0 flex items-center list-none bg-transparent p-1">
             <NavigationMenuItem class="mr-3">

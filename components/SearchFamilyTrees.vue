@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { AutoStyleClass } from '@/types/auto-styles';
+const autoStyleClass: AutoStyleClass = 'search-family-trees-as';
 import { ref } from 'vue';
 import { Icon } from '@iconify/vue';
 import { useFamilyStore } from '@/stores/family';
@@ -103,7 +105,7 @@ const handlePersonClick = (person: PersonType) => {
 </script>
 
 <template>
-    <div class="w-full h-full flex flex-col items-center">
+    <div class="w-full h-full flex flex-col items-center" :class="autoStyleClass">
         <h1 class="text-xl my-3 dark:text-white">
             {{ title }}
         </h1>

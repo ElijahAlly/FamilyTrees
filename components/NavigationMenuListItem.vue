@@ -1,11 +1,13 @@
 <script setup lang="ts">
+import type { AutoStyleClass } from '@/types/auto-styles';
+const autoStyleClass: AutoStyleClass = 'navigation-menu-list-item-as';
 const props = defineProps({
     title: String,
 })
 </script>
 
 <template>
-    <li>
+    <li :class="autoStyleClass">
         <NavigationMenuLink as-child>
             <a v-bind="$attrs"
                 class="border border-transparent hover:border-zinc-400 dark:hover:border-zinc-50 focus:shadow-[0_0_0_2px] focus:shadow-green7 hover:bg-mauve3 block select-none rounded-md p-3 text-[15px] leading-none no-underline outline-none hover:outline-none transition-colors">

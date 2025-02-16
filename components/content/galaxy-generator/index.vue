@@ -1,10 +1,13 @@
 <script setup lang="ts">
+import type { AutoStyleClass } from '@/types/auto-styles';
 import { defineProps } from 'vue';
-import { BasicShadowMap, SRGBColorSpace, NoToneMapping, Color, AdditiveBlending, BufferAttribute } from 'three'
-import gsap from 'gsap'
+import { BasicShadowMap, SRGBColorSpace, NoToneMapping, Color, AdditiveBlending } from 'three'
 import { vertexShader, fragmentShader } from './shaders'
 import { useColorMode } from '@vueuse/core'
 import type { FamilyType } from '@/types/family';
+import { Text3D } from '@tresjs/cientos';
+
+const autoStyleClass: AutoStyleClass = 'index-as';
 
 const props = defineProps({ 
     isHoveringHero: { type: Boolean, default: false, required: true },
@@ -15,6 +18,18 @@ const trees = ref<FamilyType[]>([
     { id: 1, family_name: 'Anderson', members: [1,2,3] },
     { id: 2, family_name: 'Smith', members: [4,5] },
     { id: 3, family_name: 'Williams', members: [6,7,8,9] },
+    { id: 4, family_name: 'Johnson', members: [10,11,12,13,14] },
+    { id: 5, family_name: 'Brown', members: [15,16,17] },
+    { id: 6, family_name: 'Davis', members: [18,19,20,21] },
+    { id: 7, family_name: 'Miller', members: [22,23] },
+    { id: 8, family_name: 'Wilson', members: [24,25,26,27,28] },
+    { id: 9, family_name: 'Moore', members: [29,30,31] },
+    { id: 10, family_name: 'Taylor', members: [32,33,34] },
+    { id: 11, family_name: 'Thomas', members: [35,36,37,38] },
+    { id: 12, family_name: 'Jackson', members: [39,40,41] },
+    { id: 13, family_name: 'White', members: [42,43,44,45] },
+    { id: 14, family_name: 'Harris', members: [46,47,48,49,50] },
+    { id: 15, family_name: 'Martin', members: [51,52,53] }
 ]);
 
 const colorMode = useColorMode()
@@ -30,11 +45,11 @@ const gl = computed(() => ({
     shadowMapType: BasicShadowMap,
     outputColorSpace: SRGBColorSpace,
     toneMapping: NoToneMapping,
-}))
+})) as any
 
 const radius = getRandomNumber(3, 4.2, 1);
 const speed = 0.03 * Math.exp(4.2 - radius);
-const tilt = getRandomNumber(0.3, 0.8, 1);
+// const tilt = getRandomNumber(0.3, 0.8, 1);
 const rightTiltAngle = getRandomNumber(0, 9, 1) * (Math.PI / 180); // Tilt to the right
 const forwardTiltAngle = rightTiltAngle * 0.8; // Proportional forward tilt (0.8 can be adjusted)
 const blackHoleSize = 0.3 + (radius / 4.2) * 0.4; // Will range from 0.3 to 0.7 based on radius
@@ -120,61 +135,7 @@ const shader = {
     },
 }
 
-function updateGalaxy() {
-    if (bufferRef.value) {
-        const colorInside = new Color(parameters.insideColor)
-        const colorOutside = new Color(parameters.outsideColor)
-
-        const positions = new Float32Array(parameters.count * 3)
-        const colors = new Float32Array(parameters.count * 3)
-        const scales = new Float32Array(parameters.count)
-        const randomness = new Float32Array(parameters.count * 3)
-
-        for (let i = 0; i < parameters.count; i++) {
-            const i3 = i * 3
-
-            const radius = Math.random() * parameters.radius
-            const spinAngle = radius * parameters.spin
-            const branchAngle = ((i % parameters.branches) * Math.PI * 2) / parameters.branches
-
-            const x = Math.cos(branchAngle + spinAngle) * radius;
-            const y = 0;
-            const z = Math.sin(branchAngle + spinAngle) * radius;
-
-            const x1 = x * Math.cos(rightTiltAngle) - y * Math.sin(rightTiltAngle);
-            const y1 = x * Math.sin(rightTiltAngle) + y * Math.cos(rightTiltAngle);
-            const z1 = z;
-
-            // Apply forward tilt (around X axis)
-            positions[i3] = x1;
-            positions[i3 + 1] = y1 * Math.cos(forwardTiltAngle) - z1 * Math.sin(forwardTiltAngle);
-            positions[i3 + 2] = y1 * Math.sin(forwardTiltAngle) + z1 * Math.cos(forwardTiltAngle);
-
-            const randomX = Math.random() ** parameters.randomnessPower * (Math.random() < 0.5 ? -1 : 1)
-            const randomY = Math.random() ** parameters.randomnessPower * (Math.random() < 0.5 ? -1 : 1)
-            const randomZ = Math.random() ** parameters.randomnessPower * (Math.random() < 0.5 ? -1 : 1)
-
-            randomness[i3] = randomX
-            randomness[i3 + 1] = randomY
-            randomness[i3 + 2] = randomZ
-
-            const mixedColor = colorInside.clone()
-            mixedColor.lerp(colorOutside, radius / parameters.radius)
-
-            colors[i3 + 0] = mixedColor.r // R
-            colors[i3 + 1] = mixedColor.g // G
-            colors[i3 + 2] = mixedColor.b // B
-
-            scales[i] = Math.random()
-        }
-        bufferRef.value.geometry.setAttribute('position', new BufferAttribute(positions, 3))
-        bufferRef.value.geometry.setAttribute('aRandomness', new BufferAttribute(randomness, 3))
-        bufferRef.value.geometry.setAttribute('color', new BufferAttribute(colors, 3))
-        bufferRef.value.geometry.setAttribute('aScale', new BufferAttribute(scales, 1))
-    } 
-}
-
-const bufferRef = ref(null)
+const bufferRef = ref<any>(null)
 const lastElapsedTime = ref(0);
 const pauseStartTime = ref(0);
 const totalPausedTime = ref(0);
@@ -204,38 +165,40 @@ onLoop(({ elapsed }) => {
     }
 })
 
-const labelColors = computed(() => ({
-    text: colorMode.value === 'dark' ? '#ffffff' : '#18181b',
-    star: colorMode.value === 'dark' ? parameters.insideColor : parameters.outsideColor
-}));
-
-function getStarPosition(index: number, total: number, yOffset: number = 0) {
-    const angle = (index / total) * Math.PI * 2;
-    const radius = parameters.radius * 0.7; // Slightly inside the galaxy's edge
+// const textPositions = computed(() => {
+//     const time = bufferRef.value?.material.uniforms.uTime.value || 0;
     
-    // Apply the same tilts as the galaxy
-    const x = Math.cos(angle) * radius;
-    const y = yOffset;
-    const z = Math.sin(angle) * radius;
+//     return trees.value.map((family, index) => {
+//         const angleStep = (2 * Math.PI) / trees.value.length;
+//         const baseAngle = index * angleStep;
+//         const textRadius = parameters.radius * 0.7;
+//         const rotationAngle = baseAngle + (time * parameters.speed);
+        
+//         // Calculate base position using galaxy's rotation
+//         const x = Math.cos(rotationAngle) * textRadius;
+//         const y = 0;
+//         const z = Math.sin(rotationAngle) * textRadius;
 
-    // Apply right tilt
-    const x1 = x * Math.cos(rightTiltAngle) - y * Math.sin(rightTiltAngle);
-    const y1 = x * Math.sin(rightTiltAngle) + y * Math.cos(rightTiltAngle);
-    const z1 = z;
+//         // Apply tilts in same direction as galaxy
+//         const x1 = x * Math.cos(rightTiltAngle) - y * Math.sin(rightTiltAngle);
+//         const y1 = x * Math.sin(rightTiltAngle) + y * Math.cos(rightTiltAngle);
+//         const z1 = z;
 
-    // Apply forward tilt
-    return [
-        x1,
-        y1 * Math.cos(forwardTiltAngle) - z1 * Math.sin(forwardTiltAngle) + 0.3, // Add height offset
-        y1 * Math.sin(forwardTiltAngle) + z1 * Math.cos(forwardTiltAngle)
-    ];
-}
-
-function getStarSize(memberCount: number): number {
-    const baseSize = 0.05;
-    const sizeIncrease = 0.01;
-    return baseSize + (Math.min(memberCount, 10) * sizeIncrease);
-}
+//         return {
+//             position: [
+//                 x1,
+//                 y1 * Math.cos(forwardTiltAngle) - z1 * Math.sin(forwardTiltAngle),
+//                 y1 * Math.sin(forwardTiltAngle) + z1 * Math.cos(forwardTiltAngle)
+//             ] as [number, number, number],
+//             text: family.family_name,
+//             rotation: [
+//                 forwardTiltAngle,     // Forward tilt
+//                 rotationAngle,        // Rotation around galaxy
+//                 rightTiltAngle        // Right tilt
+//             ] as [number, number, number]
+//         }
+//     });
+// });
 
 // onMounted(() => {
 //     const getFamilies = async () => {
@@ -265,7 +228,7 @@ function getStarSize(memberCount: number): number {
 </script>
 
 <template>
-    <TresCanvas v-bind="gl.value">
+    <TresCanvas v-bind="gl.value" :class="autoStyleClass">
         <TresPerspectiveCamera :position="[3.3, 0.8, 4.2]" />
         
         <TresPoints ref="bufferRef">
@@ -278,6 +241,34 @@ function getStarSize(memberCount: number): number {
             <TresShaderMaterial v-bind="shader" />
         </TresPoints>
 
+        <!-- <Suspense>
+            <template #default>
+                <TresGroup 
+                    v-for="(textData, i) in textPositions" 
+                    :key="i" 
+                    :position="textData.position"
+                    :rotation="textData.rotation"
+                >
+                    <Text3D
+                        :text="textData.text"
+                        :size="0.1" 
+                        :height="0.005" 
+                        font="/fonts/helvetiker_regular.typeface.json"
+                        :bevel-enabled="true"
+                        :bevel-size="0.001"
+                        :bevel-thickness="0.001"
+                        :rotation="[0, Math.PI / 2, Math.PI / 2]"
+                    >
+                        <TresMeshStandardMaterial 
+                            :color="colorMode === 'dark' ? '#ffffff' : '#000000'"
+                            :metalness="0.3" 
+                            :roughness="0.4"
+                        />
+                    </Text3D>
+                </TresGroup>
+            </template>
+        </Suspense> -->
+
         <OrbitControls :enableZoom="false" :enablePan="false" :target="[2.1, 0, 0]" />
     </TresCanvas>
-</template>
+</template> 

@@ -1,11 +1,13 @@
 <script setup lang="ts">
+import type { AutoStyleClass } from '@/types/auto-styles';
+const autoStyleClass: AutoStyleClass = 'theme-toggler-as';
 import { Icon } from '@iconify/vue'
 
 const themeOptions = ['system', 'light', 'dark']; // TODO: Implement 'Sepia'
 </script>
 
 <template>
-    <div>
+    <div :class="autoStyleClass">
         <SelectRoot v-model="$colorMode.preference">
             <SelectTrigger
                 class="inline-flex min-w-[96px] items-center justify-between border border-black dark:border-white rounded px-[15px] text-[13px] leading-none h-[35px] gap-[5px] bg-inherit text-grass11 focus:outline-none hover:bg-mauve3 data-[placeholder]:text-green9 outline-none"

@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { AutoStyleClass } from '@/types/auto-styles';
+const autoStyleClass: AutoStyleClass = 'discover-split-as';
 import { Icon } from '@iconify/vue';
 import { SplitterPanel } from 'radix-vue';
 
@@ -69,7 +71,7 @@ const handlePanelClick = (index: number) => {
 </script>
 
 <template>
-    <div class="w-full h-[75%] bg-transparent">
+    <div class="w-full h-[75%] bg-transparent" :class="autoStyleClass">
         <div class="w-full h-full px-8 text-green9 font-medium text-sm bg-transparent">
             <SplitterGroup id="splitter-group-1" direction="horizontal" class="h-full bg-transparent">
                 <SplitterPanel

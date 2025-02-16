@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { AutoStyleClass } from '@/types/auto-styles';
+const autoStyleClass: AutoStyleClass = 'family-tree-person-node-as';
 import type { PersonType } from '@/types/person';
 
 const { person } = defineProps({
@@ -10,7 +12,7 @@ const { person } = defineProps({
 </script>
 
 <template>
-    <div v-if="person" class="flex flex-col items-center select-none bg-zinc-500 hover:bg-zinc-400 p-2 cursor-auto rounded-md">
+    <div v-if="person" class="flex flex-col items-center select-none bg-zinc-500 hover:bg-zinc-400 p-2 cursor-auto rounded-md" :class="autoStyleClass">
         <VisitPersonLink :person="person" />
         <p>{{ person.birth_date ? person.birth_date.split('-')[0] + '-' : '' }}{{ person.death_date ? person.death_date : person.is_living ? 'Living' : 'Deceased (Date Unknown)' }}</p>
     </div>

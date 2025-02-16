@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { AutoStyleClass } from '@/types/auto-styles';
+const autoStyleClass: AutoStyleClass = 'family-tree-as';
 import { onMounted, ref } from 'vue';
 import { type FamilyTreeNodeType } from '@/types/family';
 import * as d3 from 'd3';
@@ -539,8 +541,9 @@ onMounted(() => {
     <div
         v-if="treeNode" 
         ref="containerRef" 
-        class="w-full h-full flex flex-col items-center border border-dashed rounded-md transition-shadow duration-300 hover:shadow-lg overflow-auto" 
+        class="w-full h-full flex flex-col items-center border border-dashed rounded-md transition-shadow duration-300 hover:shadow-lg overflow-auto"
         :class="{
+            autoStyleClass,
             'hover:shadow-gray-300': getSecondaryColorByCurrentColor.tailwind === 'gray-300',
             'hover:shadow-neutral-600': getSecondaryColorByCurrentColor.tailwind === 'neutral-600'
         }"
