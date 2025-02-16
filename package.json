@@ -3,9 +3,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "NITRO_PRESET=vercel nuxt build",
+    "build": "nuxt build",
     "dev": "nuxt dev",
-    "predev": "cross-env NODE_ENV=development node --loader ts-node/esm --no-warnings scripts/generate-auto-styles.ts",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
@@ -43,7 +42,6 @@
     "@types/node": "^20",
     "@types/three": "^0.172.0",
     "@vue/eslint-config-prettier": "^10.2.0",
-    "cross-env": "^7.0.3",
     "eslint": "^9.19.0",
     "eslint-plugin-vue": "^9.32.0",
     "formidable": "^3.5.2",
