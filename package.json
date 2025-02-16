@@ -1,7 +1,11 @@
 {
-  "name": "nuxt-app",
+  "name": "my-family-trees",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": "18.x",
+    "pnpm": ">=8.0.0"
+  },
   "scripts": {
     "build": "nuxt build",
     "dev": "nuxt dev",
@@ -20,7 +24,8 @@
     "tailwind-scrollbar": "^3.1.0",
     "three": "^0.172.0",
     "vue": "latest",
-    "vue-tsc": "^2.1.2"
+    "vue-tsc": "^2.1.2",
+    "sharp": "0.32.6"
   },
   "devDependencies": {
     "@formkit/auto-animate": "^0.8.2",
