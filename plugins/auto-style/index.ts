@@ -4,6 +4,12 @@ import { createToggleButton } from './components/controls';
 import { updateStyle } from './utils/update-styles';
 
 export default defineNuxtPlugin((nuxtApp) => {
+    // Only run in development mode
+    if (process.env.NODE_ENV !== 'development') {
+        console.log('Skipping auto-styles generation in production');
+        process.exit(0);
+    }
+    
     // Register the directive for both client and server
     nuxtApp.vueApp.directive('auto-style', {
         getSSRProps() {
