@@ -79,16 +79,6 @@ onMounted(() => {
     } else {
         document.documentElement.style.backgroundColor = '#d4d4d8'; 
     }
-
-//     window.addEventListener('popstate', (event) => {
-//         isNavigatingBack.value = event.state?.forward === false
-//     })
-// })
-
-// onUnmounted(() => {
-//     window.removeEventListener('popstate', (event) => {
-//         isNavigatingBack.value = event.state?.forward === false
-//     })
 })
 </script>
 

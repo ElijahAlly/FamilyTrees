@@ -6,6 +6,7 @@ import { usePersonStore } from '@/stores/person';
 import { useDraggableZoneStore } from '@/stores/draggableZone';
 import type { PersonType } from '@/types/person';
 import { storeToRefs } from 'pinia';
+import { getPersonPictureUrl } from '@/utils/supabase';
 
 const personStore = usePersonStore();
 const { setSelectedPersonInTree, clearGoToPersonInTree } = personStore;
@@ -57,6 +58,8 @@ const getNodeName = (person: PersonType) => {
     return `${person.first_name} ${person.last_name}`;
 }
 
+const ARRAY_TO_STRING_JOINER = '_|-|-|_';
+
 const getAttributes = (person: PersonType) => ({
     id: person.id,
     first_name: person.first_name,
@@ -68,7 +71,7 @@ const getAttributes = (person: PersonType) => ({
     gender: person.gender,
     mother_id: person.mother_id ? person.mother_id : '',
     father_id: person.father_id ? person.father_id : '',
-    pictures: person.pictures.join(',')
+    pictures: person.pictures.join(ARRAY_TO_STRING_JOINER)
 })
 
 const getChildren = (treeNode: FamilyTreeNodeType): RawNodeDatum[] => {
@@ -373,23 +376,23 @@ const renderTree = () => {
         // Add avatar circle background
         nodeGroup.append("circle")
             .attr("cx", 0)
-            .attr("cy", -20)
-            .attr("r", 15)
+            .attr("cy", -40)
+            .attr("r", 30)
             .attr("fill", "#e5e7eb");
 
         // Add avatar image
         nodeGroup.append("image")
-            .attr("x", -21)
-            .attr("y", -41)
-            .attr("width", 42)
-            .attr("height", 42)
-            .attr("clip-path", "circle(15px at center)")
+            .attr("x", -42)
+            .attr("y", -82)
+            .attr("width", 84)
+            .attr("height", 84)
+            .attr("clip-path", "circle(30px at center)")
             .attr("xlink:href", d => {
                 const img = new Image();
                 let url = '';
 
-                if (!!d.data.attributes?.pictures) {
-                    url = (d.data.attributes.pictures as string).split(',')[0]
+                if (!!d.data.attributes?.pictures && treeNode) {
+                    url = getPersonPictureUrl(treeNode.familyId, d.data.attributes.id as number, (d.data.attributes.pictures as string).split(ARRAY_TO_STRING_JOINER)[0])
                 } else {
                     const initials = getInitials(d);
                     url = createInitialsSvg(initials)
