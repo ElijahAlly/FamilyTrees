@@ -1,4 +1,5 @@
-import { serverSupabaseClient } from '#supabase/server'
+import { serverSupabaseClient } from '#supabase/server';
+import { defineEventHandler, readMultipartFormData } from 'h3';
 
 export default defineEventHandler(async (event) => {
     const client = await serverSupabaseClient(event)

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { PropType } from 'vue';
 import FamilyTreeDropdown from './FamilyTreeDropdown.vue';
 import { type FamilyTreeNodeType } from '@/types/family';
 

@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, reactive } from 'vue';
+import { ref } from 'vue';
 import { Icon } from '@iconify/vue';
 import { useAuthStore } from '@/stores/auth';
 
@@ -26,29 +26,29 @@ const providers: ProviderType[] = [
     { name: 'Facebook', icon: 'logos:facebook', color: 'text-neutral-200 hover:bg-blue-600 bg-[#0C63D4]' },
 ]
 
-const formData = reactive({
-    firstName: '',
-    middleName: '',
-    lastName: '',
-    email: '',
-    birthDate: '',
-    gender: ''
-})
+// const formData = reactive({
+//     firstName: '',
+//     middleName: '',
+//     lastName: '',
+//     email: '',
+//     birthDate: '',
+//     gender: ''
+// })
 
-const handleSubmit = async () => {
-    isLoading.value = true;
-    // console.log('Form submitted:', formData);
+// const handleSubmit = async () => {
+//     isLoading.value = true;
+//     // console.log('Form submitted:', formData);
 
-    try {
-      // Simulate an API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      // Handle successful submission
-    } catch (error) {
-      // Handle error
-    } finally {
-      isLoading.value = false;
-    }
-}
+//     try {
+//       // Simulate an API call
+//       await new Promise(resolve => setTimeout(resolve, 2000));
+//       // Handle successful submission
+//     } catch (error) {
+//       // Handle error
+//     } finally {
+//       isLoading.value = false;
+//     }
+// }
 
 const signInWithProvider = async (providerName: ProviderName) => {
     isLoading.value = true;
@@ -74,12 +74,8 @@ const signInWithProvider = async (providerName: ProviderName) => {
 <template>
     <div 
         class="mt-[16vh] flex flex-col items-center justify-center"
-        :class="{
-            '-translate-y-48': mode === 'signin',
-            '-translate-y-16': mode === 'signup',
-        }"
     >
-        <div class="p-8 rounded-lg shadow-md w-96 relative">
+        <div class="p-8 rounded-lg shadow-md w-96 relative bg-zinc-100 dark:bg-zinc-900">
             <!-- Loading Overlay -->
             <!-- <Transition v-bind="overlayTransition">
                 <div 
@@ -223,7 +219,7 @@ const signInWithProvider = async (providerName: ProviderName) => {
                         </div>
                     </div> -->
 
-                    <h1 class="mt-3 mb-6 font-extralight text-center">Sign in/up with</h1>
+                    <h1 class="mt-3 mb-6 font-extralight text-center dark:text-white">Sign in/up with</h1>
                     <div class="grid grid-cols-2 gap-3">
                         <button
                             v-for="provider in providers"

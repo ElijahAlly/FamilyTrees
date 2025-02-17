@@ -1,3 +1,5 @@
+import { useRuntimeConfig } from 'nuxt/app';
+
 /**
  * Generates a public URL for a person's picture in Supabase storage
  * @param familyId - The family ID

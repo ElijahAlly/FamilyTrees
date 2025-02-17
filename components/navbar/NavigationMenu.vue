@@ -2,6 +2,14 @@
 import { Icon } from '@iconify/vue'
 import { ref } from 'vue';
 import { useAuthStore } from '@/stores/auth';
+import { storeToRefs } from 'pinia';
+import { navigateTo } from 'nuxt/app';
+import { 
+    NavigationMenuItem, NavigationMenuTrigger, NavigationMenuContent, 
+    NavigationMenuLink, NavigationMenuIndicator, NavigationMenuRoot, NavigationMenuList,
+    NavigationMenuViewport
+} from 'radix-vue';
+import NavigationMenuListItem from './NavigationMenuListItem.vue';
 
 const authStore = useAuthStore();
 const { logout } = authStore;
@@ -35,12 +43,14 @@ const handleLogout = async () => {
                     <ul class="one m-0 grid list-none gap-x-[10px] p-[22px] sm:w-[500px] sm:grid-cols-[0.75fr_1fr]">
                         <li class="row-span-3 grid">
                             <NavigationMenuLink as-child>
-                                <a class="focus:shadow-green7 from-green9 to-teal9 flex h-full w-full select-none border border-transparent hover:border-zinc-400 dark:hover:border-zinc-50 flex-col justify-end rounded-[6px] bg-gradient-to-t p-[25px] no-underline outline-none focus:shadow-[0_0_0_2px]"
-                                    href="/">
+                                <NuxtLink 
+                                    class="focus:shadow-green7 from-green9 to-teal9 flex h-full w-full select-none border border-transparent hover:border-zinc-400 dark:hover:border-zinc-50 flex-col justify-end rounded-[6px] bg-gradient-to-t p-[25px] no-underline outline-none focus:shadow-[0_0_0_2px]"
+                                    to="/"
+                                >
                                     <!-- <NuxtImg src="/my-trees-logo.png" class="cursor-pointer rounded-md w-16" /> -->
                                     <div class="mb-[7px] text-[18px] font-medium leading-[1.2] dark:text-white">Family Trees</div>
                                     <p class="text-mauve4 text-[14px] leading-[1.3] dark:text-white">Private, Shareable, and easy to use for the whole family!</p>
-                                </a>
+                                </NuxtLink>
                             </NavigationMenuLink>
                         </li>
 

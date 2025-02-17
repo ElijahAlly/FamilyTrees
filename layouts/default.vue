@@ -1,14 +1,26 @@
 <script lang="ts" setup>
 import { Icon } from '@iconify/vue';
 import { useBannerStore } from '@/stores/useBannerStore';
+import { useRoute } from 'nuxt/app';
+import { ref, computed, watch, onMounted } from 'vue';
+import { useRouter } from 'nuxt/app';
+import { useColorMode } from '@vueuse/core';
+import Navbar from '@/components/navbar/index.vue';
+import AppFooter from '@/components/AppFooter.vue';
 
+const router = useRouter();
 const route = useRoute();
 const bannerStore = useBannerStore();
+const colorMode = useColorMode();
 
-const colorMode = useColorMode()
-
+const isNavigatingBack = ref(false);
 const showScrollBanner = ref(false);
 const mainRef = ref<HTMLElement | null>(null);
+
+router.beforeEach((to, from, next) => {
+    isNavigatingBack.value = router.options.history.state.back === to.fullPath;
+    next();
+})
 
 const showFooter = computed(() => {
     const doesNotHaveFamilyName = !route.params?.familyName;
@@ -54,7 +66,7 @@ watch(() => route.path, () => {
 }, { immediate: true });
 
 watch(colorMode, (newVal) => {
-    if (newVal.value === 'dark') {
+    if (newVal === 'dark') {
         document.documentElement.style.backgroundColor = '#18181b';
     } else {
         document.documentElement.style.backgroundColor = '#d4d4d8';
@@ -67,6 +79,16 @@ onMounted(() => {
     } else {
         document.documentElement.style.backgroundColor = '#d4d4d8'; 
     }
+
+//     window.addEventListener('popstate', (event) => {
+//         isNavigatingBack.value = event.state?.forward === false
+//     })
+// })
+
+// onUnmounted(() => {
+//     window.removeEventListener('popstate', (event) => {
+//         isNavigatingBack.value = event.state?.forward === false
+//     })
 })
 </script>
 
@@ -102,7 +124,10 @@ onMounted(() => {
                     </button>
                 </div>
             </Transition>
-            <div :class="`h-fit ${!$route.params?.familyName && !$route.params?.familyId ? 'min-h-screen' : ''} bg-neutral-50 dark:bg-neutral-950`">
+            <div :class="[
+                `h-fit ${!$route.params?.familyName && !$route.params?.familyId ? 'min-h-screen' : ''} bg-neutral-50 dark:bg-neutral-950`,
+                isNavigatingBack ? 'is-navigating-back' : ''
+            ]">
                 <slot></slot>
             </div>
             <AppFooter v-if="showFooter"/>
@@ -110,12 +135,52 @@ onMounted(() => {
     </main>
 </template>
 
-<style lang="postcss">
-::selection {
+<!-- ::selection {
   @apply bg-violet-600 text-white dark:bg-violet-300 dark:text-black;
 }
 
 ::-moz-selection {
   @apply bg-violet-600 text-white dark:bg-white dark:text-black;
+} -->
+
+<style>
+/* Layout transition */
+.layout-enter-active,
+.layout-leave-active {
+  transition: all 0.24s ease-in-out;
+}
+
+.layout-enter-from,
+.layout-leave-to {
+  opacity: 0;
+  filter: blur(1rem);
+}
+
+/* Page transition */
+.page-enter-active,
+.page-leave-active {
+  transition: all 0.24s ease-in-out;
+}
+
+/* Forward navigation */
+.page-enter-from {
+  opacity: 0;
+  transform: translateX(30px);
+}
+
+.page-leave-to {
+  opacity: 0;
+  transform: translateX(-30px);
+}
+
+/* Backward navigation (Only applies if going back to a page that was just visited. Otherwise, it will use the forward navigation animation ) */
+.is-navigating-back .page-enter-from {
+  opacity: 0;
+  transform: translateX(-30px);
+}
+
+.is-navigating-back .page-leave-to {
+  opacity: 0;
+  transform: translateX(30px);
 }
 </style>

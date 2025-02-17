@@ -1,13 +1,15 @@
 import { defineStore } from 'pinia';
 import { createClient, type Session, type User } from '@supabase/supabase-js';
 import type { PersonType } from '@/types/person';
+import { ref } from 'vue';
+import { useRuntimeConfig } from 'nuxt/app';
 
 export const useAuthStore = defineStore('auth', () => {
     const config = useRuntimeConfig();
     const supabaseUrl = config.public.supabaseUrl;
     const supabaseAnonKey = config.public.supabaseKey;
 
-    if (!supabaseUrl || !supabaseAnonKey) {
+    if (typeof supabaseUrl !== 'string' || typeof supabaseAnonKey !== 'string' || !supabaseUrl || !supabaseAnonKey) {
         throw new Error('Missing Supabase environment variables');
     }
 

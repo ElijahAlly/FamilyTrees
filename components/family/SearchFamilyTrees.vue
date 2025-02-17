@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, type PropType } from 'vue';
+import { ref, type PropType, watch } from 'vue';
 import { Icon } from '@iconify/vue';
 import { useFamilyStore } from '@/stores/family';
 import { usePersonStore } from '@/stores/person';
