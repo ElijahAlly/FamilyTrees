@@ -62,13 +62,19 @@ watch(() => selectedPersonInTree.value, (newVal) => {
                 />
             </span>
         </div>
-        <hr class="my-6 border-zinc-500 dark:border-200 border-dashed" :class="[collapsed ? 'blur-md' : '']" />
+        <hr class="mt-3 border-zinc-500 dark:border-200 border-dashed" :class="[collapsed ? 'blur-md' : '']" />
         <div class="relative">
             <transition name="fade" mode="out-in">
                 <div
                     :class="['transition-all duration-300', collapsed ? 'blur-md ml-6' : '']"
                     :key="person.id"
                 >
+                    <NuxtLink :to="{ name: 'familyName-member-personId', params: { familyName: person.last_name, personId: person.id }}">
+                        <div class="w-full flex justify-center items-center text-lg hover:text-xl font-normal hover:font-medium text-zinc-950 dark:text-zinc-50 p-2 border-b transition-all duration-300 hover:bg-zinc-300 dark:hover:bg-zinc-800">
+                            View Person's Page
+                            <Icon icon="grommet-icons:link-next" class="w-3 h-3 ml-2" /> 
+                        </div>
+                    </NuxtLink>
                     <p :class="[textClass]">First Name: {{ person.first_name }}</p>
                     <p :class="[textClass]">Last Name: {{ person.last_name }}</p>
                     <p :class="[textClass]">Birth Date: {{ person.birth_date }}</p>

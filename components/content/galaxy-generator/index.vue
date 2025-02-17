@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { defineProps } from 'vue';
-import { BasicShadowMap, SRGBColorSpace, NoToneMapping, Color, AdditiveBlending, BufferAttribute } from 'three'
-import gsap from 'gsap'
-import { vertexShader, fragmentShader } from './shaders'
-import { useColorMode } from '@vueuse/core'
+import { BasicShadowMap, SRGBColorSpace, NoToneMapping, Color, AdditiveBlending, BufferAttribute } from 'three';
+import gsap from 'gsap';
+import { vertexShader, fragmentShader } from './shaders';
+import { useColorMode } from '@vueuse/core';
 import type { FamilyType } from '@/types/family';
 
 const props = defineProps({ 

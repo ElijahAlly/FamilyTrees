@@ -1,4 +1,5 @@
 import glsl from 'vite-plugin-glsl';
+import { visualizer } from 'rollup-plugin-visualizer';
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
@@ -22,6 +23,7 @@ export default defineNuxtConfig({
   ],
   plugins: [
     '~/plugins/ui.ts',
+    '~/plugins/console.client'
   ],
   tres: {
     devtools: true,
@@ -29,13 +31,22 @@ export default defineNuxtConfig({
   },
   vue: {
     compilerOptions: {
+      // hmr: false, // disables hot reloading after changing a file (sometimes lol)
       isCustomElement: (tag: string) =>
         tag.startsWith('Tres') ||
         ['OrbitControls'].includes(tag)
     }
   },
   vite: {
-    plugins: [glsl()]
+    plugins: [
+      glsl(),
+      visualizer({
+        open: false,
+        filename: 'dist/stats.html',
+        gzipSize: true,
+        brotliSize: true,
+      })
+    ],
   },
   runtimeConfig: {
     public: {

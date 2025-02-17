@@ -2,6 +2,10 @@
 import { computed } from 'vue'
 import { useDraggableZoneStore } from '@/stores/draggableZone'
 
+const TreeViewSettingsSidebar = defineAsyncComponent(() => 
+  import('@/components/TreeViewSettingsSidebar.vue')
+)
+
 const draggableZoneStore = useDraggableZoneStore();
 const { curBackgroundPattern, curBackgroundColor } = storeToRefs(draggableZoneStore);
 
