@@ -1,4 +1,7 @@
-module.exports = {
+import type { Config } from 'tailwindcss'
+import scrollbar from 'tailwind-scrollbar'
+
+export default {
     darkMode: ['class', '.dark-mode'],
     content: [
         "./components/**/*.{js,vue,ts}",
@@ -14,9 +17,9 @@ module.exports = {
         // Add any other dynamic shadow classes you might use
     ],
     plugins: [
-        require('tailwind-scrollbar')({ nocompatible: true })
+        scrollbar({ nocompatible: true })
     ],
     variants: {
         scrollbar: ['rounded', 'dark']
     }
-}
+} satisfies Config
