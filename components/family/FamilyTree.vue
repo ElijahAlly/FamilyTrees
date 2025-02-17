@@ -1,17 +1,18 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { onMounted, onUnmounted, ref, watch, type PropType } from 'vue';
 import { type FamilyTreeNodeType } from '@/types/family';
 import * as d3 from 'd3';
 import { usePersonStore } from '@/stores/person';
 import { useDraggableZoneStore } from '@/stores/draggableZone';
 import type { PersonType } from '@/types/person';
+import { storeToRefs } from 'pinia';
 
 const personStore = usePersonStore();
 const { setSelectedPersonInTree, clearGoToPersonInTree } = personStore;
 const { gotToPersonInTree } = storeToRefs(personStore);
 
 const draggableStore = useDraggableZoneStore();
-const { getSecondaryColorByCurrentColor } = storeToRefs(draggableStore);
+const { getSecondaryColorByCurrentColor } = draggableStore;
 
 const { treeNode } = defineProps({
     treeNode: {

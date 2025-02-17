@@ -4,6 +4,8 @@ import type { FetchTypeList } from '@/types/fetch';
 import { getFullName, getGenderLabel } from '@/utils/person';
 import { useBannerStore } from '@/stores/useBannerStore';
 import { formatDate } from '@/utils/person';
+import { useRoute } from 'nuxt/app';
+import { ref, watchEffect, onUnmounted } from 'vue';
 
 const route = useRoute();
 const personId = Number(route.params.personId);

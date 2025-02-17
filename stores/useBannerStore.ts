@@ -1,32 +1,36 @@
 import { defineStore } from 'pinia';
+import { ref } from 'vue';
 
-interface BannerState {
-    title: string;
-    description: string;
-    isVisible: boolean;
-}
+export const useBannerStore = defineStore('banner', () => {
+    const title = ref('');
+    const description = ref('');
+    const isVisible = ref(false);
 
-export const useBannerStore = defineStore('banner', {
-    state: (): BannerState => ({
-        title: '',
-        description: '',
-        isVisible: false
-    }),
+    function setBannerInfo(newTitle: string, newDescription: string) {
+        title.value = newTitle;
+        description.value = newDescription;
+    }
 
-    actions: {
-        setBannerInfo(title: string, description: string) {
-            this.title = title;
-            this.description = description;
-        },
-        clearBannerInfo() {
-            this.title = '';
-            this.description = '';
-        },
-        show() {
-            this.isVisible = true;
-        },
-        hide() {
-            this.isVisible = false;
-        }
+    function clearBannerInfo() {
+        title.value = '';
+        description.value = '';
+    }
+
+    function show() {
+        isVisible.value = true;
+    }
+
+    function hide() {
+        isVisible.value = false;
+    }
+
+    return {
+        title,
+        description,
+        isVisible,
+        setBannerInfo,
+        clearBannerInfo,
+        show,
+        hide
     }
 });

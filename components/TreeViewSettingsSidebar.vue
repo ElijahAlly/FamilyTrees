@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
 import { useDraggableZoneStore } from '@/stores/draggableZone'
+import { storeToRefs } from 'pinia';
 
 const draggableZoneStore = useDraggableZoneStore();
 const { updateCurBackgroundColor, updateShowSidebar } = draggableZoneStore;

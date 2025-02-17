@@ -1,3 +1,4 @@
+import type { GenderType, PersonType } from "@/types/person";
 
 export const getGenderLabel = (genderChar: GenderType) => {
     switch (genderChar) {
@@ -22,5 +23,10 @@ export const getFirstAndLastName = (person: PersonType) => {
 
 export const formatDate = (dateString?: string) => {
     if (!dateString) return '';
-    return dateString.split('T')[0].split('-').join('/');
+    const date = new Date(dateString);
+    const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'long' });
+    const month = date.toLocaleDateString('en-US', { month: 'long' });
+    const day = date.getDate().toString().padStart(2, '0');
+    const year = date.getFullYear();
+    return `${dayOfWeek}, ${month} ${day}, ${year}`;
 };

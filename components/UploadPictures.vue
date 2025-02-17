@@ -3,6 +3,7 @@ import { Icon } from '@iconify/vue';
 import { type PersonType } from '@/types/person';
 import { type FamilyType } from '@/types/family';
 import type { FetchTypeList, PostType } from '@/types/fetch';
+import type { PropType } from 'vue';
 
 const { person } = defineProps({
     person: {

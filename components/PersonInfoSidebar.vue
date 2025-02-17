@@ -1,5 +1,6 @@
 <script lang="ts" setup>
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
+import { storeToRefs } from 'pinia';
 import { Icon } from '@iconify/vue';
 import { usePersonStore } from '@/stores/person';
 
@@ -7,9 +8,8 @@ const personStore = usePersonStore();
 const { clearSelectedPersonInTree, setGoToPersonInTree } = personStore;
 const { selectedPersonInTree } = storeToRefs(personStore);
 
-const person = computed(() => personStore.getSelectedPersonInTree);
 const collapsed = ref(false);
-const computedClass = computed(() => `h-full w-[330px] flex flex-col absolute top-0 right-0 transition-transform duration-300 ease-in-out p-2 z-30 border-l border-zinc-400 dark:border-zinc-600 shadow-lg shadow-zinc-300 dark:shadow-zinc-500 ${person.value ? 'bg-neutral-50 dark:bg-zinc-950' : 'bg-transparent pointer-events-none'}`);
+const computedClass = computed(() => `h-full w-[330px] flex flex-col absolute top-0 right-0 transition-transform duration-300 ease-in-out p-2 z-30 border-l border-zinc-400 dark:border-zinc-600 shadow-lg shadow-zinc-300 dark:shadow-zinc-500 ${selectedPersonInTree.value ? 'bg-neutral-50 dark:bg-zinc-950' : 'bg-transparent pointer-events-none'}`);
 const textClass = "dark:text-white cursor-text select-text";
 
 const toggleCollapsed = (newVal?: 'show' | 'hide') => {
@@ -29,7 +29,7 @@ watch(() => selectedPersonInTree.value, (newVal) => {
 
 <template>
     <div
-        v-if="person"
+        v-if="selectedPersonInTree"
         :class="[
             computedClass, 
             collapsed ? 'hover:bg-zinc-300 dark:hover:bg-zinc-900 hover:text-white cursor-pointer' : ''
@@ -67,19 +67,19 @@ watch(() => selectedPersonInTree.value, (newVal) => {
             <transition name="fade" mode="out-in">
                 <div
                     :class="['transition-all duration-300', collapsed ? 'blur-md ml-6' : '']"
-                    :key="person.id"
+                    :key="selectedPersonInTree.id"
                 >
-                    <NuxtLink :to="{ name: 'familyName-member-personId', params: { familyName: person.last_name, personId: person.id }}">
+                    <NuxtLink :to="{ name: 'familyName-member-personId', params: { familyName: selectedPersonInTree.last_name, personId: selectedPersonInTree.id }}">
                         <div class="w-full flex justify-center items-center text-lg hover:text-xl font-normal hover:font-medium text-zinc-950 dark:text-zinc-50 p-2 border-b transition-all duration-300 hover:bg-zinc-300 dark:hover:bg-zinc-800">
                             View Person's Page
                             <Icon icon="grommet-icons:link-next" class="w-3 h-3 ml-2" /> 
                         </div>
                     </NuxtLink>
-                    <p :class="[textClass]">First Name: {{ person.first_name }}</p>
-                    <p :class="[textClass]">Last Name: {{ person.last_name }}</p>
-                    <p :class="[textClass]">Birth Date: {{ person.birth_date }}</p>
+                    <p :class="[textClass]">First Name: {{ selectedPersonInTree.first_name }}</p>
+                    <p :class="[textClass]">Last Name: {{ selectedPersonInTree.last_name }}</p>
+                    <p :class="[textClass]">Birth Date: {{ selectedPersonInTree.birth_date }}</p>
                     <button 
-                        @click.stop="setGoToPersonInTree(person)"
+                        @click.stop="setGoToPersonInTree(selectedPersonInTree)"
                         class="text-black dark:text-white mt-2 p-2 border border-black dark:border-white outline-none focus:outline-none rounded-md"
                     >
                         <- Go to Person in Tree

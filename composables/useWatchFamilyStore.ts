@@ -1,10 +1,11 @@
-import { watch } from 'vue';
+import { onMounted, watch } from 'vue';
 import { useFamilyStore } from '@/stores/family';
 import type { FetchTypeList } from '@/types/fetch';
 import { type MarriageType } from '@/types/marriage';
 import { type PersonType } from '@/types/person';
 import { type FamilyTreeNodeType, type FamilyType } from '@/types/family';
 import { removeDuplicateTrees } from '@/utils/family'
+import { useRoute } from 'nuxt/app';
 
 export function useWatchFamilyStore() {
     const familyStore = useFamilyStore();

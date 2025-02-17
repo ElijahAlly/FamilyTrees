@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { defineProps } from 'vue';
-import { BasicShadowMap, SRGBColorSpace, NoToneMapping, Color, AdditiveBlending, BufferAttribute } from 'three';
-import gsap from 'gsap';
+import { watch } from 'vue';
+import { useRafFn } from '@vueuse/core'
+import { defineProps, ref, onMounted, onUnmounted } from 'vue';
+import { BasicShadowMap, SRGBColorSpace, NoToneMapping, Color, AdditiveBlending } from 'three';
 import { vertexShader, fragmentShader } from './shaders';
 import { useColorMode } from '@vueuse/core';
 import type { FamilyType } from '@/types/family';
@@ -23,14 +24,18 @@ function getRandomNumber(min: number, max: number, decimals: number = 2): number
     return Number((Math.random() * (max - min) + min).toFixed(decimals));
 }
 
-const gl = computed(() => ({
+const gl = ref<any>({
     clearColor: colorMode.value === 'dark' ? '#0a0a0a' : '#fafafa',
     shadows: true,
     alpha: true,
     shadowMapType: BasicShadowMap,
     outputColorSpace: SRGBColorSpace,
     toneMapping: NoToneMapping,
-}))
+})
+
+watch(colorMode, (newValue) => {
+    gl.value.clearColor = newValue === 'dark' ? '#0a0a0a' : '#fafafa'
+})
 
 const radius = getRandomNumber(3, 4.2, 1);
 const speed = 0.03 * Math.exp(4.2 - radius);
@@ -120,122 +125,73 @@ const shader = {
     },
 }
 
-function updateGalaxy() {
-    if (bufferRef.value) {
-        const colorInside = new Color(parameters.insideColor)
-        const colorOutside = new Color(parameters.outsideColor)
+const bufferRef = ref<{ [key: string]: any } | null>(null);
 
-        const positions = new Float32Array(parameters.count * 3)
-        const colors = new Float32Array(parameters.count * 3)
-        const scales = new Float32Array(parameters.count)
-        const randomness = new Float32Array(parameters.count * 3)
-
-        for (let i = 0; i < parameters.count; i++) {
-            const i3 = i * 3
-
-            const radius = Math.random() * parameters.radius
-            const spinAngle = radius * parameters.spin
-            const branchAngle = ((i % parameters.branches) * Math.PI * 2) / parameters.branches
-
-            const x = Math.cos(branchAngle + spinAngle) * radius;
-            const y = 0;
-            const z = Math.sin(branchAngle + spinAngle) * radius;
-
-            const x1 = x * Math.cos(rightTiltAngle) - y * Math.sin(rightTiltAngle);
-            const y1 = x * Math.sin(rightTiltAngle) + y * Math.cos(rightTiltAngle);
-            const z1 = z;
-
-            // Apply forward tilt (around X axis)
-            positions[i3] = x1;
-            positions[i3 + 1] = y1 * Math.cos(forwardTiltAngle) - z1 * Math.sin(forwardTiltAngle);
-            positions[i3 + 2] = y1 * Math.sin(forwardTiltAngle) + z1 * Math.cos(forwardTiltAngle);
-
-            const randomX = Math.random() ** parameters.randomnessPower * (Math.random() < 0.5 ? -1 : 1)
-            const randomY = Math.random() ** parameters.randomnessPower * (Math.random() < 0.5 ? -1 : 1)
-            const randomZ = Math.random() ** parameters.randomnessPower * (Math.random() < 0.5 ? -1 : 1)
-
-            randomness[i3] = randomX
-            randomness[i3 + 1] = randomY
-            randomness[i3 + 2] = randomZ
-
-            const mixedColor = colorInside.clone()
-            mixedColor.lerp(colorOutside, radius / parameters.radius)
-
-            colors[i3 + 0] = mixedColor.r // R
-            colors[i3 + 1] = mixedColor.g // G
-            colors[i3 + 2] = mixedColor.b // B
-
-            scales[i] = Math.random()
-        }
-        bufferRef.value.geometry.setAttribute('position', new BufferAttribute(positions, 3))
-        bufferRef.value.geometry.setAttribute('aRandomness', new BufferAttribute(randomness, 3))
-        bufferRef.value.geometry.setAttribute('color', new BufferAttribute(colors, 3))
-        bufferRef.value.geometry.setAttribute('aScale', new BufferAttribute(scales, 1))
-    } 
-}
-
-const bufferRef = ref(null)
-const lastElapsedTime = ref(0);
+const elapsedTime = ref(0);
 const pauseStartTime = ref(0);
-const totalPausedTime = ref(0);
+const isPaused = ref(false);
 
-const { onLoop } = useRenderLoop()
-
-onLoop(({ elapsed }) => {
+const { pause, resume } = useRafFn(({ delta }) => {
     if (bufferRef.value) {
         if (!props.isGalaxyAnimationPaused) {
-            if (pauseStartTime.value > 0) {
-                // Calculate how long we were paused
-                totalPausedTime.value += elapsed - pauseStartTime.value;
+            if (isPaused.value) {
+                isPaused.value = false;
                 pauseStartTime.value = 0;
             }
-            // Subtract the total paused time from elapsed to maintain continuity
-            const adjustedTime = elapsed - totalPausedTime.value;
-            lastElapsedTime.value = adjustedTime;
-            bufferRef.value.material.uniforms.uTime.value = adjustedTime;
+            // Convert delta from milliseconds to seconds and add to elapsed time
+            elapsedTime.value += delta * 0.001;
+            bufferRef.value.material.uniforms.uTime.value = elapsedTime.value;
         } else {
-            if (pauseStartTime.value === 0) {
-                // Record when we started pausing
-                pauseStartTime.value = elapsed;
+            if (!isPaused.value) {
+                isPaused.value = true;
+                pauseStartTime.value = elapsedTime.value;
             }
-            // Keep the last time value when paused
-            bufferRef.value.material.uniforms.uTime.value = lastElapsedTime.value;
+            // Keep the time value frozen while paused
+            bufferRef.value.material.uniforms.uTime.value = pauseStartTime.value;
         }
     }
 })
 
-const labelColors = computed(() => ({
-    text: colorMode.value === 'dark' ? '#ffffff' : '#18181b',
-    star: colorMode.value === 'dark' ? parameters.insideColor : parameters.outsideColor
-}));
+onMounted(() => {
+  resume()
+})
 
-function getStarPosition(index: number, total: number, yOffset: number = 0) {
-    const angle = (index / total) * Math.PI * 2;
-    const radius = parameters.radius * 0.7; // Slightly inside the galaxy's edge
+onUnmounted(() => {
+  pause()
+})
+
+// const labelColors = computed(() => ({
+//     text: colorMode.value === 'dark' ? '#ffffff' : '#18181b',
+//     star: colorMode.value === 'dark' ? parameters.insideColor : parameters.outsideColor
+// }));
+
+// function getStarPosition(index: number, total: number, yOffset: number = 0) {
+//     const angle = (index / total) * Math.PI * 2;
+//     const radius = parameters.radius * 0.7; // Slightly inside the galaxy's edge
     
-    // Apply the same tilts as the galaxy
-    const x = Math.cos(angle) * radius;
-    const y = yOffset;
-    const z = Math.sin(angle) * radius;
+//     // Apply the same tilts as the galaxy
+//     const x = Math.cos(angle) * radius;
+//     const y = yOffset;
+//     const z = Math.sin(angle) * radius;
 
-    // Apply right tilt
-    const x1 = x * Math.cos(rightTiltAngle) - y * Math.sin(rightTiltAngle);
-    const y1 = x * Math.sin(rightTiltAngle) + y * Math.cos(rightTiltAngle);
-    const z1 = z;
+//     // Apply right tilt
+//     const x1 = x * Math.cos(rightTiltAngle) - y * Math.sin(rightTiltAngle);
+//     const y1 = x * Math.sin(rightTiltAngle) + y * Math.cos(rightTiltAngle);
+//     const z1 = z;
 
-    // Apply forward tilt
-    return [
-        x1,
-        y1 * Math.cos(forwardTiltAngle) - z1 * Math.sin(forwardTiltAngle) + 0.3, // Add height offset
-        y1 * Math.sin(forwardTiltAngle) + z1 * Math.cos(forwardTiltAngle)
-    ];
-}
+//     // Apply forward tilt
+//     return [
+//         x1,
+//         y1 * Math.cos(forwardTiltAngle) - z1 * Math.sin(forwardTiltAngle) + 0.3, // Add height offset
+//         y1 * Math.sin(forwardTiltAngle) + z1 * Math.cos(forwardTiltAngle)
+//     ];
+// }
 
-function getStarSize(memberCount: number): number {
-    const baseSize = 0.05;
-    const sizeIncrease = 0.01;
-    return baseSize + (Math.min(memberCount, 10) * sizeIncrease);
-}
+// function getStarSize(memberCount: number): number {
+//     const baseSize = 0.05;
+//     const sizeIncrease = 0.01;
+//     return baseSize + (Math.min(memberCount, 10) * sizeIncrease);
+// }
 
 // onMounted(() => {
 //     const getFamilies = async () => {

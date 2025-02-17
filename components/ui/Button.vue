@@ -1,25 +1,16 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, type PropType } from 'vue';
 
 type Variant = 'default' | 'destructive' | 'outline' | 'ghost' | 'transparent' | 'submit' | 'active';
 type Size = 'default' | 'fit' | 'sm' | 'lg' | 'icon';
 
-interface Props {
-    variant?: Variant;
-    size?: Size;
-    active?: boolean;
-    disabled?: boolean;
-    ring?: boolean;
-    class?: string;
-}
-
-const props = withDefaults(defineProps<Props>(), {
-    variant: 'default',
-    size: 'default',
-    active: false,
-    disabled: false,
-    ring: false,
-    class: ''
+const props = defineProps({
+    variant: { type: String as PropType<Variant>, default: 'default', required: false },
+    size: { type: String as PropType<Size>, default: 'default', required: false },
+    active: { type: Boolean, default: false, required: false },
+    disabled: { type: Boolean, default: false, required: false },
+    ring: { type: Boolean, default: false, required: false },
+    class: { type: String, default: '', required: false },
 });
 
 const emit = defineEmits<{

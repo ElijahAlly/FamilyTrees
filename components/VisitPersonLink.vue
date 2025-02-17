@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
 import type { PersonType } from '@/types/person';
+import type { PropType } from 'vue';
 
 const { person } = defineProps({
     person: {

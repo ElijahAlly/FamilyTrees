@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { type PropType } from 'vue';
+import { computed, onMounted, ref, watch, type PropType } from 'vue';
 import { type PersonType } from '@/types/person';
 import { getFullName } from '@/utils/person';
 import { type FamilyType } from '@/types/family';
 import { getPersonPictureUrl } from '@/utils/supabase';
 import type { FetchTypeList } from '@/types/fetch';
+import UploadPictures from './UploadPictures.vue';
 
 const { person } = defineProps({
     person: {
@@ -86,7 +87,7 @@ const handleUploadedPictures = (pictures: string[]) => {
                 :alt="`Picture of ${getFullName(person)}`"
                 class="w-48 h-48 object-cover rounded mx-9"
             />
-            <UploadPictures 
+            <UploadPictures
                 v-if="showUpload"
                 :person="person" 
                 @picturesUploaded="handleUploadedPictures" 

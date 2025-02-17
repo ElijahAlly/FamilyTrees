@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { Icon } from '@iconify/vue';
-import { SplitterPanel } from 'radix-vue';
+import { SplitterGroup, SplitterPanel } from 'radix-vue';
+import { ref } from 'vue';
+import SearchFamilyTrees from './family/SearchFamilyTrees.vue';
+import FamilyResults from './family/FamilyResults.vue';
 
 type SectionViewType = {
     [key: number]: {

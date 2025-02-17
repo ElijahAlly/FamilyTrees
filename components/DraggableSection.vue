@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, defineAsyncComponent } from 'vue'
 import { useDraggableZoneStore } from '@/stores/draggableZone'
+import { storeToRefs } from 'pinia';
 
 const TreeViewSettingsSidebar = defineAsyncComponent(() => 
   import('@/components/TreeViewSettingsSidebar.vue')
