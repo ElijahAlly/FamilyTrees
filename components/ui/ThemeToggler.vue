@@ -1,12 +1,47 @@
 <script setup lang="ts">
-import { Icon } from '@iconify/vue'
+import { watch, onMounted } from 'vue';
+import { Icon } from '@iconify/vue';
+import { useColorMode } from '@vueuse/core';
+import { SelectContent,
+    SelectPortal,
+    SelectRoot,
+    SelectTrigger,
+    SelectValue,
+    SelectScrollUpButton,
+    SelectViewport,
+    SelectItem,
+    SelectLabel,
+    SelectGroup,
+    SelectItemIndicator,
+    SelectScrollDownButton,
+    SelectItemText 
+} from 'radix-vue';
 
+const colorMode = useColorMode();
 const themeOptions = ['system', 'light', 'dark']; // TODO: Implement 'Sepia'
+
+const toggleColorMode = (newMode: string) => {
+    if (newMode === 'dark') {
+        document.documentElement.classList.add('dark-mode');
+        document.documentElement.classList.remove('light-mode');
+    } else {
+        document.documentElement.classList.remove('dark-mode');
+        document.documentElement.classList.add('light-mode');
+    }
+};
+
+watch(colorMode, (newMode) => {
+    toggleColorMode(newMode);
+});
+
+onMounted(() => {
+    toggleColorMode(colorMode.value) 
+});
 </script>
 
 <template>
     <div>
-        <SelectRoot v-model="$colorMode.preference">
+        <SelectRoot v-model="colorMode">
             <SelectTrigger
                 class="inline-flex min-w-[96px] items-center justify-between border border-black dark:border-white rounded px-[15px] text-[13px] leading-none h-[35px] gap-[5px] bg-inherit text-grass11 focus:outline-none hover:bg-mauve3 data-[placeholder]:text-green9 outline-none"
                 aria-label="Select Theme">

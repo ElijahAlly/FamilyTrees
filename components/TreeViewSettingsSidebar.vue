@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
-// import { DropdownMenuContent, DropdownMenuItemIndicator, DropdownMenuPortal, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuRoot, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger, Separator } from 'radix-vue';
 import { useDraggableZoneStore } from '@/stores/draggableZone'
+import { storeToRefs } from 'pinia';
 
 const draggableZoneStore = useDraggableZoneStore();
 const { updateCurBackgroundColor, updateShowSidebar } = draggableZoneStore;
@@ -29,7 +29,7 @@ const {
 </script>
 
 <template>
-    <div :class="`absolute top-1/2 transform -translate-y-[42vh] left-6 flex flex-col rounded-md p-2 bg-white dark:bg-zinc-950 border-2 hover:border-zinc-300 dark:border-zinc-600 dark:hover:border-zinc-100 z-30`">
+    <div class="absolute top-1/2 transform -translate-y-[42vh] left-6 flex flex-col rounded-md p-2 bg-white dark:bg-zinc-950 border-2 hover:border-zinc-300 dark:border-zinc-600 dark:hover:border-zinc-100 z-30">
         <!-- <button :class="`bg-neutral-600 hover:bg-neutral-900 text-white rounded-md p-2 mr-2`" @click="updatePanzoomContent">Re-Center Everything</button> -->
         <!-- * Display as: Tree / Sunburst / Sankey / Treemap / List / etc. -->
         

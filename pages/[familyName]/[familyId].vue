@@ -1,9 +1,12 @@
 <script lang="ts">
-import { Icon } from '@iconify/vue';
 import { useFamilyStore } from '@/stores/family';
 import { useDraggableZoneStore } from '@/stores/draggableZone';
 import Panzoom, { type PanzoomObject } from '@panzoom/panzoom';
 import { useWatchFamilyStore } from '@/composables/useWatchFamilyStore';
+import { storeToRefs } from 'pinia';
+import { ref } from 'vue';
+import FamilyTree from '@/components/family/FamilyTree.vue';
+import DraggableSection from '@/components/DraggableSection.vue';
 
 export default {
   setup() {
@@ -35,6 +38,10 @@ export default {
       curentFamilyTree,
       curDisplayType
     }
+  },
+  components: {
+    FamilyTree,
+    DraggableSection
   },
   mounted() {
     const element: HTMLElement = this.$refs.treeContainer as HTMLElement;

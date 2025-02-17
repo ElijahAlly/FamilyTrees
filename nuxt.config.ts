@@ -1,4 +1,16 @@
 import glsl from 'vite-plugin-glsl';
+import { visualizer } from 'rollup-plugin-visualizer';
+import { defineNuxtConfig } from 'nuxt/config';
+
+declare module '@nuxt/schema' {
+  interface NuxtConfig {
+    colorMode?: {
+      classSuffix?: string
+      preference?: string
+      fallback?: string
+    }
+  }
+}
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
@@ -22,45 +34,59 @@ export default defineNuxtConfig({
   ],
   plugins: [
     '~/plugins/ui.ts',
+    '~/plugins/console.client'
   ],
-  tres: {
-    devtools: true,
+  // tres: {
+  //   devtools: true,
     // glsl: true, // for shaders
+  // },
+  typescript: {
+    strict: true,
+    typeCheck: true
   },
   vue: {
     compilerOptions: {
+      // hmr: false, // disables hot reloading after changing a file (sometimes lol)
       isCustomElement: (tag: string) =>
         tag.startsWith('Tres') ||
         ['OrbitControls'].includes(tag)
     }
   },
   vite: {
-    plugins: [glsl()]
+    plugins: [
+      glsl(),
+      visualizer({
+        open: false,
+        filename: 'dist/stats.html',
+        gzipSize: true,
+        brotliSize: true,
+      })
+    ],
   },
   runtimeConfig: {
     public: {
       supabaseUrl: process.env.NUXT_PUBLIC_SUPABASE_URL,
-      supabaseKey: process.env.NUXT_PUBLIC_SUPABASE_ANON_KEY
+      supabaseKey: process.env.NUXT_PUBLIC_SUPABASE_ANON_KEY,
+      supabase: {
+        url: process.env.NUXT_PUBLIC_SUPABASE_URL,
+        key: process.env.NUXT_PUBLIC_SUPABASE_ANON_KEY,
+        // redirect: false, // maybe `true`
+        redirectOptions: {
+          login: '/login',
+          callback: '/confirm',
+          include: ['/trees/*'],
+          exclude: ['/'],
+          cookieRedirect: false,
+        }
+      },
     }
   },
-  supabase: {
-    url: process.env.NUXT_PUBLIC_SUPABASE_URL,
-    key: process.env.NUXT_PUBLIC_SUPABASE_ANON_KEY,
-    // redirect: false, // maybe `true`
-    redirectOptions: {
-      login: '/login',
-      callback: '/confirm',
-      include: ['/trees/*'],
-      exclude: ['/'],
-      cookieRedirect: false,
-    }
-  },
-  piniaPersistedstate: {
-    cookieOptions: {
-      sameSite: 'strict',
-    },
-    storage: 'localStorage'
-  },
+  // piniaPersistedstate: {
+  //   cookieOptions: {
+  //     sameSite: 'strict',
+  //   },
+  //   storage: 'localStorage'
+  // },
   colorMode: {
     classSuffix: '-mode',
     preference: 'light',
@@ -82,5 +108,13 @@ export default defineNuxtConfig({
         { name: 'theme-color', content: '#ffffff' },
       ],
     },
+    pageTransition: {
+      name: 'page',
+      mode: 'out-in'
+    },
+    layoutTransition: {
+      name: 'layout',
+      mode: 'out-in'
+    }
   },
 })

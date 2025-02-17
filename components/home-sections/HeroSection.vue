@@ -1,6 +1,11 @@
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
-import GalaxyGenerator from './content/galaxy-generator/index.vue';
+import { useRouter } from 'nuxt/app';
+import { defineAsyncComponent, ref } from 'vue';
+
+const GalaxyGenerator = defineAsyncComponent(() => 
+  import('../content/galaxy-generator/index.vue')
+)
 
 const router = useRouter();
 const isHoveringHero = ref(false);
@@ -19,7 +24,12 @@ const startExploring = () => {
     >
         <!-- Galaxy Background -->
         <div class="absolute inset-0 right-0 w-full h-full">
-            <GalaxyGenerator :isHoveringHero="isHoveringHero" :isGalaxyAnimationPaused="isGalaxyAnimationPaused" />
+            <Suspense>
+                <GalaxyGenerator :isHoveringHero="isHoveringHero" :isGalaxyAnimationPaused="isGalaxyAnimationPaused" />
+                <template #fallback>
+                    <div>Loading...</div>
+                </template>
+            </Suspense>
         </div>
 
         <!-- Content -->

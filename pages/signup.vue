@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, reactive } from 'vue';
+import { ref } from 'vue';
 import { Icon } from '@iconify/vue';
 import { useAuthStore } from '@/stores/auth';
 
@@ -26,29 +26,29 @@ const providers: ProviderType[] = [
     { name: 'Facebook', icon: 'logos:facebook', color: 'text-neutral-200 hover:bg-blue-600 bg-[#0C63D4]' },
 ]
 
-const formData = reactive({
-    firstName: '',
-    middleName: '',
-    lastName: '',
-    email: '',
-    birthDate: '',
-    gender: ''
-})
+// const formData = reactive({
+//     firstName: '',
+//     middleName: '',
+//     lastName: '',
+//     email: '',
+//     birthDate: '',
+//     gender: ''
+// })
 
-const handleSubmit = async () => {
-    isLoading.value = true;
-    // console.log('Form submitted:', formData);
+// const handleSubmit = async () => {
+//     isLoading.value = true;
+//     // console.log('Form submitted:', formData);
 
-    try {
-      // Simulate an API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      // Handle successful submission
-    } catch (error) {
-      // Handle error
-    } finally {
-      isLoading.value = false;
-    }
-}
+//     try {
+//       // Simulate an API call
+//       await new Promise(resolve => setTimeout(resolve, 2000));
+//       // Handle successful submission
+//     } catch (error) {
+//       // Handle error
+//     } finally {
+//       isLoading.value = false;
+//     }
+// }
 
 const signInWithProvider = async (providerName: ProviderName) => {
     isLoading.value = true;
@@ -61,27 +61,23 @@ const signInWithProvider = async (providerName: ProviderName) => {
     }
 }
 
-const overlayTransition = {
-    'enter-active-class': 'transition-opacity duration-300 ease-out',
-    'enter-from-class': 'opacity-0',
-    'enter-to-class': 'opacity-100',
-    'leave-active-class': 'transition-opacity duration-200 ease-in',
-    'leave-from-class': 'opacity-100',
-    'leave-to-class': 'opacity-0'
-};
+// const overlayTransition = {
+//     'enter-active-class': 'transition-opacity duration-300 ease-out',
+//     'enter-from-class': 'opacity-0',
+//     'enter-to-class': 'opacity-100',
+//     'leave-active-class': 'transition-opacity duration-200 ease-in',
+//     'leave-from-class': 'opacity-100',
+//     'leave-to-class': 'opacity-0'
+// };
 </script>
 
 <template>
     <div 
-        class="min-h-screen flex flex-col items-center justify-center"
-        :class="{
-            '-translate-y-48': mode === 'signin',
-            '-translate-y-16': mode === 'signup',
-        }"
+        class="mt-[16vh] flex flex-col items-center justify-center"
     >
-        <div class="bg-neutral-50 dark:bg-zinc-900 p-8 rounded-lg shadow-md w-96 relative">
+        <div class="p-8 rounded-lg shadow-md w-96 relative bg-zinc-100 dark:bg-zinc-900">
             <!-- Loading Overlay -->
-            <Transition v-bind="overlayTransition">
+            <!-- <Transition v-bind="overlayTransition">
                 <div 
                     v-if="isLoading"
                     class="absolute inset-0 bg-neutral-200/60 dark:bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 rounded-md select-none"
@@ -212,7 +208,7 @@ const overlayTransition = {
                     {{ mode === 'signin' ? 'Sign In' : 'Sign Up' }}
                 </button>
 
-                <!-- Social Provider Buttons -->
+                Social Provider Buttons
                 <div class="mt-6">
                     <div class="relative">
                         <div class="absolute inset-0 flex items-center">
@@ -221,9 +217,10 @@ const overlayTransition = {
                         <div class="relative flex justify-center text-sm">
                             <span class="px-2 bg-neutral-50 dark:bg-zinc-900 text-gray-500 dark:text-neutral-300">Or sign in with</span>
                         </div>
-                    </div>
+                    </div> -->
 
-                    <div class="mt-6 grid grid-cols-2 gap-3">
+                    <h1 class="mt-3 mb-6 font-extralight text-center dark:text-white">Sign in/up with</h1>
+                    <div class="grid grid-cols-2 gap-3">
                         <button
                             v-for="provider in providers"
                             :key="provider.name"
@@ -244,8 +241,8 @@ const overlayTransition = {
                             </span>
                         </button>
                     </div>
-                </div>
-            </form>
+                <!-- </div>
+            </form> -->
         </div>
     </div>
 </template>
