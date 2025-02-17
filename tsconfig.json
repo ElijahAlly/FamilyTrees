@@ -1,36 +1,42 @@
 {
-  // https://nuxt.com/docs/guide/concepts/typescript
   "extends": "./.nuxt/tsconfig.json",
   "compilerOptions": {
-    "target": "esnext",
-    "module": "esnext",
-    "moduleResolution": "node",
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
     "strict": true,
     "jsx": "preserve",
     "sourceMap": true,
     "resolveJsonModule": true,
     "esModuleInterop": true,
+    "skipLibCheck": true,
+    "baseUrl": ".",
     "lib": [
-      "esnext",
-      "dom"
+      "ESNext",
+      "DOM",
+      "DOM.Iterable"
     ],
     "types": [
       "node",
       "vite/client",
       "@nuxt/types",
-      "@nuxtjs/supabase"
+      "@nuxtjs/supabase",
+      "@types/node",
+      "@nuxtjs/color-mode"
     ],
     "paths": {
-      "@/*": [
-        "./*"
-      ],
-      "@UI/*": [
-        "./*"
-      ],
-      "~/*": [
-        "./*"
-      ],
-    },
+      "@/*": ["./*"],
+      "~/*": ["./*"]
+    }
   },
-  "moduleResolution": "Node",
+  "include": [
+    "./**/*.ts",
+    "./**/*.d.ts",
+    "./**/*.tsx",
+    "./**/*.vue"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
 }

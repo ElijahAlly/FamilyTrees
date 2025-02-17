@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, type PropType, watch } from 'vue';
 import { Icon } from '@iconify/vue';
 import { useFamilyStore } from '@/stores/family';
 import { usePersonStore } from '@/stores/person';
 import type { FamilyType } from '@/types/family';
 import type { FetchTypeList } from '@/types/fetch';
-import { getFullName, type PersonType } from '@/types/person';
+import { type PersonType } from '@/types/person';
+import { getFullName } from '@/utils/person';
 
 const familyStore = useFamilyStore();
 const personStore = usePersonStore();
@@ -14,11 +15,9 @@ const userInputedCharAndDidNotClickOnResult = ref(false);
 const families = ref<FamilyType[]>([]);
 const people = ref<PersonType[]>([]);
 
-const { title, searchBy } = withDefaults(defineProps<{
-    title: string,
-    searchBy?: 'families' | 'people' | 'all'
-}>(), {
-    searchBy: 'all'
+const { title, searchBy } = defineProps({
+    title: { type: String, default: '' },
+    searchBy: { type: String as PropType<'families' | 'people' | 'all'>, default: 'all', required: false }
 });
 
 const placeholder = searchBy === 'families' ? 'Enter Family Name (Your last name)...' : searchBy === 'people' ? 'Search for a person by their first, middle, and last name' : 'Search by family or person name';

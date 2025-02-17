@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { PersonType } from '@/types/person';
+import type { PropType } from 'vue';
 
 const { person } = defineProps({
     person: {
