@@ -17,8 +17,9 @@ const { getSecondaryColorByCurrentColor } = draggableStore;
 
 const { treeNode } = defineProps({
     treeNode: {
-        type: {} as PropType<FamilyTreeNodeType | null | undefined>,
-        required: true,
+        type: Object as PropType<FamilyTreeNodeType | null>,
+        required: false,
+        default: null
     },
 });
 
@@ -75,7 +76,7 @@ const getAttributes = (person: PersonType) => ({
 })
 
 const getChildren = (treeNode: FamilyTreeNodeType): RawNodeDatum[] => {
-    if (treeNode.children.length === 0) return [];
+    if (treeNode?.children.length === 0) return [];
 
     return treeNode.children.map((child) => ({
         name: getNodeName(child.member),
@@ -358,7 +359,6 @@ const renderTree = () => {
             .each(function(d) {
                 const rect = d3.select(this);
                 if (gotToPersonInTree.value?.id === (d.data.attributes?.id || -1 as number)) {
-                    // console.log('should pulse - new node');
                     createPulsingAnimation(rect, d);
                 }
             });
@@ -368,7 +368,6 @@ const renderTree = () => {
             .each(function(d) {
                 const rect = d3.select(this);
                 if (gotToPersonInTree.value?.id === (d.data.attributes?.id || -1 as number)) {
-                    // console.log('should pulse - existing node');
                     createPulsingAnimation(rect, d);
                 }
             });
@@ -378,7 +377,7 @@ const renderTree = () => {
             .attr("cx", 0)
             .attr("cy", -40)
             .attr("r", 30)
-            .attr("fill", "#e5e7eb");
+            .attr("fill", "#665C8A");
 
         // Add avatar image
         nodeGroup.append("image")
@@ -391,7 +390,7 @@ const renderTree = () => {
                 const img = new Image();
                 let url = '';
 
-                if (!!d.data.attributes?.pictures && treeNode) {
+                if (!!d.data.attributes?.pictures && !!treeNode) {
                     url = getPersonPictureUrl(treeNode.familyId, d.data.attributes.id as number, (d.data.attributes.pictures as string).split(ARRAY_TO_STRING_JOINER)[0])
                 } else {
                     const initials = getInitials(d);
@@ -513,7 +512,6 @@ watch(() => gotToPersonInTree.value, (newPerson) => {
     const root = d3.hierarchy(familyTree.value) as CollapsibleNode;
     const targetNode = findNodeAndExpandPath(root, newPerson.id);
 
-    // console.log("\n== targetNode ==\n", targetNode, "\n");
     if (targetNode) {
         renderTree();
     }
@@ -541,9 +539,9 @@ onMounted(() => {
 
 <template>
     <div
-        v-if="treeNode" 
+        v-if="!!treeNode" 
         ref="containerRef" 
-        class="w-full h-full flex flex-col items-center border border-dashed rounded-md transition-shadow duration-300 hover:shadow-lg overflow-auto" 
+        class="w-full h-full flex flex-col items-center border hover:border-zinc-300 dark:border-zinc-600 dark:hover:border-zinc-100 rounded-md transition-all duration-300 overflow-auto" 
         :class="{
             'hover:shadow-gray-300': getSecondaryColorByCurrentColor.tailwind === 'gray-300',
             'hover:shadow-neutral-600': getSecondaryColorByCurrentColor.tailwind === 'neutral-600'

@@ -1,23 +1,23 @@
 <script setup lang="ts">
-import { computed, defineAsyncComponent } from 'vue'
-import { useDraggableZoneStore } from '@/stores/draggableZone'
+import { computed, defineAsyncComponent } from 'vue';
+import { useDraggableZoneStore } from '@/stores/draggableZone';
 import { storeToRefs } from 'pinia';
-
-const TreeViewSettingsSidebar = defineAsyncComponent(() => 
-  import('@/components/TreeViewSettingsSidebar.vue')
-)
+import PersonInfoSidebar from './PersonInfoSidebar.vue';
+import TreeViewSettingsSidebar from './TreeViewSettingsSidebar.vue';
 
 const draggableZoneStore = useDraggableZoneStore();
 const { curBackgroundPattern, curBackgroundColor } = storeToRefs(draggableZoneStore);
 
-const computedClass = computed(() => `relative h-[88vh] w-full flex flex-col items-center justify-center overflow-visible ${curBackgroundPattern.value}`);
-
-// TODO: Create a toast message component that appears in the middle of the page right below the navbar to display messages for a set duration (3-9 seconds)
+// TODO: Create a toast message component that appears in the middle of the page at the bottom to display messages for a set duration (3-9 seconds)
 // - Display message `Click on a person to view their information` a few seconds after the page is first loaded (have an option to click `Do Not Show Again`)
 </script>
 
 <template>
-  <div :class="[computedClass]" :style="{ backgroundColor: curBackgroundColor.hex }">
+  <div 
+    class="relative h-[92vh] w-full flex flex-col items-center justify-center overflow-visible" 
+    :class="[curBackgroundPattern]" 
+    :style="{ backgroundColor: curBackgroundColor.hex }"
+  >
     <TreeViewSettingsSidebar />
     <PersonInfoSidebar />
     <slot></slot>

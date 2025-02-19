@@ -2,6 +2,7 @@
 import { useAuthStore } from '@/stores/auth';
 import { useRouter } from 'nuxt/app';
 import { ref, onMounted } from 'vue';
+import LoadingSpinner from '@/components/ui/LoadingSpinner.vue';
 
 const auth = useAuthStore();
 const router = useRouter();

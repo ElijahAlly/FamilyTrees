@@ -23,7 +23,7 @@ logs
 .env.*
 !.env.example
 
-.vscode/settings.json
+.vscode
 prettier.config.js
 shims-vue.d.ts
 

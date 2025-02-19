@@ -9,6 +9,7 @@ export const useFamilyStore = defineStore('family', () => {
     const families = ref<FamilyType[]>([]);
     const curentFamilyTree = ref<FamilyTreeNodeType | null>(null);
     const searchedForFamily = ref<boolean>(false);
+    const shownFamilyDetails = ref<boolean>(false);
 
     function setFamily(newFamily: FamilyType) {
         family.value = newFamily;
@@ -41,17 +42,30 @@ export const useFamilyStore = defineStore('family', () => {
         setTimeout(() => searchedForFamily.value = false, 4200);
     }
 
+    function setShownFamilyDetails(bool: boolean) {
+        shownFamilyDetails.value = bool;
+    }
+
     return {
         family,
         familyTrees,
         curentFamilyTree,
         searchedForFamily,
         families,
+        shownFamilyDetails,
         setFamily,
         updateFamilyTrees,
         getFamilyByPerson,
         updateFamilies,
         setCurrentFamilyTree,
-        setSearchedForFamily
+        setSearchedForFamily,
+        setShownFamilyDetails
+    }
+}, {
+    persist: {
+        key: 'family',
+        pick: [
+            'shownFamilyDetails',
+        ],
     }
 })

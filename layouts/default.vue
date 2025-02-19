@@ -100,7 +100,7 @@ onMounted(() => {
             >
                 <div
                     v-if="showScrollBanner && bannerStore.isVisible"
-                    class="fixed top-0 left-0 right-0 pt-[13vh] backdrop-blur-md backdrop-brightness-100 dark:backdrop-brightness-50 z-30 border-b border-zinc-200 dark:border-zinc-700 py-2 px-4 flex justify-between items-center gap-2 shadow-lg text-zinc-950 dark:text-zinc-200 select-none"
+                    class="fixed top-0 left-0 right-0 pt-[9vh] backdrop-blur-md backdrop-brightness-100 dark:backdrop-brightness-50 z-30 border-b border-zinc-200 dark:border-zinc-700 py-2 px-4 flex justify-between items-center gap-2 shadow-lg text-zinc-950 dark:text-zinc-200 select-none"
                 >
                     <div class="flex flex-col">
                         <span class="text-sm font-medium">{{ bannerStore.title }}</span>

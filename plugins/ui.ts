@@ -4,7 +4,7 @@ import {
     SliderThumb,
     SliderTrack,
     SliderRange,
-} from 'radix-vue'
+} from 'radix-vue';
 import { defineNuxtPlugin } from 'nuxt/app';
 
 export default defineNuxtPlugin((nuxtApp: any) => {
