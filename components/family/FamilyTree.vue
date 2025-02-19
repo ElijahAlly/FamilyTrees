@@ -522,18 +522,18 @@ onMounted(() => {
     setupFamilyTree();
     
     // Re-render on window resize
-    const resizeObserver = new ResizeObserver(() => {
-        setupFamilyTree();
-    });
+    // const resizeObserver = new ResizeObserver(() => {
+    //     setupFamilyTree();
+    // });
 
-    if (containerRef.value) {
-        resizeObserver.observe(containerRef.value);
-    }
+    // if (containerRef.value) {
+    //     resizeObserver.observe(containerRef.value);
+    // }
 
     // Cleanup
-    onUnmounted(() => {
-        resizeObserver.disconnect();
-    });
+    // onUnmounted(() => {
+    //     resizeObserver.disconnect();
+    // });
 });
 </script>
 

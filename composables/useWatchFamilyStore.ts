@@ -1,4 +1,4 @@
-import { onMounted, watch } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import { useFamilyStore } from '@/stores/family';
 import type { FetchTypeList } from '@/types/fetch';
 import { type MarriageType } from '@/types/marriage';
@@ -6,42 +6,175 @@ import { type PersonType } from '@/types/person';
 import { type FamilyTreeNodeType, type FamilyType } from '@/types/family';
 import { removeDuplicateTrees } from '@/utils/family'
 import { useRoute } from 'nuxt/app';
+import { storeToRefs } from 'pinia';
+
+type MarriageMap = Map<number, MarriageType[]>;
+type MembersMap = Map<number, PersonType>;
 
 export function useWatchFamilyStore() {
     const familyStore = useFamilyStore();
+    const { loadingFamily } = storeToRefs(familyStore);
 
     onMounted(() => {
-        const route = useRoute();
-        const isOnFamilyTreePage = !!(route.params?.familyName && route.params?.familyId);
-        getFamiliyTreeOrTrees(route, isOnFamilyTreePage);
+        if (!loadingFamily.value) {
+            familyStore.setLoadingFamily(true);
+            const route = useRoute();
+            const isOnFamilyTreePage = !!(route.params?.familyName && route.params?.familyId);
+            // console.time('family-tree-data-fetching-and-building-start')
+            getFamiliyTreeOrTrees(route, isOnFamilyTreePage);
+        }
     })
     
     watch(() => familyStore.family, async (newFamily, oldFamilyName) => {
-        await getFamiliyTreeOrTrees();
+        if (!loadingFamily.value) {
+            familyStore.setLoadingFamily(true);
+            await getFamiliyTreeOrTrees();
+        }
     });
 
     const getFamiliyTreeOrTrees = async (route?: any, isOnFamilyTreePage?: boolean) => {
         try {
-            let families: PersonType[] = [];
+            const familyMembers: PersonType[] | undefined = await getFamilyMembers(route, isOnFamilyTreePage);
+
+            if (!familyMembers) throw Error('No family members found');
+
+            if (familyMembers && familyStore.family?.id) {
+                try {
+                    // Fetch all marriages at once instead of per member
+                    const allMarriages: MarriageType[] | undefined = await getMarriages(familyMembers);
+
+                    if (!allMarriages) throw Error('No marriages found');
+
+                    // Create a map of marriages for quick lookup
+                    const marriageMap = new Map() as MarriageMap;
+                    allMarriages.forEach(marriage => {
+                        [marriage.person1_id, marriage.person2_id].forEach(personId => {
+                            if (!marriageMap.has(personId)) {
+                                marriageMap.set(personId, []);
+                            }
+                            marriageMap.get(personId)?.push(marriage);
+                        });
+                    });
+
+                    // Create a map of members for quick lookup
+                    const membersMap = new Map() as MembersMap;
+                    familyMembers.forEach(member => {
+                        membersMap.set(member.id, member);
+                    });
+
+                    // console.timeLog('family-tree-data-fetching-and-building-start', ['familyMembers', familyMembers])
+                    const allTrees = await constructFamilyTrees(familyMembers, marriageMap, membersMap);
+                    // console.timeLog('family-tree-data-fetching-and-building-start', ['allTrees', allTrees])
+                    const uniqueTrees = removeDuplicateTrees(allTrees);
+                    // console.timeLog('family-tree-data-fetching-and-building-start', ['uniqueTrees', uniqueTrees])
+                    // console.timeEnd('family-tree-data-fetching-and-building-start')
+                    familyStore.updateFamilyTrees(uniqueTrees);
+
+                    // Only set the current family tree right away if on a specific families page. Needed for when the persisted state is cleared.
+                    if (isOnFamilyTreePage) familyStore.setCurrentFamilyTree(uniqueTrees[0]);
+                } catch (err) {
+                    console.error(err);
+                } finally {
+                    familyStore.setLoadingFamily(false);
+                }
+            }
+        } catch (err) {
+            console.error(err);
+        }  finally {
+            familyStore.setLoadingFamily(false);
+        }
+    }
+
+    const constructFamilyTrees = async (
+        members: PersonType[], 
+        marriageMap: MarriageMap, 
+        membersMap: MembersMap
+    ): Promise<FamilyTreeNodeType[]> => {
+        const startingMembers = members.filter(member => member.father_id === null && member.mother_id === null);
+        const familyTrees: FamilyTreeNodeType[] = [];
+
+        for (const startingMember of startingMembers) {
+            const tree = buildTreeRecursively(startingMember, members, marriageMap, membersMap, 0);
+            familyTrees.push(tree);
+        }
+
+        return familyTrees;
+    };
+
+    const buildTreeRecursively = (
+        currentMember: PersonType, 
+        members: PersonType[], 
+        marriageMap: MarriageMap, 
+        membersMap: MembersMap, 
+        currentLevel: number
+    ): FamilyTreeNodeType => {
+        currentLevel++;
+        const children = members
+            .filter(member => member.father_id === currentMember.id || member.mother_id === currentMember.id)
+            .map(member => buildTreeRecursively(member, members, marriageMap, membersMap, currentLevel))
+
+        let marriagesExcludingCurrentSpouse: PersonType[] = [];
+        let spouse: PersonType | null = null;
+
+        const memberMarriages = marriageMap.get(currentMember.id) || [];
+        const spouses: PersonType[] = memberMarriages
+            .map(marriage => {
+                const spouseId = marriage.person1_id === currentMember.id
+                    ? marriage.person2_id
+                    : marriage.person1_id;
+                return membersMap.get(spouseId);
+            })
+            .filter((spouse): spouse is PersonType => spouse !== undefined);
+
+        if (spouses.length > 0) {
+            const currentSpouseIndex = spouses.findIndex(spouse =>
+                memberMarriages.some(marriage =>
+                    (marriage.person1_id === spouse.id || marriage.person2_id === spouse.id)
+                    && !marriage.divorce_date
+                )
+            );
+
+            if (currentSpouseIndex !== -1) {
+                spouse = spouses[currentSpouseIndex];
+                spouses.splice(currentSpouseIndex, 1);
+            }
+            marriagesExcludingCurrentSpouse = spouses;
+        }
+
+        return {
+            member: currentMember,
+            marriages: marriagesExcludingCurrentSpouse,
+            spouse,
+            level: currentLevel,
+            children,
+            familyId: familyStore.getFamilyByPerson(currentMember)?.id || 0
+        };
+    };
+
+    const getFamilyMembers = async (route?: any, isOnFamilyTreePage?: boolean): Promise<PersonType[] | undefined> => {
+        try {
             if (isOnFamilyTreePage) {
                 // Only fetch 1 family tree (all members in the family)
-                const { data: familyResData, error: firstError }: FetchTypeList<FamilyType> = await $fetch('/api/get-family-by-id', {
+                const { data: familyResData, error: familyError }: FetchTypeList<FamilyType> = await $fetch('/api/get-family-by-id', {
                     method: 'GET',
                     params: {
                         table: 'families',
                         select: '*',
-                        eq: 'id',
-                        id: Number(route.params.familyId)
+                        eq: ['id', 'family_name'],
+                        id: Number(route.params.familyId),
+                        family_name: route.params.familyName
                     }
                 });
 
-                if (firstError) throw firstError;
+                if (familyError) throw familyError;
 
                 if (familyResData.length) {
                     familyStore.setFamily(familyResData[0]);
+                } else {
+                    throw Error('Family not found');
                 }
 
-                const { data, error }: FetchTypeList<PersonType> = await $fetch('/api/get-family-members-by-ids', {
+                const { data: membersResData, error: membersError }: FetchTypeList<PersonType> = await $fetch('/api/get-family-members-by-ids', {
                     method: 'GET',
                     params: {
                         table: 'people',
@@ -50,10 +183,11 @@ export function useWatchFamilyStore() {
                         ids: familyResData[0].members
                     }
                 });
-                if (error) throw error;
+                if (membersError) throw membersError;
 
-                families = data;
                 familyStore.updateFamilies(familyResData[0]);
+                return membersResData;
+                
             } else if (familyStore.family) {
                 // Fetch ALL family trees (members) based on the last name (used in searches where multiple families can have the same last name)
                 const { data, error }: FetchTypeList<PersonType> = await $fetch('/api/get-families-by-name', {
@@ -66,130 +200,29 @@ export function useWatchFamilyStore() {
                     }
                 });
                 if (error) throw error;
-                families = data;
+                return data;
             }
 
-            if (families && familyStore.family?.id) {
-                try {
-                    const constructFamilyTrees = async (members: PersonType[]): Promise<FamilyTreeNodeType[]> => {
-                        const startingMembers = members.filter(member => member.father_id === null && member.mother_id === null);
-                        const familyTrees: FamilyTreeNodeType[] = [];
-
-                        try {
-                            for (const startingMember of startingMembers) {
-                                const tree = await buildTreeRecursively(startingMember, members, 0);
-                                familyTrees.push(tree);
-                            }
-                        } catch (err) {
-                            console.error('Error building family trees:', err);
-                        }
-
-                        return familyTrees;
-                    };
-
-                    const buildTreeRecursively = async (currentMember: PersonType, members: PersonType[], currentLevel: number): Promise<FamilyTreeNodeType> => {
-                        currentLevel++;
-                        const children = await Promise.all(
-                            members
-                                .filter(member => member.father_id === currentMember.id || member.mother_id === currentMember.id)
-                                .map(member => buildTreeRecursively(member, members, currentLevel))
-                        );
-
-                        let marriagesExcludingCurrentSpouse: PersonType[] = [];
-                        let spouse: PersonType | null = null;
-
-                        try {
-                            const { data: marriages, error }: FetchTypeList<MarriageType> = await $fetch('/api/get-marriages', {
-                                method: 'GET',
-                                params: {
-                                    table: 'marriages',
-                                    select: '*',
-                                    or: `person1_id.eq.${currentMember.id}, person2_id.eq.${currentMember.id}`,
-                                }
-                            });
-
-                            if (error) throw error;
-
-                            if (marriages) {
-                                const spousePromises = marriages.map(async (marriage: MarriageType) => {
-                                    const spouseId = marriage.person1_id === currentMember.id
-                                        ? marriage.person2_id
-                                        : marriage.person1_id;
-
-                                    try {
-                                        const { data: person, error }: FetchTypeList<PersonType> = await $fetch('/api/get-single-person-from-marriage', {
-                                            method: 'GET',
-                                            params: {
-                                                table: 'people',
-                                                select: '*',
-                                                eq: 'id',
-                                                spouseId: spouseId,
-                                            }
-                                        });
-
-                                        if (error) throw error;
-                                        return person[0];
-                                    } catch (err) {
-                                        console.error(err);
-                                    }
-                                });
-
-                                const resolvedSpouses: PersonType[] = (await Promise.all(spousePromises)).filter(person => person !== undefined);
-
-                                const getCurrentSpouse = (spouses: PersonType[]): { curSpouse: PersonType | null, curSpouseIndex: number } => {
-                                    const curSpouseIndex = spouses.findIndex(spouse =>
-                                        marriages.some((marriage: MarriageType) =>
-                                            (marriage.person1_id === spouse.id || marriage.person2_id === spouse.id)
-                                            && !marriage.divorce_date
-                                        )
-                                    );
-
-                                    if (curSpouseIndex === -1) {
-                                        return { curSpouse: null, curSpouseIndex: -1 };
-                                    } else {
-                                        return { curSpouse: spouses[curSpouseIndex], curSpouseIndex: curSpouseIndex };
-                                    }
-                                }
-
-
-                                const curSpouseRes = getCurrentSpouse(resolvedSpouses);
-                                spouse = resolvedSpouses.length > 0 ? curSpouseRes.curSpouse : null;
-
-                                if (resolvedSpouses.length) {
-                                    if (curSpouseRes.curSpouseIndex !== -1) {
-                                        resolvedSpouses.splice(curSpouseRes.curSpouseIndex, 1);
-                                        marriagesExcludingCurrentSpouse = resolvedSpouses;
-                                    } else {
-                                        marriagesExcludingCurrentSpouse = resolvedSpouses;
-                                    }
-                                }
-                            }
-                        } catch (err) {
-                            console.error(err);
-                        }
-
-                        return {
-                            member: currentMember,
-                            marriages: marriagesExcludingCurrentSpouse,
-                            spouse,
-                            level: currentLevel,
-                            children: children,
-                            familyId: familyStore.getFamilyByPerson(currentMember)?.id || 0
-                        };
-                    };
-
-                    const allTrees = await constructFamilyTrees(families);
-                    const uniqueTrees = removeDuplicateTrees(allTrees);
-                    familyStore.updateFamilyTrees(uniqueTrees);
-
-                    // Only set the current family tree right away if on a specific families page. Needed for when the persisted state is cleared.
-                    if (isOnFamilyTreePage) familyStore.setCurrentFamilyTree(uniqueTrees[0]);
-                } catch (err) {
-                    console.error(err);
-                }
-            }
         } catch (err) {
-            console.error(err);
+            throw err;
+        }
+    };
+
+    const getMarriages = async (families: PersonType[]): Promise<MarriageType[] | undefined> => {
+        try {
+            const { data: allMarriages, error: marriageError }: FetchTypeList<MarriageType> = await $fetch('/api/get-marriages-bulk', {
+                method: 'GET',
+                params: {
+                    table: 'marriages',
+                    select: '*',
+                    memberIds: families.map(f => f.id).join(',')
+                }
+            });
+
+            if (marriageError) throw marriageError;
+            return allMarriages;
+        } catch (err) {
+            throw err;
         }
     }
 }
