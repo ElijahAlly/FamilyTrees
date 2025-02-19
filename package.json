@@ -39,7 +39,6 @@
     "@tresjs/post-processing": "^2.1.0",
     "@types/d3": "^7.4.3",
     "@types/three": "^0.172.0",
-    "@vue/eslint-config-prettier": "^10.2.0",
     "eslint": "^9.19.0",
     "eslint-plugin-vue": "^9.32.0",
     "gsap": "^3.12.7",
