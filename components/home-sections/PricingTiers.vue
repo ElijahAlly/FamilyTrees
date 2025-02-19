@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { Icon } from '@iconify/vue';
+
 const plans = [
     {
         name: 'Just Looking',
@@ -101,7 +103,7 @@ const plans = [
 
                         <ul class="mb-8 space-y-4">
                             <li v-for="(feature, featureIndex) in plan.features" :key="featureIndex" class="flex items-center gap-3">
-                                <IconCheck class="w-5 h-5" :class="{'text-zinc-200': plan.popular, 'text-zinc-600 dark:text-zinc-400': !plan.popular}" />
+                                <Icon icon="radix-icons:check" class="w-5 h-5" :class="{'text-zinc-200': plan.popular, 'text-zinc-600 dark:text-zinc-400': !plan.popular}" />
                                 <span :class="{'text-zinc-200': plan.popular, 'text-zinc-600 dark:text-zinc-400': !plan.popular}">
                                     {{ feature }}
                                 </span>

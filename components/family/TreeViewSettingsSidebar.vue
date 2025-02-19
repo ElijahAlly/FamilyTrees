@@ -184,7 +184,7 @@ const { showSidebar, curDisplayType, toggleSettings, curBackgroundColor, curBack
                                         :key="i"
                                     >
                                         <DropdownMenuItemIndicator class="absolute left-0 w-[25px] inline-flex items-center justify-center">
-                                            <Icon name="check" icon="radix-icons:check" />
+                                            <Icon icon="radix-icons:check" />
                                         </DropdownMenuItemIndicator>
                                         {{ background }} 
                                     </DropdownMenuRadioItem>
