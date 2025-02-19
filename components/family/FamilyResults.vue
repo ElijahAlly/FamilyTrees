@@ -23,10 +23,10 @@ onMounted(() => {
         <div v-if="familyStore.family && familyStore.searchedForFamily" class="absolute top-0 left-0 flex items-center justify-center h-56 w-full">
             <LoadingSpinner />
         </div>
-        <p v-else-if="familyStore.family && familyStore.familyTrees.length === 0 && !familyStore.searchedForFamily">
+        <p v-else-if="familyStore.family && familyStore.familyTrees.length === 0 && !familyStore.searchedForFamily" class="text-zinc-950 dark:text-zinc-50">
             No familes found. Please modify your search or
             <NuxtLink to="/create">
-                <span class="text-zinc-500 underline underline-offset-1 hover:underline-offset-2 font-light cursor-pointer">Create Your Tree</span>
+                <span class="text-zinc-600 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200 underline underline-offset-1 hover:underline-offset-2 font-light cursor-pointer transition-all duration-300">Create Your Tree</span>
             </NuxtLink>
         </p>
         <div v-else class="w-full" v-for="(familyTreeNode, i) in familyStore.familyTrees" :key="familyTreeNode.familyId">

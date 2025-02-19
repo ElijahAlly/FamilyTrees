@@ -5,22 +5,31 @@ import { ref } from 'vue';
 import { useRuntimeConfig } from 'nuxt/app';
 
 export const useAuthStore = defineStore('auth', () => {
-    const config = useRuntimeConfig();
-    const supabaseUrl = config.public.supabaseUrl;
-    const supabaseAnonKey = config.public.supabaseKey;
+    // Single instance of the Supabase client outside the store
+    const supabaseClient = ref<ReturnType<typeof createClient> | null>(null);
 
-    if (typeof supabaseUrl !== 'string' || typeof supabaseAnonKey !== 'string' || !supabaseUrl || !supabaseAnonKey) {
-        throw new Error('Missing Supabase environment variables');
+    function createSupabaseClient() {
+        if (supabaseClient.value?.auth) return;
+        
+        const config = useRuntimeConfig();
+        const supabaseUrl = config.public.supabaseUrl;
+        const supabaseAnonKey = config.public.supabaseKey;
+
+        if (typeof supabaseUrl !== 'string' || typeof supabaseAnonKey !== 'string' || !supabaseUrl || !supabaseAnonKey) {
+            throw new Error('Missing Supabase environment variables');
+        }
+
+        supabaseClient.value = createClient(supabaseUrl, supabaseAnonKey, {
+            auth: {
+                persistSession: true,
+                autoRefreshToken: true,
+                detectSessionInUrl: true,
+            }
+        });
     }
 
-    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-        auth: {
-            persistSession: true,
-            autoRefreshToken: true,
-            detectSessionInUrl: true,
-        }
-    });
-    
+    createSupabaseClient();
+
     const user = ref<User | null>(null);
     const session = ref<Session | null>(null);
     const profile = ref<PersonType | null>(null);
@@ -28,8 +37,9 @@ export const useAuthStore = defineStore('auth', () => {
     const error = ref<string | null>(null);
 
     async function signInWithProvider(provider: string) {
+        if (!supabaseClient.value) throw new Error('Supabase client not initialized');
         try {
-            const { data, error } = await supabase.auth.signInWithOAuth({
+            const { data, error } = await supabaseClient.value.auth.signInWithOAuth({
                 provider: provider as any,
                 options: {
                     redirectTo: `${window.location.origin}/auth/callback`
@@ -46,14 +56,15 @@ export const useAuthStore = defineStore('auth', () => {
     }
 
     async function fetchProfile() {
+        if (!supabaseClient.value) throw new Error('Supabase client not initialized');
         try {
             if (!user.value) return;
 
-            const { data: profileData, error } = await supabase
+            const { data: profileData, error } = await supabaseClient.value
                 .from('people')
                 .select('*')
                 .eq('user_id', user.value.id)
-                .single();
+                .single<PersonType>();
 
             if (error) throw error;
 
@@ -65,7 +76,8 @@ export const useAuthStore = defineStore('auth', () => {
     }
 
     async function handleAuthStateChange() {
-        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        if (!supabaseClient.value) throw new Error('Supabase client not initialized');
+        const { data: { session: currentSession } } = await supabaseClient.value.auth.getSession();
         // console.log("\n== currentSession ==\n", currentSession, "\n");
         session.value = currentSession;
         user.value = currentSession?.user ?? null;
@@ -76,9 +88,10 @@ export const useAuthStore = defineStore('auth', () => {
     }
 
     async function logout() {
+        if (!supabaseClient.value) throw new Error('Supabase client not initialized');
         try {
             loading.value = true;
-            const { error } = await supabase.auth.signOut();
+            const { error } = await supabaseClient.value.auth.signOut();
 
             if (error) throw error;
 
@@ -101,7 +114,6 @@ export const useAuthStore = defineStore('auth', () => {
         profile,
         loading,
         error,
-        supabase,
         logout,
         signInWithProvider,
         fetchProfile,

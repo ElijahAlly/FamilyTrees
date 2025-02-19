@@ -10,6 +10,11 @@ export const useFamilyStore = defineStore('family', () => {
     const curentFamilyTree = ref<FamilyTreeNodeType | null>(null);
     const searchedForFamily = ref<boolean>(false);
     const shownFamilyDetails = ref<boolean>(false);
+    const loadingFamily = ref<boolean>(false);
+
+    function setLoadingFamily(bool: boolean) {
+        loadingFamily.value = bool;
+    }
 
     function setFamily(newFamily: FamilyType) {
         family.value = newFamily;
@@ -53,13 +58,15 @@ export const useFamilyStore = defineStore('family', () => {
         searchedForFamily,
         families,
         shownFamilyDetails,
+        loadingFamily,
         setFamily,
         updateFamilyTrees,
         getFamilyByPerson,
         updateFamilies,
         setCurrentFamilyTree,
         setSearchedForFamily,
-        setShownFamilyDetails
+        setShownFamilyDetails,
+        setLoadingFamily
     }
 }, {
     persist: {

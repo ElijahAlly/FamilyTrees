@@ -3,20 +3,17 @@ import { defineEventHandler, getQuery } from 'h3';
 
 export default defineEventHandler(async (event) => {
     const client = await serverSupabaseClient(event)
-    const { table, select, id, family_name } = getQuery(event);
+    const { table, select, memberIds } = getQuery(event);
 
     try {
-        let query = client
+        // Split the comma-separated memberIds into an array
+        const ids = (memberIds as string).split(',').map(Number);
+        
+        const { data, error } = await client
             .from(table)
             .select(select)
-            .eq('id', id);
+            .or(`person1_id.in.(${ids}),person2_id.in.(${ids})`);
 
-        // Only add family_name condition if it's provided
-        if (family_name) {
-            query = query.eq('family_name', family_name);
-        }
-
-        const { data, error } = await query;
         if (error) throw error;
         return { data };
     } catch (error) {
