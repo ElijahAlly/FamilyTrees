@@ -31,6 +31,8 @@ export default defineNuxtConfig({
     '@pinia-plugin-persistedstate/nuxt',
     '@nuxt/icon',
     '@tresjs/nuxt',
+    '@pinia/nuxt',
+    'pinia-plugin-persistedstate/nuxt',
   ],
   plugins: [
     '~/plugins/ui.ts',
@@ -40,9 +42,18 @@ export default defineNuxtConfig({
   //   devtools: true,
     // glsl: true, // for shaders
   // },
+  // piniaPluginPersistedstate: {
+  //   key: 'mft-%id',
+  //   storage: 'localStorage',
+  //   cookieOptions: {
+  //     sameSite: 'scrict',
+  //   },
+  //   debug: false,
+  // },
   typescript: {
     strict: true,
-    typeCheck: true
+    typeCheck: true,
+    // shim: false
   },
   vue: {
     compilerOptions: {
@@ -81,12 +92,6 @@ export default defineNuxtConfig({
       },
     }
   },
-  // piniaPersistedstate: {
-  //   cookieOptions: {
-  //     sameSite: 'strict',
-  //   },
-  //   storage: 'localStorage'
-  // },
   colorMode: {
     classSuffix: '-mode',
     preference: 'light',

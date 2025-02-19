@@ -1,4 +1,5 @@
 <script lang="ts">
+import { Icon } from '@iconify/vue';
 import { useFamilyStore } from '@/stores/family';
 import { useDraggableZoneStore } from '@/stores/draggableZone';
 import Panzoom, { type PanzoomObject } from '@panzoom/panzoom';
@@ -6,7 +7,10 @@ import { useWatchFamilyStore } from '@/composables/useWatchFamilyStore';
 import { storeToRefs } from 'pinia';
 import { ref } from 'vue';
 import FamilyTree from '@/components/family/FamilyTree.vue';
-import DraggableSection from '@/components/DraggableSection.vue';
+import DraggableSection from '@/components/family/DraggableSection.vue';
+import LoadingSpinner from '@/components/ui/LoadingSpinner.vue';
+import FamilyDetailsDropdown from '@/components/family/FamilyDetailsDropdown.vue';
+import FamilyDetails from '@/components/family/FamilyDetails.vue';
 
 export default {
   setup() {
@@ -41,7 +45,9 @@ export default {
   },
   components: {
     FamilyTree,
-    DraggableSection
+    DraggableSection,
+    LoadingSpinner,
+    FamilyDetailsDropdown
   },
   mounted() {
     const element: HTMLElement = this.$refs.treeContainer as HTMLElement;
@@ -179,22 +185,27 @@ export default {
 </script>
 
 <template>
-  <div class="relative min-h-[88vh] max-h-[88vh] w-full overflow-hidden border-t border-zinc-400 dark:border-zinc-600">
-    <DraggableSection>
+  <div class="relative min-h-[92vh] max-h-[92vh] w-full overflow-hidden">
+    <FamilyDetailsDropdown v-show="curentFamilyTree" title="Family Details">
+      <template #content>
+        <FamilyDetails />
+      </template>
+    </FamilyDetailsDropdown>
+    <DraggableSection v-show="curentFamilyTree">
       <div
         ref="treeContainer"
       >
-        <FamilyTree 
-          v-if="curDisplayType === 'mdi:family-tree'" 
-          :treeNode="curentFamilyTree || null" 
+        <FamilyTree
+          v-if="curentFamilyTree && curDisplayType === 'mdi:family-tree'"
+          :treeNode="curentFamilyTree" 
           @centerNode="centerOnNode" 
         />
-        <!-- <FamilySunburstChart /> -->
+        <!-- <FamilySunburstChart />  -->
       </div>
     </DraggableSection>
 
     <!-- SliderRange for zoom -->
-    <div class="flex flex-col items-center absolute bottom-[51px] left-[0px] translate-x-[30px] bg-white dark:bg-black border-2 hover:border-zinc-300 dark:border-zinc-950 dark:hover:border-zinc-800 rounded p-2">
+    <div v-if="curentFamilyTree" class="flex flex-col items-center absolute bottom-[51px] left-[0px] translate-x-[30px] bg-white dark:bg-black border hover:border-zinc-300 dark:border-zinc-600 dark:hover:border-zinc-100 rounded p-2">
       <Icon name="iconamoon:zoom-in-duotone" @click.stop="zoomIn" class="h-5 w-5 text-black dark:text-white cursor-pointer" />
       <ui-slider-root
         v-model="sliderValue"
@@ -217,8 +228,12 @@ export default {
       </ui-slider-root>
       <Icon name="iconamoon:zoom-out-duotone" @click.stop="zoomOut" class="h-5 w-5 text-black dark:text-white cursor-pointer" />
     </div>
-    <div class="flex items-center absolute bottom-[12px] left-[0px] translate-x-[30px] bg-white dark:bg-black border-2 hover:border-zinc-300 dark:border-zinc-950 dark:hover:border-zinc-800 rounded py-1 px-2 cursor-pointer">
+    <div v-if="curentFamilyTree" class="flex items-center absolute bottom-[12px] left-[0px] translate-x-[30px] bg-white dark:bg-black border hover:border-zinc-300 dark:border-zinc-600 dark:hover:border-zinc-100 rounded py-1 px-2 cursor-pointer">
       <Icon name="carbon:zoom-reset" @click.stop="resetZoomAndPan" class="h-5 w-5 text-black dark:text-white" />
+    </div>
+    <div v-else class="absolute inset-0 w-full h-full flex flex-col items-center justify-center">
+      <LoadingSpinner />
+      <p class="text-black dark:text-white mt-3 font-extralight text-sm">Loading the{{ ` ${$route.params.familyName || ''} ` }}family tree...</p>
     </div>
   </div>
 </template>

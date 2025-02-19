@@ -5,7 +5,8 @@ import ThemeToggler from '../ui/ThemeToggler.vue';
 
 <template>
     <nav
-        class="sticky top-0 left-0 w-full flex items-center min-h-[12vh] max-h-[12vh] p-4 bg-gradient-to-b from-zinc-300 to-neutral-50 dark:from-zinc-900 dark:to-neutral-950 z-50 border-b border-zinc-200 dark:border-zinc-700">
+        class="sticky top-0 left-0 w-full flex items-center min-h-[8vh] max-h-[8vh] p-4 bg-gradient-to-b from-zinc-300 to-neutral-50 dark:from-zinc-900 dark:to-neutral-950 z-50 border-b border-zinc-200 dark:border-zinc-700"
+    >
         <div class="flex items-center rounded-md p-3 w-full">
             <NuxtLink to="/">
                 <!-- <NuxtImg src="/my-trees-logo-with-name.png" class="cursor-pointer rounded-md hover:shadow-md" height="99" /> -->
