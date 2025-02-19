@@ -1,6 +1,5 @@
 import { defineStore } from 'pinia';
-import { computed, ref, watch } from 'vue';
-import { useColorMode } from '@vueuse/core';
+import { computed, ref } from 'vue';
 
 type BackgroundName = 'White' | 'Black' | 'Neutral' | 'Stone' | 'Amber' | 'Emerald' | 'Cyan' | 'Blue' | 'Zinc' | 'Fuchsia' | 'Rose';
 
@@ -9,21 +8,26 @@ type BackgroundColor = {
     name: BackgroundName; 
 }
 
+type BackgroundPattern = 'no-background' | 'dot-background' | 'tree-background';
+
 export const useDraggableZoneStore = defineStore('draggable-zone', () => {
     // * State
-    const panzoomContentCenter = ref(false);
+    const panzoomContentCenter = ref<boolean>(false);
     
-    const showSidebar = ref(true);
-    const toggleSettings = ref(false);
+    const showSidebar = ref<boolean>(true);
+    const toggleSettings = ref<boolean>(false);
+    const isFullPageDropdownOpen = ref<boolean>(false);
 
     // Patterns
-    const availableBackgroundPatterns = [
+    const availableBackgroundPatterns: BackgroundPattern[] = [
         'no-background',
         'dot-background',
         'tree-background',
     ];
-    const curBackgroundPattern = ref('no-background');
+    const curBackgroundPattern = ref<BackgroundPattern>('no-background');
+    // const curBackgroundPattern = useStorage<string>('mft-curBackgroundPattern', 'no-background', undefined, { serializer: StorageSerializers.string });
     const showBackgroundPattern = computed(() => curBackgroundPattern.value !== 'no-background');
+    const curDisplayType = ref('mdi:family-tree');
 
     // Colors
     const whiteHex: '#ffffff' = '#ffffff';
@@ -50,23 +54,41 @@ export const useDraggableZoneStore = defineStore('draggable-zone', () => {
         { hex: fuchsiaHex, name: 'Fuchsia'},
         { hex: roseHex, name: 'Rose'},
     ];
+    
+    const curBackgroundColor = ref<BackgroundColor>(availableBackgroundColors[0]);
+
+    /**
+    * * Uncomment to enable automatic background color change based on theme
+    * Only changes if the current background color is white or black
+    * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    
+    const theme = useColorMode();
+
     const getBackgroundColorByHex = (hex: string): BackgroundColor => {
         return availableBackgroundColors.filter((color) => color.hex === hex)[0] as BackgroundColor;
     }
-    const theme = useColorMode();
-    const curBackgroundColor = ref<BackgroundColor>(availableBackgroundColors[0]);
-    curBackgroundColor.value = theme.value === 'dark' ? getBackgroundColorByHex(blackHex) : getBackgroundColorByHex(whiteHex)
-
-    watch(theme, (newValue) => {
+    
+    const updateBackgroundColorBasedOnCurrentTheme = (newVal: "light" | "dark" | "auto" = theme.value) => {
         if (curBackgroundColor.value.hex === whiteHex || curBackgroundColor.value.hex === blackHex) {
-            curBackgroundColor.value.hex = newValue ? blackHex : whiteHex;
+            if (newVal === 'dark'){
+                updateCurBackgroundColor(getBackgroundColorByHex(blackHex));
+            } else {
+                updateCurBackgroundColor(getBackgroundColorByHex(whiteHex));
+            }
         }
+    }
+    
+    onMounted(() => {
+        updateBackgroundColorBasedOnCurrentTheme();
     })
 
-    const curDisplayType = ref('mdi:family-tree');
+    watch(theme, (newVal) => {
+        updateBackgroundColorBasedOnCurrentTheme(newVal);
+    }) 
 
-    // * Functions
-    
+    * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    */
+
     function updatePanzoomContentCenter(value?: boolean) {
         panzoomContentCenter.value = value ? value : !panzoomContentCenter.value;
     }
@@ -77,13 +99,14 @@ export const useDraggableZoneStore = defineStore('draggable-zone', () => {
 
     function updateCurBackgroundColor(color: BackgroundColor) {
         curBackgroundColor.value = color;
+        return color;
     }
 
-    function updateCurBackgroundPattern(value: string) {
+    function updateCurBackgroundPattern(value: BackgroundPattern) {
         curBackgroundPattern.value = value;
     }
 
-    const getSecondaryColorByCurrentColor= computed<{ hex: string, tailwind: string }>(() =>{
+    const getSecondaryColorByCurrentColor = computed<{ hex: string, tailwind: string }>(() =>{
         const _defaultDark = {
             hex: '#d1d5db',
             tailwind: 'gray-300',
@@ -143,10 +166,20 @@ export const useDraggableZoneStore = defineStore('draggable-zone', () => {
         curDisplayType,
         availableBackgroundColors,
         availableBackgroundPatterns,
+        getSecondaryColorByCurrentColor,
+        isFullPageDropdownOpen,
         updatePanzoomContentCenter,
         updateShowSidebar,
         updateCurBackgroundColor,
         updateCurBackgroundPattern,
-        getSecondaryColorByCurrentColor
+    }
+}, {
+    persist: {
+        key: 'draggable-zone',
+        pick: [
+            'isFullPageDropdownOpen',
+            'curBackgroundPattern',
+            'curBackgroundColor'
+        ],
     }
 })
