@@ -15,3 +15,12 @@ declare global {
         }
     }
 }
+
+declare module 'pinia' {
+    export interface DefineStoreOptionsBase<S, Store> {
+        persist?: boolean | {
+            key?: string
+            pick?: string[] | Path<StateTree>[],
+        }
+    }
+}

@@ -3,7 +3,7 @@
   "compilerOptions": {
     "target": "ESNext",
     "module": "ESNext",
-    "moduleResolution": "bundler",
+    "moduleResolution": "node",
     "strict": true,
     "jsx": "preserve",
     "sourceMap": true,
@@ -22,7 +22,8 @@
       "@nuxt/types",
       "@nuxtjs/supabase",
       "@types/node",
-      "@nuxtjs/color-mode"
+      "@nuxtjs/color-mode",
+      "@pinia-plugin-persistedstate/nuxt"
     ],
     "paths": {
       "@/*": ["./*"],

@@ -33,13 +33,14 @@ const handleLogout = async () => {
             class="center shadow-blackA7 m-0 flex items-center list-none bg-transparent p-1">
             <NavigationMenuItem class="mr-3">
                 <NavigationMenuTrigger
-                    class="text-black dark:text-white hover:text-zinc-500 dark:hover:text-zinc-400 border border-black dark:border-white hover:border-zinc-500 dark:hover:border-zinc-400 shadow-none group flex select-none items-center justify-between gap-[2px] rounded-md px-3 py-2 text-[15px] font-medium leading-none outline-none focus:outline-none focus:shadow-none">
+                    class="text-black dark:text-white hover:text-zinc-500 dark:hover:text-zinc-400 border border-black dark:border-white hover:border-zinc-500 dark:hover:border-zinc-400 shadow-none group flex select-none items-center justify-between gap-[2px] rounded-md px-3 py-2 text-[15px] leading-none outline-none focus:outline-none focus:shadow-none">
                     Discover
                     <Icon icon="radix-icons:caret-down"
                         class="relative top-[1px] transition-transform duration-[250ms] ease-in group-data-[state=open]:-rotate-180" />
                 </NavigationMenuTrigger>
                 <NavigationMenuContent
-                    class="bg-gradient-to-b from-zinc-300 to-neutral-50 dark:from-zinc-900 dark:to-neutral-950 shadow-xl data-[motion=from-start]:animate-enterFromLeft data-[motion=from-end]:animate-enterFromRight data-[motion=to-start]:animate-exitToLeft data-[motion=to-end]:animate-exitToRight absolute top-0 left-0 w-full sm:w-auto">
+                    class="bg-gradient-to-b z-50 from-zinc-300 to-neutral-50 dark:from-zinc-900 dark:to-neutral-950 shadow-xl data-[motion=from-start]:animate-enterFromLeft data-[motion=from-end]:animate-enterFromRight data-[motion=to-start]:animate-exitToLeft data-[motion=to-end]:animate-exitToRight absolute top-0 left-0 w-full sm:w-auto"
+                >
                     <ul class="one m-0 grid list-none gap-x-[10px] p-[22px] sm:w-[500px] sm:grid-cols-[0.75fr_1fr]">
                         <li class="row-span-3 grid">
                             <NavigationMenuLink as-child>
