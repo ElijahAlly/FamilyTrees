@@ -4,11 +4,18 @@ import { defineStore } from 'pinia';
 import { ref, watch } from 'vue';
 
 export const useFamilyStore = defineStore('family', () => {
+    // Family Type (Current and All)
     const family = ref<FamilyType | null>(null);
-    const familyTrees = ref<FamilyTreeNodeType[]>([]);
     const families = ref<FamilyType[]>([]);
+
+    // Family Tree Node Type (Current and All)
+    const familyTrees = ref<FamilyTreeNodeType[]>([]);
     const curentFamilyTree = ref<FamilyTreeNodeType | null>(null);
+
+    // Discover Page
     const searchedForFamily = ref<boolean>(false);
+
+    // Family Tree Page
     const shownFamilyDetails = ref<boolean>(false);
     const loadingFamily = ref<boolean>(false);
 
