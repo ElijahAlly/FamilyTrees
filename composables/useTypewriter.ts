@@ -14,7 +14,6 @@ export function useTypewriter(text: string, speed: number = 100, delay: number =
 
         for (let i = 0; i <= textToType.length; i++) {
             displayText.value = textToType.slice(0, i);
-            console.log(displayText.value);
             await new Promise(resolve => setTimeout(resolve, speed));
         }
         
