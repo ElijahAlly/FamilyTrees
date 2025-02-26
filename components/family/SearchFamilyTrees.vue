@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ref, type PropType, watch } from 'vue';
+import { ref, type PropType, watch, nextTick } from 'vue';
 import { Icon } from '@iconify/vue';
+import { storeToRefs } from 'pinia';
 import { useFamilyStore } from '@/stores/family';
 import { usePersonStore } from '@/stores/person';
 import type { FamilyType } from '@/types/family';
@@ -9,8 +10,10 @@ import { type PersonType } from '@/types/person';
 import { getFullName } from '@/utils/person';
 
 const familyStore = useFamilyStore();
+const { setFamily, setSearchedForFamily, updateFamilies, searchedInputChanged } = familyStore;
+const { family: familyFromStore, searchedInput } = storeToRefs(familyStore);
 const personStore = usePersonStore();
-const userInput = ref('');
+const userInput = ref(searchedInput.value);
 const userInputedCharAndDidNotClickOnResult = ref(false);
 const families = ref<FamilyType[]>([]);
 const people = ref<PersonType[]>([]);
@@ -25,12 +28,12 @@ const { title, searchBy } = defineProps({
 });
 
 const placeholder = searchBy === 'families' ? 'Enter Family Name (Your last name)...' : searchBy === 'people' ? 'Search for a person by their first, middle, and last name' : 'Search by family or person name';
-const familiesByName = ref<{familyName: string, familyFromDb: FamilyType}[]>([]);
+const familiesByName = ref<Map<string, FamilyType>>(new Map());
 
 watch(userInput, async (newInput) => {
-    selectedIndex.value = 0;
+    const alreadySearchedForFamily = familyFromStore.value?.family_name === newInput;
 
-    if (newInput && !loadingResults.value) {
+    if (newInput && !loadingResults.value && !alreadySearchedForFamily) {
         userInputedCharAndDidNotClickOnResult.value = true;
         try {
             // Already sorted alphabetically from supabase
@@ -50,10 +53,7 @@ watch(userInput, async (newInput) => {
             if (response?.length) {
                 if (searchBy === 'families') {
                     (response as FamilyType[]).forEach((family: FamilyType) => {
-                        familiesByName.value.push({
-                            familyName: family.family_name, 
-                            familyFromDb: family
-                        });
+                        familiesByName.value.set(family.family_name, family);
                     });
 
                     const removeDuplicateFamilyNames = (families: FamilyType[]): FamilyType[] => {
@@ -79,7 +79,9 @@ watch(userInput, async (newInput) => {
             console.error(err);
         }
     } else {
-        families.value = [];
+        if (!alreadySearchedForFamily) {
+            families.value = [];
+        }
     }
 });
 
@@ -118,6 +120,7 @@ const setLoadingResultsFalse = () =>  {
 
 const handleClearInput = () => {
     userInput.value = '';
+    searchedInputChanged('');
     userInputedCharAndDidNotClickOnResult.value = false;
     loadingResults.value = false;
 
@@ -127,16 +130,22 @@ const handleClearInput = () => {
 }
 
 const handleFamilyNameClick = (family: FamilyType) => {
-    loadingResults.value = true;
     userInputedCharAndDidNotClickOnResult.value = false;
     userInput.value = family.family_name;
-    familyStore.setFamily(family);
-    familyStore.setSearchedForFamily(true);
-    familiesByName.value.forEach(familyObj => {
-        if (familyObj.familyName === family.family_name) {
-            familyStore.updateFamilies(familyObj.familyFromDb);
-        }
-    })
+
+    // Already fetched results for this family
+    if (family.family_name === familyFromStore.value?.family_name) return;
+
+    loadingResults.value = true;
+    searchedInputChanged(family.family_name);
+    setSearchedForFamily(true);
+    setFamily(family);
+
+    const familyFromDb = familiesByName.value.get(family.family_name);
+    if (familyFromDb) {
+        updateFamilies(familyFromDb);
+        return;
+    }
 }
 
 const handlePersonClick = (person: PersonType) => {
@@ -179,6 +188,8 @@ const handlePersonClick = (person: PersonType) => {
                 v-if="userInput.length > 0"
                 class="absolute z-10 w-3/5 overflow-y-hidden mt-10 min-w-[160px] overflow-hidden rounded shadow-md dark:shadow-zinc-300 bg-white dark:bg-zinc-950 data-[side=top]:animate-slideDownAndFade data-[side=right]:animate-slideLeftAndFade data-[side=bottom]:animate-slideUpAndFade data-[side=left]:animate-slideRightAndFade">
                 <ComboboxViewport class="p-[5px] max-h-28 overflow-y-auto dark:text-white scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 dark:scrollbar-thumb-zinc-600 dark:scrollbar-track-zinc-800">
+                   
+                    <!-- Families Dropdown -->
                     <ComboboxGroup v-if="searchBy === 'families'" class="pt-2">
                         <ComboboxItem value="none-found" v-if="families.length === 0">
                             <span>
@@ -203,6 +214,8 @@ const handlePersonClick = (person: PersonType) => {
                         </ComboboxItem>
                         <ComboboxSeparator class="h-[1px] bg-grass6 m-[5px]" />
                     </ComboboxGroup>
+
+                    <!-- People Dropdown -->
                     <ComboboxGroup v-if="searchBy === 'people'" class="overflow-y-auto max-h-30 pt-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 dark:scrollbar-thumb-zinc-600 dark:scrollbar-track-zinc-800">
                         <ComboboxItem value="none-found" v-if="people.length === 0">
                             <span>
@@ -227,6 +240,7 @@ const handlePersonClick = (person: PersonType) => {
                         </ComboboxItem>
                         <ComboboxSeparator class="h-[1px] bg-grass6 m-[5px]" />
                     </ComboboxGroup>
+
                 </ComboboxViewport>
             </ComboboxContent>
         </ComboboxRoot>

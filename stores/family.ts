@@ -14,6 +14,7 @@ export const useFamilyStore = defineStore('family', () => {
 
     // Discover Page
     const searchedForFamily = ref<boolean>(false);
+    const searchedInput = ref<string>('');
 
     // Family Tree Page
     const shownFamilyDetails = ref<boolean>(false);
@@ -32,7 +33,10 @@ export const useFamilyStore = defineStore('family', () => {
     }
 
     function getFamilyByPerson(person: PersonType): FamilyType | null {
-        return families.value.filter(tree => tree.members.some(id => id  === person.id))[0] || null;
+        return families.value.filter(tree => {
+            if (!tree.members) return false;
+            return tree.members.some(id => id  === person.id)
+        })[0] || null;
     }
 
     function updateFamilies(family: FamilyType) {
@@ -54,6 +58,10 @@ export const useFamilyStore = defineStore('family', () => {
         setTimeout(() => searchedForFamily.value = false, 4200);
     }
 
+    function searchedInputChanged(newInput: string) {
+        searchedInput.value = newInput;
+    }
+
     function setShownFamilyDetails(bool: boolean) {
         shownFamilyDetails.value = bool;
     }
@@ -66,6 +74,7 @@ export const useFamilyStore = defineStore('family', () => {
         families,
         shownFamilyDetails,
         loadingFamily,
+        searchedInput,
         setFamily,
         updateFamilyTrees,
         getFamilyByPerson,
@@ -73,12 +82,17 @@ export const useFamilyStore = defineStore('family', () => {
         setCurrentFamilyTree,
         setSearchedForFamily,
         setShownFamilyDetails,
-        setLoadingFamily
+        setLoadingFamily,
+        searchedInputChanged
     }
 }, {
     persist: {
         key: 'family',
         pick: [
+            'family',
+            'families',
+            'searchedForFamily',
+            'searchedInput',
             'shownFamilyDetails',
         ],
     }
