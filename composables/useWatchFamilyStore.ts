@@ -13,11 +13,12 @@ type MembersMap = Map<number, PersonType>;
 
 export function useWatchFamilyStore() {
     const familyStore = useFamilyStore();
-    const { loadingFamily } = storeToRefs(familyStore);
+    const { setLoadingFamily, setCurrentFamilyTree, updateFamilyTrees } = familyStore;
+    const { family, loadingFamily } = storeToRefs(familyStore);
 
     onMounted(() => {
         if (!loadingFamily.value) {
-            familyStore.setLoadingFamily(true);
+            setLoadingFamily(true);
             const route = useRoute();
             const isOnFamilyTreePage = !!(route.params?.familyName && route.params?.familyId);
             // console.time('family-tree-data-fetching-and-building-start')
@@ -25,9 +26,10 @@ export function useWatchFamilyStore() {
         }
     })
     
-    watch(() => familyStore.family, async (newFamily, oldFamilyName) => {
+    watch(family, async (newFamily, oldFamilyName) => {
         if (!loadingFamily.value) {
-            familyStore.setLoadingFamily(true);
+            // console.time('family-tree-data-fetching-and-building-start')
+            setLoadingFamily(true);
             await getFamiliyTreeOrTrees();
         }
     });
@@ -38,7 +40,7 @@ export function useWatchFamilyStore() {
 
             if (!familyMembers) throw Error('No family members found');
 
-            if (familyMembers && familyStore.family?.id) {
+            if (familyMembers && family.value?.id) {
                 try {
                     // Fetch all marriages at once instead of per member
                     const allMarriages: MarriageType[] | undefined = await getMarriages(familyMembers);
@@ -68,20 +70,20 @@ export function useWatchFamilyStore() {
                     const uniqueTrees = removeDuplicateTrees(allTrees);
                     // console.timeLog('family-tree-data-fetching-and-building-start', ['uniqueTrees', uniqueTrees])
                     // console.timeEnd('family-tree-data-fetching-and-building-start')
-                    familyStore.updateFamilyTrees(uniqueTrees);
+                    updateFamilyTrees(uniqueTrees);
 
                     // Only set the current family tree right away if on a specific families page. Needed for when the persisted state is cleared.
-                    if (isOnFamilyTreePage) familyStore.setCurrentFamilyTree(uniqueTrees[0]);
+                    if (isOnFamilyTreePage) setCurrentFamilyTree(uniqueTrees[0]);
                 } catch (err) {
                     console.error(err);
                 } finally {
-                    familyStore.setLoadingFamily(false);
+                    setLoadingFamily(false);
                 }
             }
         } catch (err) {
             console.error(err);
         }  finally {
-            familyStore.setLoadingFamily(false);
+            setLoadingFamily(false);
         }
     }
 
