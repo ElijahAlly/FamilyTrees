@@ -16,7 +16,9 @@ declare module '@nuxt/schema' {
 export default defineNuxtConfig({
   compatibilityDate: '2024-04-03',
   devtools: { 
-    enabled: false
+    // `false` to hide devtools and animation 
+    // ...or `true` to see devtools (this will add the Nuxt animation that takes way too long to go away after each change)
+    enabled: false 
   },
   css: ['~/assets/css/main.css'],
   modules: [
