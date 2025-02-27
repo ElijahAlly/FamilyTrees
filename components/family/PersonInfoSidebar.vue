@@ -115,7 +115,7 @@ watch(collapsed, (newValue) => {
                             @click.stop="setGoToPersonInTree(selectedPersonInTree)"
                             class="text-black dark:text-white mt-2 p-2 border border-black dark:border-white outline-none focus:outline-none rounded-md"
                         >
-                            <- Go to Person in Tree
+                            <- Find Person in Tree
                         </button>
                     </div>
                 </transition>

@@ -2,7 +2,7 @@
 import { Icon } from '@iconify/vue';
 import { useBannerStore } from '@/stores/useBannerStore';
 import { useRoute } from 'nuxt/app';
-import { ref, computed, watch, onMounted } from 'vue';
+import { ref, computed, watch, onMounted, nextTick } from 'vue';
 import { useRouter } from 'nuxt/app';
 import { useColorMode } from '@vueuse/core';
 import Navbar from '@/components/navbar/index.vue';
@@ -50,18 +50,29 @@ const handleScroll = (event: Event) => {
 };
 
 watch(() => route.path, () => {
-    if (route.params.familyName && route.params.personId) {
+    if (route.name === 'familyName-member-personId') {
         bannerStore.setBannerInfo(
             'Person Details',
             `Viewing details for person ${route.params.personId} in family ${route.params.familyName}`
         );
-    } else if (route.path.includes('member')) {
-        bannerStore.setBannerInfo(
-            'Member Area',
-            'Manage your family tree and personal settings'
-        );
-    } else {
+    } 
+    // Can't remember why this is here
+    // else if (route.path.includes('member')) {
+    //     bannerStore.setBannerInfo(
+    //         'Member Area',
+    //         'Manage your family tree and personal settings'
+    //     );
+    // } 
+    else {
         bannerStore.clearBannerInfo();
+    }
+
+    if (route.name !== 'familyName-familyId') {
+        setTimeout(() => {
+            scrollToTop();
+        }, 420)
+    } else {
+        bannerStore.hide();
     }
 }, { immediate: true });
 
