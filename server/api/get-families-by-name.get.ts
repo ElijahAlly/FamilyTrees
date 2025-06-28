@@ -1,7 +1,7 @@
 import { serverSupabaseClient } from '#supabase/server';
 import { defineEventHandler, getQuery } from 'h3';
 
-export default defineEventHandler(async (event) => {
+export default defineEventHandler(async (event: any) => {
     const client = await serverSupabaseClient(event)
     const { table, select, eq, familyName, limit } = getQuery(event);
 

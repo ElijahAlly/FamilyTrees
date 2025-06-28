@@ -1,9 +1,7 @@
 <script lang="ts" setup>
 import { Icon } from '@iconify/vue';
 import { useBannerStore } from '@/stores/useBannerStore';
-import { useRoute } from 'nuxt/app';
 import { ref, computed, watch, onMounted } from 'vue';
-import { useRouter } from 'nuxt/app';
 import { useColorMode } from '@vueuse/core';
 import Navbar from '@/components/navbar/index.vue';
 import AppFooter from '@/components/AppFooter.vue';

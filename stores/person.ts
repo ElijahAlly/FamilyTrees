@@ -1,4 +1,4 @@
-import type { PersonType } from '@/types/person';
+import type { PersonType } from '../types/person';
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 

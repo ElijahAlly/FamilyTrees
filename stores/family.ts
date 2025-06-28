@@ -1,5 +1,5 @@
-import type { FamilyTreeNodeType, FamilyType } from '@/types/family';
-import type { PersonType } from '@/types/person';
+import type { FamilyTreeNodeType, FamilyType } from '../types/family';
+import type { PersonType } from '../types/person';
 import { defineStore } from 'pinia';
 import { ref, watch } from 'vue';
 

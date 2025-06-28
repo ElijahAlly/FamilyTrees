@@ -1,4 +1,4 @@
-import type { GenderType, PersonType } from "@/types/person";
+import type { GenderType, PersonType } from "../types/person";
 
 export const getGenderLabel = (genderChar: GenderType) => {
     switch (genderChar) {

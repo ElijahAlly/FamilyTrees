@@ -1,8 +1,8 @@
 import { defineStore } from 'pinia';
 import { createClient, type Session, type User } from '@supabase/supabase-js';
-import type { PersonType } from '@/types/person';
+import type { PersonType } from '../types/person';
 import { ref } from 'vue';
-import { useRuntimeConfig } from 'nuxt/app';
+import { useRuntimeConfig } from '#imports';
 
 export const useAuthStore = defineStore('auth', () => {
     // Single instance of the Supabase client outside the store
