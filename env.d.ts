@@ -25,14 +25,6 @@ declare module 'pinia' {
     }
 }
 
-// declare module '#imports' {
-//     export const useRuntimeConfig: typeof import('nuxt/app')['useRuntimeConfig']
-// }
-
-declare module '#supabase/server' {
-    export { useSupabaseClient, serverSupabaseClient } from '@nuxtjs/supabase/dist/runtime/composables'
-}
-
 declare module 'vite-plugin-glsl' {
     export * as glsl from 'vite-plugin-glsl';
 }

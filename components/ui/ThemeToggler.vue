@@ -1,87 +1,46 @@
 <script setup lang="ts">
-import { watch, onMounted } from 'vue';
-import { Icon } from '@iconify/vue';
+import { watch, onMounted, ref } from 'vue';
 import { useColorMode } from '@vueuse/core';
-import { SelectContent,
-    SelectPortal,
-    SelectRoot,
-    SelectTrigger,
-    SelectValue,
-    SelectScrollUpButton,
-    SelectViewport,
-    SelectItem,
-    SelectLabel,
-    SelectGroup,
-    SelectItemIndicator,
-    SelectScrollDownButton,
-    SelectItemText 
-} from 'radix-vue';
 
 const colorMode = useColorMode();
-const themeOptions = ['system', 'light', 'dark']; // TODO: Implement 'Sepia'
+const isDark = ref<boolean>(colorMode.value === 'dark');
 
-const toggleColorMode = (newMode: string) => {
-    if (newMode === 'dark') {
+const toggleColorMode = (newVal: boolean) => {
+    colorMode.value = newVal ? 'dark' : 'light';
+    if (newVal) {
         document.documentElement.classList.add('dark-mode');
         document.documentElement.classList.remove('light-mode');
+        localStorage.setItem('ft-theme', 'dark');
     } else {
         document.documentElement.classList.remove('dark-mode');
         document.documentElement.classList.add('light-mode');
+        localStorage.setItem('ft-theme', 'light');
     }
 };
 
-watch(colorMode, (newMode) => {
-    toggleColorMode(newMode);
+const toggleIsDark = () => {
+    isDark.value = !isDark.value;
+}
+
+watch(isDark, (newVal) => {
+    toggleColorMode(newVal);
 });
 
 onMounted(() => {
-    toggleColorMode(colorMode.value) 
+    const localValue = localStorage.getItem('ft-theme');
+    const savedTheme = localValue ? localValue === 'dark' : isDark.value;
+    isDark.value = savedTheme;
+    toggleColorMode(savedTheme);
 });
 </script>
 
 <template>
-    <div>
-        <SelectRoot v-model="colorMode">
-            <SelectTrigger
-                class="inline-flex min-w-[96px] items-center justify-between border border-black dark:border-white rounded px-[15px] text-[13px] leading-none h-[35px] gap-[5px] bg-inherit text-grass11 focus:outline-none hover:bg-mauve3 data-[placeholder]:text-green9 outline-none"
-                aria-label="Select Theme">
-                <SelectValue placeholder="Select a theme" class="dark:text-white" />
-                <Icon icon="radix-icons:chevron-down" class="h-3.5 w-3.5 dark:text-white" />
-            </SelectTrigger>
-            <SelectPortal>
-                <SelectContent
-                    class="min-w-[160px] bg-white dark:bg-zinc-900 rounded shadow-[0px_10px_38px_-10px_rgba(22,_23,_24,_0.35),_0px_10px_20px_-15px_rgba(22,_23,_24,_0.2)] will-change-[opacity,transform] data-[side=top]:animate-slideDownAndFade data-[side=right]:animate-slideLeftAndFade data-[side=bottom]:animate-slideUpAndFade data-[side=left]:animate-slideRightAndFade z-[100]"
-                    :side-offset="5">
-                    <SelectScrollUpButton
-                        class="flex items-center justify-center h-[25px] dark:text-white dark:bg-zinc-900 text-zinc11 cursor-default">
-                        <Icon icon="radix-icons:chevron-up" />
-                    </SelectScrollUpButton>
-
-                    <SelectViewport class="p-[5px]">
-                        <SelectLabel class="px-[25px] text-xs leading-[25px] text-mauve11 dark:text-white">
-                            Themes
-                        </SelectLabel>
-                        <SelectGroup>
-                            <SelectItem v-for="(theme, index) in themeOptions" :key="index"
-                                class="text-[13px] cursor-pointer leading-none text-grass11 rounded-[3px] flex items-center h-[25px] pr-[35px] pl-[25px] relative select-none data-[disabled]:text-mauve8 data-[disabled]:pointer-events-none data-[highlighted]:outline-none data-[highlighted]:bg-green9 data-[highlighted]:text-green1"
-                                :value="theme.toLowerCase()">
-                                <SelectItemIndicator
-                                    class="absolute left-0 w-[25px] inline-flex items-center justify-center dark:text-white">
-                                    <Icon icon="radix-icons:check" />
-                                </SelectItemIndicator>
-                                <SelectItemText class="dark:text-white">
-                                    {{ theme }}
-                                </SelectItemText>
-                            </SelectItem>
-                        </SelectGroup>
-                    </SelectViewport>
-
-                    <SelectScrollDownButton
-                        class="flex items-center justify-center h-[25px] dark:text-white text-zinc11 cursor-default">
-                        <Icon icon="radix-icons:chevron-down" />
-                    </SelectScrollDownButton>
-                </SelectContent>
-            </SelectPortal>
-        </SelectRoot>
+    <div class="group relative inline-flex items-center rounded-full border-2 border-zinc-600/60 dark:border-white/60"
+        :title="`Enter ${isDark ? 'light' : 'dark'} mode`">
+        <input id="theme-toggler" type="checkbox" @change="toggleIsDark" :checked="isDark" class="peer sr-only" />
+        <label for="theme-toggler"
+            class="relative h-6 w-11 cursor-pointer rounded-full bg-zinc-500/50 dark:peer-checked:bg-zinc-300/50 transition-colors after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:bg-zinc-50 dark:after:bg-zinc-800 after:transition-all after:content-[''] peer-checked:bg-black peer-checked:after:translate-x-full peer-focus:outline-none">
+            <span class="sr-only">Toggle theme</span>
+        </label>
     </div>
 </template>
