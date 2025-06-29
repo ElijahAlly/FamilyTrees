@@ -1,7 +1,7 @@
 import { serverSupabaseClient } from '#supabase/server';
 import { defineEventHandler, readMultipartFormData } from 'h3';
 
-export default defineEventHandler(async (event) => {
+export default defineEventHandler(async (event: any) => {
     const client = await serverSupabaseClient(event)
 
     // Parse multipart form data
@@ -9,10 +9,10 @@ export default defineEventHandler(async (event) => {
     if (!formData) throw new Error('No form data received')
 
     // Extract files and other data
-    const files = formData.filter(item => item.name === 'files[]')
-    const familyId = formData.find(item => item.name === 'familyId')?.data.toString()
-    const id = formData.find(item => item.name === 'id')?.data.toString()
-    const pictures = formData.find(item => item.name === 'pictures')?.data.toString().split(',');
+    const files = formData.filter((item: any) => item.name === 'files[]')
+    const familyId = formData.find((item: any) => item.name === 'familyId')?.data.toString()
+    const id = formData.find((item: any) => item.name === 'id')?.data.toString()
+    const pictures = formData.find((item: any) => item.name === 'pictures')?.data.toString().split(',');
 
     if (!files.length || !familyId || !id || !pictures) {
         throw new Error('Missing required data')
@@ -27,7 +27,7 @@ export default defineEventHandler(async (event) => {
             const filePath = `${familyId}/${id}/${fileName}`;
 
             // Upload file to Supabase storage
-            const { data: storageData, error: storageError } = await client
+            const { data: _, error: storageError } = await client
                 .storage
                 .from('people')
                 .upload(filePath, fileData.data, {

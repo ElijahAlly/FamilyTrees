@@ -1,4 +1,4 @@
-import type { FamilyTreeNodeType } from "@/types/family";
+import type { FamilyTreeNodeType } from "../types/family";
 
 export const collectMemberIds = (node: FamilyTreeNodeType): Set<number> => {
     const memberIds: Set<number> = new Set();

@@ -76,7 +76,7 @@ const handleFileUpload = async (event: Event) => {
 <template>
     <div 
         v-if="person"
-        @click="$refs.fileInput.click()"
+        @click="($refs.fileInput as any).click()"
         class="flex items-center justify-center w-48 h-48 mx-9 border rounded-md hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-all duration-300 cursor-pointer"
     >
         <Icon icon="material-symbols:add-photo-alternate-outline" class="inline-block w-6 h-6" />

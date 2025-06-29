@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { watch } from 'vue';
 import { useRafFn } from '@vueuse/core'
-import { defineProps, ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import { BasicShadowMap, SRGBColorSpace, NoToneMapping, Color, AdditiveBlending } from 'three';
 import { vertexShader, fragmentShader } from './shaders';
 import { useColorMode } from '@vueuse/core';

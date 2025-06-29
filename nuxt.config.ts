@@ -14,6 +14,7 @@ declare module '@nuxt/schema' {
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
+  // srcDir: 'src',
   compatibilityDate: '2024-04-03',
   devtools: { 
     // `false` to hide devtools and animation 
@@ -22,23 +23,29 @@ export default defineNuxtConfig({
   },
   css: ['~/assets/css/main.css'],
   modules: [
-    '@nuxtjs/supabase',
+    '@nuxtjs/tailwindcss',
+    ['@nuxtjs/supabase', {
+      url: process.env.NUXT_SUPABASE_URL,
+      key: process.env.NUXT_SUPABASE_ANON_KEY,
+      redirectOptions: {
+        login: '/login',
+        callback: '/confirm',
+        include: ['/trees/*'],
+        exclude: ['/'],
+        cookieRedirect: false,
+      }
+    }],
     '@pinia/nuxt',
     '@formkit/auto-animate',
-    '@nuxtjs/tailwindcss',
     '@nuxt/image',
     'radix-vue/nuxt',
-    '@nuxtjs/color-mode',
     '@nuxtjs/robots',
-    '@pinia-plugin-persistedstate/nuxt',
     '@nuxt/icon',
     '@tresjs/nuxt',
-    '@pinia/nuxt',
-    'pinia-plugin-persistedstate/nuxt',
   ],
   plugins: [
     '~/plugins/ui.ts',
-    '~/plugins/console.client'
+    '~/plugins/console.client.ts'
   ],
   // tres: {
   //   devtools: true,
@@ -54,8 +61,8 @@ export default defineNuxtConfig({
   // },
   typescript: {
     strict: true,
-    typeCheck: true,
-    // shim: false
+    typeCheck: false,
+    shim: false
   },
   vue: {
     compilerOptions: {
@@ -76,22 +83,10 @@ export default defineNuxtConfig({
       })
     ],
   },
-  runtimeConfig: {
+  runtimeConfig: {    
     public: {
-      supabaseUrl: process.env.NUXT_PUBLIC_SUPABASE_URL,
-      supabaseKey: process.env.NUXT_PUBLIC_SUPABASE_ANON_KEY,
-      supabase: {
-        url: process.env.NUXT_PUBLIC_SUPABASE_URL,
-        key: process.env.NUXT_PUBLIC_SUPABASE_ANON_KEY,
-        // redirect: false, // maybe `true`
-        redirectOptions: {
-          login: '/login',
-          callback: '/confirm',
-          include: ['/trees/*'],
-          exclude: ['/'],
-          cookieRedirect: false,
-        }
-      },
+      supabaseUrl: process.env.NUXT_SUPABASE_URL,
+      supabaseKey: process.env.NUXT_SUPABASE_ANON_KEY,
     }
   },
   colorMode: {

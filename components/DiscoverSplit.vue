@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Icon } from '@iconify/vue';
 import { SplitterGroup, SplitterPanel } from 'radix-vue';
-import { ref } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import SearchFamilyTrees from './family/SearchFamilyTrees.vue';
 import FamilyResults from './family/FamilyResults.vue';
 
@@ -48,6 +48,20 @@ const handleToggleFullPage = (index: number) => {
     }, 300); // Match this with your transition duration
 }
 
+const handleKeyPress = (event: KeyboardEvent) => {
+    // Only handle if Shift is pressed
+    if (!event.shiftKey) return;
+
+    switch (event.key.toLowerCase()) {
+        case 'l':
+            handleToggleFullPage(0); // Left panel
+            break;
+        case 'r':
+            handleToggleFullPage(1); // Right panel
+            break;
+    }
+}
+
 const resetSectionViewsSize = () => {
     Object.keys(sectionViews.value).forEach((key) => {
         sectionViews.value[Number(key)].isFullPage = false;
@@ -69,10 +83,18 @@ const handlePanelClick = (index: number) => {
         resetSectionViewsSize();
     }
 }
+
+onMounted(() => {
+    window.addEventListener('keydown', handleKeyPress);
+});
+
+onUnmounted(() => {
+    window.removeEventListener('keydown', handleKeyPress);
+});
 </script>
 
 <template>
-    <div class="w-full h-[75%] bg-transparent">
+    <div class="w-full h-[75%] bg-transparent" tabindex="0" @keydown="handleKeyPress">
         <div class="w-full h-full px-8 text-green9 font-medium text-sm bg-transparent">
             <SplitterGroup id="splitter-group-1" direction="horizontal" class="h-full bg-transparent">
                 <SplitterPanel
@@ -90,7 +112,7 @@ const handlePanelClick = (index: number) => {
                     <div v-else class="relative w-full h-full flex flex-col">
                         <div
                             class=" self-end text-zinc-950 dark:text-zinc-50 cursor-pointer hover:bg-zinc-800 hover:text-zinc-50 dark:hover:text-zinc-950 dark:hover:bg-zinc-200 transition-colors duration-300 rounded-sm py-0 px-1"
-                            :title="sectionViews[0].isFullPage ? 'Collapse section' : 'Expand to full page'"
+                            :title="sectionViews[0].isFullPage ? 'Collapse section (Shift+L)' : 'Expand section (Shift+L)'"
                             @click.stop="handleToggleFullPage(0)"
                         >
                             <Icon
@@ -125,7 +147,7 @@ const handlePanelClick = (index: number) => {
                             <div v-else class="relative w-full h-full flex flex-col items-center">
                                 <div
                                     class="self-end text-zinc-950 dark:text-zinc-50 cursor-pointer hover:bg-zinc-800 hover:text-zinc-50 dark:hover:text-zinc-950 dark:hover:bg-zinc-200 transition-colors duration-300 rounded-sm py-0 px-1"
-                                    :title="sectionViews[1].isFullPage ? 'Collapse section' : 'Expand to full page'"
+                                    :title="sectionViews[1].isFullPage ? 'Collapse section (Shift+R)' : 'Expand section (Shift+R)'"
                                     @click.stop="handleToggleFullPage(1)"
                                 >
                                     <Icon
