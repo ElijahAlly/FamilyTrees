@@ -1,4 +1,4 @@
-import { useRuntimeConfig } from 'nuxt/app';
+import { useRuntimeConfig } from '#imports';
 
 /**
  * Generates a public URL for a person's picture in Supabase storage

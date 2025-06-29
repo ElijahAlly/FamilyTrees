@@ -5,7 +5,6 @@ import {
     SliderTrack,
     SliderRange,
 } from 'radix-vue';
-import { defineNuxtPlugin } from 'nuxt/app';
 
 export default defineNuxtPlugin((nuxtApp: any) => {
     nuxtApp.vueApp.component('ui-button', Button);
