@@ -1,3 +1,3 @@
 declare module '#supabase/server' {
-    export { serverSupabaseClient } from '@nuxtjs/supabase'
+    export { useSupabaseClient, serverSupabaseClient } from '@nuxtjs/supabase/dist/runtime/composables'
 }

@@ -1,15 +1,15 @@
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
-import { useRouter } from 'nuxt/app';
 import { defineAsyncComponent, ref } from 'vue';
+import { useRouter } from 'vue-router'
 
 const GalaxyGenerator = defineAsyncComponent(() => 
   import('../content/galaxy-generator/index.vue')
 )
 
 const router = useRouter();
-const isHoveringHero = ref(false);
-const isGalaxyAnimationPaused = ref(false);
+const isHoveringHero = ref<boolean>(false);
+const isGalaxyAnimationPaused = ref<boolean>(false);
 
 const startExploring = () => {
     router.push('/discover');
