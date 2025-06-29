@@ -3,7 +3,6 @@ import { Icon } from '@iconify/vue'
 import { ref } from 'vue';
 import { useAuthStore } from '@/stores/auth';
 import { storeToRefs } from 'pinia';
-import { navigateTo } from 'nuxt/app';
 import { 
     NavigationMenuItem, NavigationMenuTrigger, NavigationMenuContent, 
     NavigationMenuLink, NavigationMenuIndicator, NavigationMenuRoot, NavigationMenuList,

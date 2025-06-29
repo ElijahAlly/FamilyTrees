@@ -2,7 +2,7 @@
 import { Icon } from '@iconify/vue';
 import { useBannerStore } from '@/stores/useBannerStore';
 import { useRoute } from 'nuxt/app';
-import { ref, computed, watch, onMounted, nextTick } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { useRouter } from 'nuxt/app';
 import { useColorMode } from '@vueuse/core';
 import Navbar from '@/components/navbar/index.vue';
@@ -126,7 +126,7 @@ onMounted(() => {
                 </div>
             </Transition>
             <div :class="[
-                `h-fit ${!$route.params?.familyName && !$route.params?.familyId ? 'min-h-screen' : ''} bg-neutral-50 dark:bg-neutral-950`,
+                `h-fit ${!route.params?.familyName && !route.params?.familyId ? 'min-h-screen' : ''} bg-neutral-50 dark:bg-neutral-950`,
                 isNavigatingBack ? 'is-navigating-back' : ''
             ]">
                 <slot></slot>

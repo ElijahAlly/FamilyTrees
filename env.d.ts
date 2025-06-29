@@ -24,3 +24,11 @@ declare module 'pinia' {
         }
     }
 }
+
+declare module 'vite-plugin-glsl' {
+    export * as glsl from 'vite-plugin-glsl';
+}
+
+declare module 'rollup-plugin-visualizer' {
+    export { visualizer } from 'rollup-plugin-visualizer';
+}

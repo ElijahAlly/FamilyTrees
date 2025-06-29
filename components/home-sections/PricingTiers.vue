@@ -55,18 +55,16 @@ const plans = [
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    <div v-for="(plan, index) in plans" 
-                        :key="index"
-                        :class="[
+                    <div v-for="(plan, index) in plans" :key="index" :class="[
                             'p-8 rounded-2xl transition-all duration-200',
                             plan.popular 
                                 ? 'bg-gradient-to-b from-zinc-900 to-zinc-600 dark:from-zinc-800 dark:to-zinc-900 text-white transform hover:scale-105' 
                                 : 'bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:border-zinc-300 dark:hover:border-zinc-600'
-                        ]"
-                    >
+                        ]">
                         <div v-if="plan.popular" class="absolute right-0 top-0">
                             <div class="relative h-[72px] w-[72px] overflow-hidden">
-                                <span class="absolute top-[12px] right-[-22px] rotate-45 block w-[100px] text-center bg-violet-600 text-white text-sm font-medium py-1">
+                                <span
+                                    class="absolute top-[12px] right-[-22px] rotate-45 block w-[100px] text-center bg-violet-600 text-white text-sm font-medium py-1">
                                     Popular
                                 </span>
                             </div>
@@ -102,16 +100,19 @@ const plans = [
                         </div>
 
                         <ul class="mb-8 space-y-4">
-                            <li v-for="(feature, featureIndex) in plan.features" :key="featureIndex" class="flex items-center gap-3">
-                                <Icon icon="radix-icons:check" class="w-5 h-5" :class="{'text-zinc-200': plan.popular, 'text-zinc-600 dark:text-zinc-400': !plan.popular}" />
-                                <span :class="{'text-zinc-200': plan.popular, 'text-zinc-600 dark:text-zinc-400': !plan.popular}">
+                            <li v-for="(feature, featureIndex) in plan.features" :key="featureIndex"
+                                class="flex items-center gap-3">
+                                <Icon icon="radix-icons:check" class="w-5 h-5"
+                                    :class="{'text-zinc-200': plan.popular, 'text-zinc-600 dark:text-zinc-400': !plan.popular}" />
+                                <span
+                                    :class="{'text-zinc-200': plan.popular, 'text-zinc-600 dark:text-zinc-400': !plan.popular}">
                                     {{ feature }}
                                 </span>
                             </li>
                         </ul>
 
                         <ui-button size="fit" :variant="plan.popular ? 'default' : 'outline'">
-                            Get Started
+                            Get Started 
                         </ui-button>
                     </div>
                 </div>
