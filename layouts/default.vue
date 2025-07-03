@@ -2,17 +2,21 @@
 import { Icon } from '@iconify/vue';
 import { useBannerStore } from '@/stores/useBannerStore';
 import { useRoute } from 'nuxt/app';
-import { ref, computed, watch, onMounted } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted, onBeforeMount } from 'vue';
 import { useRouter } from 'nuxt/app';
 import { useColorMode } from '@vueuse/core';
 import Navbar from '@/components/navbar/index.vue';
 import AppFooter from '@/components/AppFooter.vue';
+import { listOfAllShortcuts, ShortcutSectionName, useHotkeys } from '../composables/useHotkeys';
+import HotkeyHelperModal from '../components/HotkeyHelperModal.vue';
 
 const router = useRouter();
 const route = useRoute();
 const bannerStore = useBannerStore();
 const colorMode = useColorMode();
+const { registerHotkeys, setHotkeysActions, unregisterHotkeys } = useHotkeys();
 
+const showHotkeyHelper = ref(false);
 const isNavigatingBack = ref(false);
 const showScrollBanner = ref(false);
 const mainRef = ref<HTMLElement | null>(null);
@@ -84,13 +88,32 @@ watch(colorMode, (newVal) => {
     }
 })
 
+onBeforeMount(() => {
+    // Register all possible shortcuts with empty actions
+    listOfAllShortcuts.forEach(({ name, hotkeys, activeOnPages, active }) => {
+        registerHotkeys(name, hotkeys, activeOnPages, active);
+    });
+})
+
 onMounted(() => {
     if (colorMode.value === 'dark') {
         document.documentElement.style.backgroundColor = '#18181b';
     } else {
         document.documentElement.style.backgroundColor = '#d4d4d8'; 
     }
+
+    setHotkeysActions(ShortcutSectionName.GLOBAL, {
+        '?': { action: () => showHotkeyHelper.value = !showHotkeyHelper.value },
+        't': {
+            action: scrollToTop,
+            condition: () => showScrollBanner.value
+        }
+    })
 })
+
+onUnmounted(() => {
+    unregisterHotkeys(ShortcutSectionName.GLOBAL);
+});
 </script>
 
 <template>
@@ -119,9 +142,10 @@ onMounted(() => {
                     </div>
                     <button
                         @click="scrollToTop"
-                        class="px-3 py-1 text-sm bg-zinc-800 hover:bg-zinc-900 text-white dark:bg-zinc-200 dark:hover:bg-zinc-50 dark:text-black rounded-lg transition-colors duration-200 justify-end"
+                        class="flex gap-1 items-center px-3 py-1 text-sm bg-zinc-800 hover:bg-zinc-900 text-white dark:bg-zinc-200 dark:hover:bg-zinc-50 dark:text-black rounded-lg transition-colors duration-200 justify-end"
+                        title="Back to top of page (Shift+T)"
                     >
-                        Scroll to top <Icon icon="mdi:arrow-up" class="inline-block" />
+                        Scroll to top <Icon icon="mdi:arrow-up" class="h-4 w-4" />
                     </button>
                 </div>
             </Transition>
@@ -131,6 +155,7 @@ onMounted(() => {
             ]">
                 <slot></slot>
             </div>
+            <HotkeyHelperModal v-model:isOpen="showHotkeyHelper" />
             <AppFooter v-if="showFooter"/>
         <!-- </AutoStyleWrapper> -->
     </main>

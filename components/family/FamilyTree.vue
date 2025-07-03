@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, watch, type PropType } from 'vue';
+import { onMounted, ref, watch, type PropType } from 'vue';
 import { type FamilyTreeNodeType } from '@/types/family';
 import * as d3 from 'd3';
 import { usePersonStore } from '@/stores/person';

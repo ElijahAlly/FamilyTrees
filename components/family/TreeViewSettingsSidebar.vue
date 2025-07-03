@@ -3,12 +3,8 @@ import { Icon } from '@iconify/vue';
 import { useDraggableZoneStore } from '@/stores/draggableZone';
 import { storeToRefs } from 'pinia';
 import {
-  DropdownMenuArrow,
-  DropdownMenuCheckboxItem,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuItemIndicator,
-  DropdownMenuLabel,
   DropdownMenuPortal,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,

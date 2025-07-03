@@ -12,14 +12,18 @@ import DraggableSection from '@/components/family/DraggableSection.vue';
 import LoadingSpinner from '@/components/ui/LoadingSpinner.vue';
 import FamilyDetailsDropdown from '@/components/family/FamilyDetailsDropdown.vue';
 import FamilyDetails from '@/components/family/FamilyDetails.vue';
+import { useRoute } from 'nuxt/app';
+import { ShortcutSectionName, useHotkeys } from '../../composables/useHotkeys';
 
 export default {
   setup() {
     const familyStore = useFamilyStore();
     const { curentFamilyTree, loadingFamily } = storeToRefs(familyStore);
+    const route = useRoute();
     
     const draggableZoneStore = useDraggableZoneStore();
     const { curDisplayType } = storeToRefs(draggableZoneStore);
+    const { setHotkeysActions, unregisterHotkeys } = useHotkeys();
 
     const maxScale = ref(3.6);
     const minScale = ref(0.3);
@@ -45,14 +49,19 @@ export default {
       maxScale,
       currentZoomPercent,
       curentFamilyTree,
-      curDisplayType
+      curDisplayType,
+      route,
+      setHotkeysActions,
+      unregisterHotkeys,
+      ShortcutSectionName
     }
   },
   components: {
     FamilyTree,
     DraggableSection,
     LoadingSpinner,
-    FamilyDetailsDropdown
+    FamilyDetailsDropdown,
+    FamilyDetails
   },
   mounted() {
     this.isMountedAndTriedToFetchFamilyTree = true;
@@ -101,12 +110,31 @@ export default {
       event.preventDefault();
     }, { passive: false });
 
-    // Set scrolling capability to the tree
+    this.setHotkeyCapabilities();
   },
   onBeforeUnmount() {
     this.isMountedAndTriedToFetchFamilyTree = true; 
+    this.unregisterHotkeys(ShortcutSectionName.FAMILY_TREE_PAGE); 
   },
   methods: {
+    handleToggleFamilyDetails(isVisible: boolean) {
+      if (isVisible) {
+        this.unregisterHotkeys(ShortcutSectionName.FAMILY_TREE_PAGE);
+        return;
+      }
+      this.setHotkeyCapabilities();
+    },
+    setHotkeyCapabilities() {
+      this.setHotkeysActions(ShortcutSectionName.FAMILY_TREE_PAGE, {
+        'r': { action: this.resetZoomAndPan },
+        '_': { action: this.zoomOut },
+        '+': { action: this.zoomIn },
+        'a': { action: this.panLeft },
+        'd': { action: this.panRight },
+        'w': { action: this.panUp },
+        's': { action: this.panDown }
+      })
+    },
     handleSliderDrag(payload: number[] | undefined) {
       if (!this.panzoom || !payload || !payload[0]) return;
       this.panzoom.zoom(payload[0])
@@ -159,6 +187,42 @@ export default {
       this.sliderValue[0] = scale;
       this.currentZoomPercent = scale / this.maxScale;
     },
+    panLeft() {
+      if (!this.panzoom) return;
+      const currentX = this.panzoom.getPan().x;
+      this.panzoom.pan(currentX + 50, this.panzoom.getPan().y, {
+        animate: true,
+        duration: 150,
+        easing: 'ease-out'
+      });
+    },
+    panRight() {
+      if (!this.panzoom) return;
+      const currentX = this.panzoom.getPan().x;
+      this.panzoom.pan(currentX - 50, this.panzoom.getPan().y, {
+        animate: true,
+        duration: 150,
+        easing: 'ease-out'
+      });
+    },
+    panUp() {
+      if (!this.panzoom) return;
+      const currentY = this.panzoom.getPan().y;
+      this.panzoom.pan(this.panzoom.getPan().x, currentY + 50, {
+        animate: true,
+        duration: 150,
+        easing: 'ease-out'
+      });
+    },
+    panDown() {
+      if (!this.panzoom) return;
+      const currentY = this.panzoom.getPan().y;
+      this.panzoom.pan(this.panzoom.getPan().x, currentY - 50, {
+        animate: true,
+        duration: 150,
+        easing: 'ease-out'
+      });
+    },
     centerOnNode({ x, y }: { x: number, y: number }) {
       if (!this.panzoom || !window) return;
 
@@ -195,7 +259,7 @@ export default {
 
 <template>
   <div class="relative min-h-[92vh] max-h-[92vh] w-full overflow-hidden">
-    <FamilyDetailsDropdown v-show="curentFamilyTree" title="Family Details">
+    <FamilyDetailsDropdown v-show="curentFamilyTree" title="Family Details" @toggle:familyDetails="handleToggleFamilyDetails">
       <template #content>
         <FamilyDetails />
       </template>
@@ -228,15 +292,16 @@ export default {
         class="h-5 w-5 text-black dark:text-white cursor-pointer" />
     </div>
     <div v-if="curentFamilyTree"
-      class="flex items-center absolute bottom-[12px] left-[0px] translate-x-[30px] bg-white dark:bg-black border hover:border-zinc-300 dark:border-zinc-600 dark:hover:border-zinc-100 rounded py-1 px-2 cursor-pointer">
-      <Icon name="carbon:zoom-reset" @click.stop="resetZoomAndPan" class="h-5 w-5 text-black dark:text-white" />
+      class="flex items-center absolute bottom-[12px] left-[0px] translate-x-[30px] bg-white dark:bg-black border hover:border-zinc-300 dark:border-zinc-600 dark:hover:border-zinc-100 rounded py-1 px-2 cursor-pointer"
+      @click.stop="resetZoomAndPan" title="Reset Zoom & Pan to original view (Shift+R)">
+      <Icon name="carbon:zoom-reset" class="h-5 w-5 text-black dark:text-white" />
     </div>
 
     <!-- Error Loading tree -->
     <div v-else-if="isMountedAndTriedToFetchFamilyTree && !loadingFamily && !curentFamilyTree"
       class="absolute inset-0 w-full h-full flex flex-col items-center">
       <p class="text-red-500 dark:text-red-500 font-medium text-lg mt-80">
-        Error loading the{{ ` ${$route.params.familyName || ''} ` }}family tree! Please refresh or go back to
+        Error loading the{{ ` ${route.params.familyName || ''} ` }}family tree! Please refresh or go back to
         <NuxtLink to="/discover" class="underline font-normal text-zinc-700 dark:text-zinc-300">
           <span>Discover</span>
         </NuxtLink>
@@ -247,7 +312,7 @@ export default {
     <!-- Loading tree -->
     <div v-else class="absolute inset-0 w-full h-full flex flex-col items-center justify-center">
       <LoadingSpinner />
-      <p class="text-black dark:text-white mt-3 font-extralight text-sm">Loading the{{ ` ${$route.params.familyName ||
+      <p class="text-black dark:text-white mt-3 font-extralight text-sm">Loading the{{ ` ${route.params.familyName ||
         ''} ` }}family tree...</p>
     </div>
   </div>

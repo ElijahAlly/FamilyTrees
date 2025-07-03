@@ -4,6 +4,7 @@ import { SplitterGroup, SplitterPanel } from 'radix-vue';
 import { ref, onMounted, onUnmounted } from 'vue';
 import SearchFamilyTrees from './family/SearchFamilyTrees.vue';
 import FamilyResults from './family/FamilyResults.vue';
+import { ShortcutSectionName, useHotkeys } from '../composables/useHotkeys';
 
 type SectionViewType = {
     [key: number]: {
@@ -19,6 +20,7 @@ const _defaultSectionViews = {
         isFullPage: false
     }
 }
+const { setHotkeysActions, unregisterHotkeys, hotkeyList } = useHotkeys();
 
 const sectionViews = ref<SectionViewType>(_defaultSectionViews);
 const isTransitioning = ref(false);
@@ -45,21 +47,7 @@ const handleToggleFullPage = (index: number) => {
     // Reset transition state after animation completes
     setTimeout(() => {
         isTransitioning.value = false;
-    }, 300); // Match this with your transition duration
-}
-
-const handleKeyPress = (event: KeyboardEvent) => {
-    // Only handle if Shift is pressed
-    if (!event.shiftKey) return;
-
-    switch (event.key.toLowerCase()) {
-        case 'l':
-            handleToggleFullPage(0); // Left panel
-            break;
-        case 'r':
-            handleToggleFullPage(1); // Right panel
-            break;
-    }
+    }, 300); // Match this with the transition duration
 }
 
 const resetSectionViewsSize = () => {
@@ -68,9 +56,9 @@ const resetSectionViewsSize = () => {
     });
 }
 
-const resetSectionViews = () => {
-    sectionViews.value = _defaultSectionViews;
-}
+// const resetSectionViews = () => {
+//     sectionViews.value = _defaultSectionViews;
+// }
 
 const isAnySectionFullPage = () => {
     return Object.keys(sectionViews.value).some((key) => {
@@ -85,98 +73,78 @@ const handlePanelClick = (index: number) => {
 }
 
 onMounted(() => {
-    window.addEventListener('keydown', handleKeyPress);
+    setHotkeysActions(ShortcutSectionName.DISCOVER_SPLIT, {
+        'l': { action: () => handleToggleFullPage(0) },
+        'r': { action: () => handleToggleFullPage(1) },
+        'ArrowLeft': { action: () => handleToggleFullPage(0) },
+        'ArrowRight': { action: () => handleToggleFullPage(1) }
+    });
 });
 
 onUnmounted(() => {
-    window.removeEventListener('keydown', handleKeyPress);
+    unregisterHotkeys(ShortcutSectionName.DISCOVER_SPLIT);
 });
 </script>
 
 <template>
-    <div class="w-full h-[75%] bg-transparent" tabindex="0" @keydown="handleKeyPress">
+    <div class="w-full h-[75%] bg-transparent" tabindex="0">
         <div class="w-full h-full px-8 text-green9 font-medium text-sm bg-transparent">
             <SplitterGroup id="splitter-group-1" direction="horizontal" class="h-full bg-transparent">
-                <SplitterPanel
-                    id="splitter-group-1-panel-1"
-                    :min-size="sectionViews[0].isFullPage ? 88 : 10"
+                <SplitterPanel id="splitter-group-1-panel-1" :min-size="sectionViews[0].isFullPage ? 88 : 10"
                     class="relative border w-full h-full min-h-96 rounded-xl border-zinc-950 dark:border-zinc-100 flex flex-col items-center mr-3 overflow-y-auto px-6 py-2 transition-all duration-300 ease-in-out"
-                    @click.stop="handlePanelClick(0)"
-                >
-                    <div
-                        v-if="isAnySectionFullPage() && !sectionViews[0].isFullPage"
-                        class="flex justify-between items-center w-full h-full absolute top-0 left-0 text-black bg-zinc-300 hover:bg-zinc-400 dark:bg-zinc-900 hover:dark:bg-zinc-700 cursor-pointer dark:text-white transition-all duration-300"
-                    >
+                    @click.stop="handlePanelClick(0)">
+                    <div v-if="isAnySectionFullPage() && !sectionViews[0].isFullPage"
+                        class="flex justify-between items-center w-full h-full absolute top-0 left-0 text-black bg-zinc-300 hover:bg-zinc-400 dark:bg-zinc-900 hover:dark:bg-zinc-700 cursor-pointer dark:text-white transition-all duration-300">
                         <p class="w-full text-center">Click to expand</p>
                     </div>
                     <div v-else class="relative w-full h-full flex flex-col">
-                        <div
-                            class=" self-end text-zinc-950 dark:text-zinc-50 cursor-pointer hover:bg-zinc-800 hover:text-zinc-50 dark:hover:text-zinc-950 dark:hover:bg-zinc-200 transition-colors duration-300 rounded-sm py-0 px-1"
+                        <div class=" self-end text-zinc-950 dark:text-zinc-50 cursor-pointer hover:bg-zinc-800 hover:text-zinc-50 dark:hover:text-zinc-950 dark:hover:bg-zinc-200 transition-colors duration-300 rounded-sm py-0 px-1"
                             :title="sectionViews[0].isFullPage ? 'Collapse section (Shift+L)' : 'Expand section (Shift+L)'"
-                            @click.stop="handleToggleFullPage(0)"
-                        >
+                            @click.stop="handleToggleFullPage(0)">
                             <Icon
-                                :icon="sectionViews[0].isFullPage ? 'ri:collapse-horizontal-line' : 'ri:expand-horizontal-line'" 
-                                class="w-7 h-7"
-                            />
+                                :icon="sectionViews[0].isFullPage ? 'ri:collapse-horizontal-line' : 'ri:expand-horizontal-line'"
+                                class="w-7 h-7" />
                         </div>
                         <SearchFamilyTrees title="Search for your family trees by last name" searchBy="families" />
                         <!-- Should handle families with the same last name by showing the people in the family with a non-visual tree (nested dropdowns, but it should be reversed, starting from the youngest person) -->
                         <FamilyResults />
                     </div>
                 </SplitterPanel>
-                <SplitterPanel 
-                    id="splitter-group-1-panel-2" 
-                    :min-size="sectionViews[1].isFullPage ? 90 : 12"
-                    class="relative transition-all duration-300 ease-in-out"
-                >
+                <SplitterPanel id="splitter-group-1-panel-2" :min-size="sectionViews[1].isFullPage ? 90 : 12"
+                    class="relative transition-all duration-300 ease-in-out">
                     <!-- <div class="absolute top-0 right-0 text-zinc-950 dark:text-zinc-50 cursor-pointer hover:bg-zinc-900 hover:text-zinc-50 dark:hover:text-zinc-950 dark:hover:bg-zinc-200 transition-colors duration-300 rounded-sm py-0 px-1"></div> -->
                     <SplitterGroup id="splitter-group-2" direction="vertical">
-                        <SplitterPanel
-                            id="splitter-group-2-panel-1" 
-                            :min-size="sectionViews[1].isFullPage ? 100 : 80"
+                        <SplitterPanel id="splitter-group-2-panel-1" :min-size="sectionViews[1].isFullPage ? 100 : 80"
                             class="flex flex-col relative border rounded-xl items-center justify-center border-zinc-950 dark:border-zinc-100 px-6 py-2"
-                            @click.stop="handlePanelClick(1)"
-                        >
-                            <div
-                                v-if="isAnySectionFullPage() && !sectionViews[1].isFullPage"
-                                class="flex justify-between items-center w-full h-full absolute top-0 left-0 text-black bg-zinc-300 hover:bg-zinc-400 dark:bg-zinc-900 hover:dark:bg-zinc-700 cursor-pointer dark:text-white transition-colors duration-300"
-                            >
+                            @click.stop="handlePanelClick(1)">
+                            <div v-if="isAnySectionFullPage() && !sectionViews[1].isFullPage"
+                                class="flex justify-between items-center w-full h-full absolute top-0 left-0 text-black bg-zinc-300 hover:bg-zinc-400 dark:bg-zinc-900 hover:dark:bg-zinc-700 cursor-pointer dark:text-white transition-colors duration-300">
                                 <p class="w-full text-center">Click to expand</p>
                             </div>
                             <div v-else class="relative w-full h-full flex flex-col items-center">
-                                <div
-                                    class="self-end text-zinc-950 dark:text-zinc-50 cursor-pointer hover:bg-zinc-800 hover:text-zinc-50 dark:hover:text-zinc-950 dark:hover:bg-zinc-200 transition-colors duration-300 rounded-sm py-0 px-1"
+                                <div class="self-end text-zinc-950 dark:text-zinc-50 cursor-pointer hover:bg-zinc-800 hover:text-zinc-50 dark:hover:text-zinc-950 dark:hover:bg-zinc-200 transition-colors duration-300 rounded-sm py-0 px-1"
                                     :title="sectionViews[1].isFullPage ? 'Collapse section (Shift+R)' : 'Expand section (Shift+R)'"
-                                    @click.stop="handleToggleFullPage(1)"
-                                >
+                                    @click.stop="handleToggleFullPage(1)">
                                     <Icon
-                                        :icon="sectionViews[1].isFullPage ? 'ri:collapse-horizontal-line' : 'ri:expand-horizontal-line'" 
-                                        class="w-7 h-7"
-                                    />
+                                        :icon="sectionViews[1].isFullPage ? 'ri:collapse-horizontal-line' : 'ri:expand-horizontal-line'"
+                                        class="w-7 h-7" />
                                 </div>
                                 <!-- ! FIX: Search for people - by first name, middle name, last name, or a combination of the three. -->
                                 <SearchFamilyTrees title="Search for a person by their full name" searchBy="people" />
-                                <NuxtLink
-                                    v-if="sectionViews[1].isFullPage"
-                                    class="w-fit flex items-center justify-center mx-3 border border-zinc-500 dark:border-zinc-400 text-zinc-700 dark:text-zinc-300 rounded-md hover:bg-zinc-200 dark:hover:text-zinc-950 dark:hover:border-zinc-950 transition-colors duration-300 p-2" 
-                                    to="/create"
-                                >
+                                <NuxtLink v-if="sectionViews[1].isFullPage"
+                                    class="w-fit flex items-center justify-center mx-3 border border-zinc-500 dark:border-zinc-400 text-zinc-700 dark:text-zinc-300 rounded-md hover:bg-zinc-200 dark:hover:text-zinc-950 dark:hover:border-zinc-950 transition-colors duration-300 p-2"
+                                    to="/create">
                                     <p class="flex flex-nowrap">Create New Family Tree</p>
                                 </NuxtLink>
                             </div>
                         </SplitterPanel>
                         <div v-if="!sectionViews[1].isFullPage" class="h-3 w-3"></div>
-                        <SplitterPanel 
-                            id="splitter-group-2-panel-2" 
-                            :min-size="sectionViews[1].isFullPage ? 0 : 20"
+                        <SplitterPanel id="splitter-group-2-panel-2" :min-size="sectionViews[1].isFullPage ? 0 : 20"
                             class="border rounded-xl flex items-center justify-center border-zinc-950 dark:border-zinc-100"
-                            :class="{'border-none': sectionViews[1].isFullPage}"
-                        >
-                            <NuxtLink 
-                                class="w-fit flex items-center justify-center mx-3 border border-zinc-500 dark:border-zinc-400 text-zinc-700 dark:text-zinc-300 rounded-md hover:bg-zinc-200 dark:hover:text-zinc-950 dark:hover:border-zinc-950 transition-colors duration-300 p-2" 
-                                to="/create"
-                            >
+                            :class="{'border-none': sectionViews[1].isFullPage}">
+                            <NuxtLink
+                                class="w-fit flex items-center justify-center mx-3 border border-zinc-500 dark:border-zinc-400 text-zinc-700 dark:text-zinc-300 rounded-md hover:bg-zinc-200 dark:hover:text-zinc-950 dark:hover:border-zinc-950 transition-colors duration-300 p-2"
+                                to="/create">
                                 <p class="flex flex-nowrap">Create New Family Tree</p>
                             </NuxtLink>
                         </SplitterPanel>
