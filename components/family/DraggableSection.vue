@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { computed, defineAsyncComponent } from 'vue';
 import { useDraggableZoneStore } from '@/stores/draggableZone';
 import { storeToRefs } from 'pinia';
 import PersonInfoSidebar from './PersonInfoSidebar.vue';

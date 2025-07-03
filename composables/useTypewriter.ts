@@ -1,5 +1,11 @@
 import { ref } from 'vue'
 
+/**
+ * 
+ * @param text Text to display when typing
+ * @param speed Lower number (in ms) will type the next character faster
+ * @param delay How long should it wait before starting to type the text (This is NOT the pause between characters, use speed)
+ */
 export function useTypewriter(text: string, speed: number = 100, delay: number = 0) {
     const displayText = ref('');
     const isTyping = ref(false);

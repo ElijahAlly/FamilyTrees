@@ -1,18 +1,20 @@
 <script setup lang="ts">
 import { Icon } from '@iconify/vue';
-import { ref } from 'vue';
 import { useDraggableZoneStore } from '@/stores/draggableZone';
 import { storeToRefs } from 'pinia';
 
-const { title } = defineProps({
+const props = defineProps({
     title: { type: String, required: true }
 })
 
 const draggableZoneStore = useDraggableZoneStore();
 const { isFullPageDropdownOpen } = storeToRefs(draggableZoneStore);
 
+const emit = defineEmits<{ 'toggle:familyDetails': [boolean] }>();
+
 const toggleDropdown = () => {
     isFullPageDropdownOpen.value = !isFullPageDropdownOpen.value;
+    emit('toggle:familyDetails', isFullPageDropdownOpen.value);
 }
 </script>
 

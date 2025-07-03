@@ -5,6 +5,7 @@ import { getFullName, getGenderLabel } from '@/utils/person';
 import { useBannerStore } from '@/stores/useBannerStore';
 import { formatDate } from '@/utils/person';
 import { ref, watchEffect, onUnmounted } from 'vue';
+import { useRoute } from 'nuxt/app';
 
 const route = useRoute();
 const personId = Number(route.params.personId);

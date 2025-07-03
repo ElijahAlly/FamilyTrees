@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, type PropType, watch, nextTick } from 'vue';
+import { ref, type PropType, watch } from 'vue';
 import { Icon } from '@iconify/vue';
 import { storeToRefs } from 'pinia';
 import { useFamilyStore } from '@/stores/family';

@@ -1,4 +1,4 @@
-import { onMounted, ref, watch } from 'vue';
+import { onMounted, watch } from 'vue';
 import { useFamilyStore } from '../stores/family';
 import type { FetchTypeList } from '../types/fetch';
 import { type MarriageType } from '../types/marriage';
@@ -6,6 +6,7 @@ import { type PersonType } from '../types/person';
 import { type FamilyTreeNodeType, type FamilyType } from '../types/family';
 import { removeDuplicateTrees } from '../utils/family'
 import { storeToRefs } from 'pinia';
+import { useRoute } from 'nuxt/app';
 
 type MarriageMap = Map<number, MarriageType[]>;
 type MembersMap = Map<number, PersonType>;

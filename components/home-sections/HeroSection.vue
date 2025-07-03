@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
 import { defineAsyncComponent, ref } from 'vue';
-import { useRouter } from 'vue-router'
+import { useRouter } from 'nuxt/app'
 
 const GalaxyGenerator = defineAsyncComponent(() => 
   import('../content/galaxy-generator/index.vue')
