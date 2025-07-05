@@ -87,8 +87,10 @@ watch(colorMode, (newVal) => {
     }
 })
 
+const toggleShortcutHelperModal = () => showHotkeyHelper.value = !showHotkeyHelper.value;
+
 const { registerHotkeys } = useHotkeys(ShortcutSectionName.GLOBAL, {
-    '?': { action: () => showHotkeyHelper.value = !showHotkeyHelper.value },
+    '?': { action: toggleShortcutHelperModal },
     't': {
         action: scrollToTop,
         condition: () => showScrollBanner.value
@@ -149,6 +151,13 @@ onMounted(() => {
                 isNavigatingBack ? 'is-navigating-back' : ''
             ]">
                 <slot></slot>
+            </div>
+            <div 
+                class="fixed right-12 bottom-9 px-3 dark:text-white font-extralight rounded-full bg-zinc-200 dark:bg-zinc-900 border border-zinc-800 dark:border-zinc-100 cursor-help"
+                title="View the Shortcuts Menu (Shift+?)"
+                @click="toggleShortcutHelperModal"
+            >
+                ?
             </div>
             <HotkeyHelperModal v-model:isOpen="showHotkeyHelper" />
             <AppFooter v-if="showFooter"/>
