@@ -3,6 +3,7 @@ import { ref, computed, watch } from 'vue';
 import { storeToRefs } from 'pinia';
 import { Icon } from '@iconify/vue';
 import { usePersonStore } from '@/stores/person';
+import { ShortcutSectionName, useHotkeys } from '../../composables/useHotkeys';
 
 const personStore = usePersonStore();
 const { clearSelectedPersonInTree, setGoToPersonInTree } = personStore;
@@ -10,20 +11,20 @@ const { selectedPersonInTree } = storeToRefs(personStore);
 
 const collapsed = ref(false);
 const collapsedStyles = ref('');
-const computedClass = computed(() => `${selectedPersonInTree.value ? 'bg-neutral-50 dark:bg-zinc-950' : 'bg-transparent pointer-events-none'} ${size.value === 'md' ? 'min-w-[330px]' : 'min-w-[600px]'}`);
+const computedClass = computed(() => `${selectedPersonInTree.value ? 'bg-neutral-50 dark:bg-zinc-950' : 'bg-transparent pointer-events-none'} ${size.value === 'sm' ? 'min-w-[330px]' : 'min-w-[600px]'}`);
 const TEXT_CLASS = "dark:text-white cursor-text select-text";
 
-const size = ref<'md' | 'lg'>('md');
+const size = ref<'sm' | 'lg'>('sm');
 const SIZE_CLASS = 'px-2 py-1 cursor-pointer text-zinc-950 dark:text-zinc-50 hover:bg-zinc-300 dark:hover:bg-zinc-700';
 const SIZE_ACTIVE_CLASS = 'bg-zinc-400 hover:bg-zinc-400 dark:bg-zinc-600 dark:hover:bg-zinc-600';
-const mediumClass = computed(() => size.value === 'md' ? `${SIZE_ACTIVE_CLASS} rounded-l-md` : 'rounded-l-md');
+const smallClass = computed(() => size.value === 'sm' ? `${SIZE_ACTIVE_CLASS} rounded-l-md` : 'rounded-l-md');
 const largeClass = computed(() => size.value === 'lg' ? `${SIZE_ACTIVE_CLASS} rounded-r-md` : 'rounded-r-md');
 
 const blurClass = computed(() => `transition-all duration-300 ${collapsed.value ? 'blur-md ml-6' : ''}`);
 
-const toggleSize = (newVal?: 'md' | 'lg') => {
+const toggleSize = (newVal?: 'sm' | 'lg') => {
     if (!newVal) {
-        size.value = size.value === 'md' ? 'lg' : 'md';
+        size.value = size.value === 'sm' ? 'lg' : 'sm';
     } else {
         size.value = newVal;
     }
@@ -53,6 +54,10 @@ watch(collapsed, (newValue) => {
         collapsedStyles.value = '';
     }
 });
+
+useHotkeys(ShortcutSectionName.FAMILY_TREE_PERSON_DETAILS, {
+    'p': { action: toggleCollapsed }
+});
 </script>
 
 <template>
@@ -65,7 +70,7 @@ watch(collapsed, (newValue) => {
         ]" 
         @click.stop="() => collapsed && toggleCollapsed('show')"
         :style="{
-            transform: collapsed ? `translateX(${size === 'md' ? '282' : '552'}px)` : 'translateX(0)', 
+            transform: collapsed ? `translateX(${size === 'sm' ? '282' : '552'}px)` : 'translateX(0)', 
         }" 
     >
         <div>
@@ -125,7 +130,7 @@ watch(collapsed, (newValue) => {
             <div class="flex items-center">
                 <span class="mr-2 text-black dark:text-white">Size:</span>
                 <div class="flex items-center justify-center border rounded-md">
-                    <span :class="[SIZE_CLASS, mediumClass]" @click="toggleSize('md')">Medium</span>
+                    <span :class="[SIZE_CLASS, smallClass]" @click="toggleSize('sm')">Small</span>
                     <div class="text-zinc-300 dark:text-zinc-600">|</div>
                     <span :class="[SIZE_CLASS, largeClass]" @click="toggleSize('lg')">Large</span>
                 </div>

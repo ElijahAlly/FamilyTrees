@@ -2,6 +2,7 @@
 import { Icon } from '@iconify/vue';
 import { useDraggableZoneStore } from '@/stores/draggableZone';
 import { storeToRefs } from 'pinia';
+import { ShortcutSectionName, useHotkeys } from '../../composables/useHotkeys';
 
 const props = defineProps({
     title: { type: String, required: true }
@@ -16,6 +17,10 @@ const toggleDropdown = () => {
     isFullPageDropdownOpen.value = !isFullPageDropdownOpen.value;
     emit('toggle:familyDetails', isFullPageDropdownOpen.value);
 }
+
+useHotkeys(ShortcutSectionName.FAMILY_TREE_DETAILS, {
+    'f': { action: toggleDropdown },
+});
 </script>
 
 <template>
@@ -40,7 +45,7 @@ const toggleDropdown = () => {
             leave-from-class="transform translate-y-0 opacity-100"
             leave-to-class="transform -translate-y-full opacity-0"
         >
-            <div v-if="isFullPageDropdownOpen" class="absolute top-0 left-0 w-full h-[92vh] bg-zinc-100 dark:bg-zinc-900 backdrop-blur-sm z-30 p-8 shadow-lg border-b border-zinc-300 dark:border-zinc-600">
+            <div v-if="isFullPageDropdownOpen" class="absolute top-0 left-0 w-full h-[92vh] bg-zinc-100/90 dark:bg-zinc-900/80 backdrop-blur-2xl dark:backdrop-blur-3xl z-30 p-8 shadow-lg border-b border-zinc-300 dark:border-zinc-600">
                 <slot name="content"></slot>
             </div>
         </Transition>

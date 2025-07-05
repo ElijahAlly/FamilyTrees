@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Icon } from '@iconify/vue';
 import { SplitterGroup, SplitterPanel } from 'radix-vue';
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref } from 'vue';
 import SearchFamilyTrees from './family/SearchFamilyTrees.vue';
 import FamilyResults from './family/FamilyResults.vue';
 import { ShortcutSectionName, useHotkeys } from '../composables/useHotkeys';
@@ -20,7 +20,6 @@ const _defaultSectionViews = {
         isFullPage: false
     }
 }
-const { setHotkeysActions, unregisterHotkeys, hotkeyList } = useHotkeys();
 
 const sectionViews = ref<SectionViewType>(_defaultSectionViews);
 const isTransitioning = ref(false);
@@ -72,17 +71,11 @@ const handlePanelClick = (index: number) => {
     }
 }
 
-onMounted(() => {
-    setHotkeysActions(ShortcutSectionName.DISCOVER_SPLIT, {
-        'l': { action: () => handleToggleFullPage(0) },
-        'r': { action: () => handleToggleFullPage(1) },
-        'ArrowLeft': { action: () => handleToggleFullPage(0) },
-        'ArrowRight': { action: () => handleToggleFullPage(1) }
-    });
-});
-
-onUnmounted(() => {
-    unregisterHotkeys(ShortcutSectionName.DISCOVER_SPLIT);
+useHotkeys(ShortcutSectionName.DISCOVER_SPLIT, {
+    'l': { action: () => handleToggleFullPage(0) },
+    'r': { action: () => handleToggleFullPage(1) },
+    'ArrowLeft': { action: () => handleToggleFullPage(0) },
+    'ArrowRight': { action: () => handleToggleFullPage(1) }
 });
 </script>
 

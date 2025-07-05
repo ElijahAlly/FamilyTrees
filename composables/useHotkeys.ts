@@ -5,12 +5,28 @@ import type { Page } from '../types/page';
 export enum ShortcutSectionName {
     GLOBAL = 'Global',
     DISCOVER_SPLIT = 'Discover Split',
-    FAMILY_TREE_PAGE = 'Family Tree Page'
+    FAMILY_TREE_PAGE = 'Family Tree Page',
+    FAMILY_TREE_DETAILS = 'Family Tree Details',
+    FAMILY_TREE_PERSON_DETAILS = 'Family Tree Person Details',
 }
 
-type HotKeyOptions = '?' | 't' | 'd' // Global
-    | 'l' | 'r' | 'ArrowLeft' | 'ArrowRight' // Discover Split
-    | '_' | '+' | 'r' | 'a' | 'd' | 'w' | 's' // Family Tree Page (a, w, s, d) for moving
+type HotKeyOptions = 
+    // Global
+    // (?) for showing shortcut helpers modal.
+    // (t) for scrolling back to top of page.
+    // (d) for toggling dark theme.
+    '?' | 't' | 'd' 
+    
+    // Discover Split
+    // (l or ArrowLeft, r or ArrowRight) for expanding/collapsing search sections.
+    | 'l' | 'r' | 'ArrowLeft' | 'ArrowRight'
+
+    // Family Tree Page 
+    // (a, w, s, d) for panning. 
+    // (_, +) for zooming.
+    // (f) for showing family details. 
+    // (p) for showing a person's details.
+    | '_' | '+' | 'r' | 'a' | 'd' | 'w' | 's' | 'f' | 'p'
 ;
 
 interface HotkeyConfig {
@@ -41,7 +57,7 @@ const isProcessingHotkey = ref(false);
 // Helper to create a unique key for the hotkey
 // const createHotkeyKey = (key: string, modifier?: string) => modifier ? `${modifier}+${key}` : key;
 
-export function useHotkeys() {
+export function useHotkeys(sectionName?: ShortcutSectionName, actions?: Partial<Record<HotKeyOptions, HotkeyUpdates>>) {
     // Set of all registered hotkey keys for quick lookup
     const activeHotkeyKeys = computed(() => {
         const keys = new Set<string>();
@@ -60,25 +76,32 @@ export function useHotkeys() {
         hotkeyRegistry.value.set(section, { name: section, hotkeys, activeOnPages, active });
     };
 
-    const unregisterHotkeys = (section: ShortcutSectionName) => {
-        const hotKeyToDeactivate = hotkeyRegistry.value.get(section);
-        hotkeyRegistry.value.delete(section);
+    const unregisterHotkeys = (sectionNameOverride?: ShortcutSectionName) => {
+        const sectionNameVal: ShortcutSectionName | undefined = sectionNameOverride || sectionName;
+        if (!sectionNameVal) return;
+        const hotKeyToDeactivate = hotkeyRegistry.value.get(sectionNameVal);
+        hotkeyRegistry.value.delete(sectionNameVal);
         if (hotKeyToDeactivate?.hotkeys.length && hotKeyToDeactivate.activeOnPages?.length) {
-            registerHotkeys(section, hotKeyToDeactivate.hotkeys, hotKeyToDeactivate.activeOnPages, false)
+            registerHotkeys(sectionNameVal, hotKeyToDeactivate.hotkeys, hotKeyToDeactivate.activeOnPages, false)
         }
     };
 
-    const setHotkeysActions = (sectionName: ShortcutSectionName, actions: Partial<Record<HotKeyOptions, HotkeyUpdates>>) => {
-        const section = hotkeyRegistry.value.get(sectionName);
+    const setHotkeysActions = (sectionNameOverride?: ShortcutSectionName, actionsOverride?: Partial<Record<HotKeyOptions, HotkeyUpdates>>) => {
+        const sectionNameVal: ShortcutSectionName | undefined = sectionNameOverride || sectionName;
+        if (!sectionNameVal) return;
+        const actionsVal = actionsOverride || actions;
+        if (!actionsVal) return;
+
+        const section = hotkeyRegistry.value.get(sectionNameVal);
         if (!section) return;
 
         const updatedHotkeys = section.hotkeys.map(hotkey => ({
             ...hotkey,
-            action: actions[hotkey.key]?.action || hotkey.action,
-            condition: actions[hotkey.key]?.condition || hotkey.condition
+            action: actionsVal[hotkey.key]?.action || hotkey.action,
+            condition: actionsVal[hotkey.key]?.condition || hotkey.condition
         }));
         
-        hotkeyRegistry.value.set(sectionName, {
+        hotkeyRegistry.value.set(sectionNameVal, {
             ...section,
             active: true,
             hotkeys: updatedHotkeys
@@ -156,10 +179,12 @@ export function useHotkeys() {
 
     onMounted(() => {
         window.addEventListener('keydown', handleKeyPressHelper);
+        setHotkeysActions();
     });
 
     onUnmounted(() => {
         window.removeEventListener('keydown', handleKeyPressHelper);
+        unregisterHotkeys();
     });
     
     return {
@@ -277,6 +302,32 @@ export const listOfAllShortcuts: HotkeySection[] = [
                 key: 's',
                 modifier: 'shift',
                 description: 'Move family tree down',
+                action: () => {}
+            }
+        ]
+    },
+    {
+        name: ShortcutSectionName.FAMILY_TREE_DETAILS,
+        active: false,
+        activeOnPages: [{ name: 'Family Tree View', url: '/:familyName/:familyId'}],
+        hotkeys: [
+            {
+                key: 'f',
+                modifier: 'shift',
+                description: 'Show/Hide Family Details',
+                action: () => {}
+            }
+        ]
+    },
+    {
+        name: ShortcutSectionName.FAMILY_TREE_PERSON_DETAILS,
+        active: false,
+        activeOnPages: [{ name: 'Family Tree View', url: '/:familyName/:familyId'}],
+        hotkeys: [
+            {
+                key: 'p',
+                modifier: 'shift',
+                description: 'Show/Hide A Person\'s Details',
                 action: () => {}
             }
         ]
