@@ -2,7 +2,7 @@
 import { Icon } from '@iconify/vue';
 import { useBannerStore } from '@/stores/useBannerStore';
 import { useRoute } from 'nuxt/app';
-import { ref, computed, watch, onMounted, onUnmounted, onBeforeMount } from 'vue';
+import { ref, computed, watch, onMounted, onBeforeMount } from 'vue';
 import { useRouter } from 'nuxt/app';
 import { useColorMode } from '@vueuse/core';
 import Navbar from '@/components/navbar/index.vue';
@@ -14,7 +14,6 @@ const router = useRouter();
 const route = useRoute();
 const bannerStore = useBannerStore();
 const colorMode = useColorMode();
-const { registerHotkeys, setHotkeysActions, unregisterHotkeys } = useHotkeys();
 
 const showHotkeyHelper = ref(false);
 const isNavigatingBack = ref(false);
@@ -88,6 +87,14 @@ watch(colorMode, (newVal) => {
     }
 })
 
+const { registerHotkeys } = useHotkeys(ShortcutSectionName.GLOBAL, {
+    '?': { action: () => showHotkeyHelper.value = !showHotkeyHelper.value },
+    't': {
+        action: scrollToTop,
+        condition: () => showScrollBanner.value
+    }
+});
+
 onBeforeMount(() => {
     // Register all possible shortcuts with empty actions
     listOfAllShortcuts.forEach(({ name, hotkeys, activeOnPages, active }) => {
@@ -101,19 +108,7 @@ onMounted(() => {
     } else {
         document.documentElement.style.backgroundColor = '#d4d4d8'; 
     }
-
-    setHotkeysActions(ShortcutSectionName.GLOBAL, {
-        '?': { action: () => showHotkeyHelper.value = !showHotkeyHelper.value },
-        't': {
-            action: scrollToTop,
-            condition: () => showScrollBanner.value
-        }
-    })
 })
-
-onUnmounted(() => {
-    unregisterHotkeys(ShortcutSectionName.GLOBAL);
-});
 </script>
 
 <template>

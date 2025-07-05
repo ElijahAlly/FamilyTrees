@@ -294,7 +294,7 @@ const renderTree = () => {
                 if (event.shiftKey) {
                     toggleChildren(d);
                 } else {
-                    setSelectedPersonInTree(d.data.attributes as any)
+                    setSelectedPersonInTree(d.data.attributes as any);
                 }
             });
         

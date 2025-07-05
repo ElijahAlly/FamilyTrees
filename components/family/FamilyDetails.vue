@@ -27,10 +27,10 @@ watch(family, (newFamily) => {
 
 <template>
     <div v-if="family && curentFamilyTree"
-        class="relative min-w-full p-6 mt-6 overflow-y-auto border rounded-md bg-zinc-100 dark:bg-zinc-800 text-black dark:text-white backdrop-blur-none"
-        :class="{'h-fit': isTyping, 'h-full': !isTyping}"    
-    >
-        <h1 class="sticky top-0 left-0 font-extralight text-4xl z-40 bg-zinc-100 dark:bg-zinc-800">
+        class="relative min-w-full mt-6 overflow-y-auto border rounded-md text-black dark:text-white"
+        :class="{'h-fit': isTyping, 'h-full': !isTyping}">
+        <h1
+            class="sticky top-0 left-0 w-full p-6 font-extralight text-4xl z-40 bg-zinc-100 dark:bg-gradient-to-b dark:from-zinc-900 dark:to-neutral-950 border-b">
             <span v-if="shownFamilyDetails">The {{ family.family_name }} Family</span>
             <span v-else class="relative inline-block min-w-[1px]">
                 <span class="relative">
@@ -42,14 +42,13 @@ watch(family, (newFamily) => {
         </h1>
         <Transition enter-active-class="transition duration-300 ease-out"
             enter-from-class="transform -translate-y-full opacity-0"
-            enter-to-class="transform translate-y-0 opacity-100" 
-            leave-active-class="transition duration-200 ease-in"
+            enter-to-class="transform translate-y-0 opacity-100" leave-active-class="transition duration-200 ease-in"
             leave-from-class="transform translate-y-0 opacity-100"
-            leave-to-class="transform -translate-y-full opacity-0"
-        >
+            leave-to-class="transform -translate-y-full opacity-0">
             <div v-if="!isTyping"
-                class="absolute top-[4rem] left-0 w-full h-[calc(92vh-4rem)] bg-zinc-100 dark:bg-zinc-900 backdrop-blur-sm z-30 p-8 shadow-lg border-b border-zinc-300 dark:border-zinc-600">
-                You have {{ family.members.length }} family member{{ family.members.length > 1 ? 's' : '' }} in your tree.
+                class="w-full h-[calc(92vh-4rem)] z-30 p-8 shadow-lg border-b border-zinc-300 dark:border-zinc-600">
+                You have {{ family.members.length }} family member{{ family.members.length > 1 ? 's' : '' }} in your
+                tree.
             </div>
         </Transition>
     </div>
