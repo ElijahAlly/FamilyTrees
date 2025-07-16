@@ -1,12 +1,13 @@
 import type { FamilyTreeNodeType, FamilyType } from '../types/family';
 import type { PersonType } from '../types/person';
 import { defineStore } from 'pinia';
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 
 export const useFamilyStore = defineStore('family', () => {
     // Family Type (Current and All)
     const family = ref<FamilyType | null>(null);
     const families = ref<FamilyType[]>([]);
+    const isFamilyTreePrivate = computed<boolean>(() => family.value?.visibility === 'private');
 
     // Family Tree Node Type (Current and All)
     const familyTrees = ref<FamilyTreeNodeType[]>([]);
@@ -75,6 +76,7 @@ export const useFamilyStore = defineStore('family', () => {
         shownFamilyDetails,
         loadingFamily,
         searchedInput,
+        isFamilyTreePrivate,
         setFamily,
         updateFamilyTrees,
         getFamilyByPerson,

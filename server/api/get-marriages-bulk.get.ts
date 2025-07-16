@@ -1,9 +1,13 @@
 import { serverSupabaseClient } from '#supabase/server';
 import { defineEventHandler, getQuery } from 'h3';
 
+
 export default defineEventHandler(async (event: any) => {
     const client = await serverSupabaseClient(event)
-    const { table, select, memberIds } = getQuery(event);
+    let { table, select, memberIds } = getQuery(event);
+    table = table as string;
+    select = select as string;
+    memberIds = memberIds as any;
 
     try {
         // Split the comma-separated memberIds into an array

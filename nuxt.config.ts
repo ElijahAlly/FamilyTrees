@@ -19,20 +19,31 @@ export default defineNuxtConfig({
   devtools: { 
     // `false` to hide devtools and animation 
     // ...or `true` to see devtools (this will add the Nuxt animation that takes way too long to go away after each change)
-    enabled: false 
+    enabled: false,
+    // Timeline enables the inspection of when composable being executed and the route changes.
+    timeline: {
+      enabled: false
+    }
   },
   css: ['~/assets/css/main.css'],
   modules: [
     '@nuxtjs/tailwindcss',
     ['@nuxtjs/supabase', {
-      url: process.env.NUXT_SUPABASE_URL,
-      key: process.env.NUXT_SUPABASE_ANON_KEY,
-      redirectOptions: {
-        login: '/login',
-        callback: '/confirm',
-        include: ['/trees/*'],
-        exclude: ['/'],
-        cookieRedirect: false,
+      url: process.env.NUXT_PUBLIC_SUPABASE_URL,
+      key: process.env.NUXT_PUBLIC_SUPABASE_ANON_KEY,
+      redirect: false,
+      cookieOptions: {
+        maxAge: 60 * 60 * 24, // 24 hours
+        sameSite: 'lax',
+        secure: process.env.NODE_ENV === 'production'
+      },
+      clientOptions: {
+        global: {
+          fetch: async (url: RequestInfo | URL, init?: RequestInit) => {
+            const { customSupabaseFetch } = await import('./utils/supabase');
+            return customSupabaseFetch()(url.toString(), init);
+          }
+        }
       }
     }],
     '@pinia/nuxt',
@@ -62,7 +73,7 @@ export default defineNuxtConfig({
   typescript: {
     strict: true,
     typeCheck: false,
-    shim: false
+    shim: true
   },
   vue: {
     compilerOptions: {
@@ -83,10 +94,14 @@ export default defineNuxtConfig({
       })
     ],
   },
-  runtimeConfig: {    
+  runtimeConfig: {
     public: {
-      supabaseUrl: process.env.NUXT_SUPABASE_URL,
-      supabaseKey: process.env.NUXT_SUPABASE_ANON_KEY,
+      supabaseUrl: process.env.NUXT_PUBLIC_SUPABASE_URL,
+      supabaseKey: process.env.NUXT_PUBLIC_SUPABASE_ANON_KEY,
+      supabaseAppId: process.env.NUXT_PUBLIC_SUPABASE_APP_ID,
+      // supabase: {
+        
+      // },
     }
   },
   colorMode: {

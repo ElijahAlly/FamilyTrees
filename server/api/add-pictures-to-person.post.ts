@@ -23,7 +23,7 @@ export default defineEventHandler(async (event: any) => {
 
         // Upload each file to storage
         for (const fileData of files) {
-            const fileName = `${Date.now()}-${fileData.filename?.replaceAll(' ', '-') || ''}`;
+            const fileName = `${Date.now()}-${(fileData.filename || '')?.replaceAll(' ', '-') || ''}`;
             const filePath = `${familyId}/${id}/${fileName}`;
 
             // Upload file to Supabase storage
