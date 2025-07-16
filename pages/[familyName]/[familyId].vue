@@ -1,7 +1,7 @@
 <script lang="ts">
 import { Icon } from '@iconify/vue';
-import { useFamilyStore } from '@/stores/family';
-import { useDraggableZoneStore } from '@/stores/draggableZone';
+import { useFamilyStore } from '@/stores/useFamily';
+import { useDraggableZoneStore } from '@/stores/useDraggableZone';
 import * as PanzoomModule from '@panzoom/panzoom';
 const Panzoom = PanzoomModule.default;
 import { type PanzoomObject } from '@panzoom/panzoom'; import { useWatchFamilyStore } from '@/composables/useWatchFamilyStore';

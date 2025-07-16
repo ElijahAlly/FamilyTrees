@@ -1,5 +1,5 @@
 import { onMounted, watch } from 'vue';
-import { useFamilyStore } from '../stores/family';
+import { useFamilyStore } from '../stores/useFamily';
 import type { FetchTypeList } from '../types/fetch';
 import { type MarriageType } from '../types/marriage';
 import { type PersonType } from '../types/person';
@@ -26,7 +26,7 @@ export function useWatchFamilyStore() {
         }
     })
     
-    watch(family, async (newFamily, oldFamilyName) => {
+    watch(family, async (_newFamily, _oldFamilyName) => {
         if (!loadingFamily.value) {
             // console.time('family-tree-data-fetching-and-building-start')
             setLoadingFamily(true);
@@ -154,77 +154,68 @@ export function useWatchFamilyStore() {
     };
 
     const getFamilyMembers = async (route?: any, isOnFamilyTreePage?: boolean): Promise<PersonType[] | undefined> => {
-        try {
-            if (isOnFamilyTreePage) {
-                // Only fetch 1 family tree (all members in the family)
-                const { data: familyResData, error: familyError }: FetchTypeList<FamilyType> = await $fetch('/api/get-family-by-id', {
-                    method: 'GET',
-                    params: {
-                        table: 'families',
-                        select: '*',
-                        eq: ['id', 'family_name'],
-                        id: Number(route.params.familyId),
-                        family_name: route.params.familyName
-                    }
-                });
-
-                if (familyError) throw familyError;
-
-                if (familyResData.length) {
-                    familyStore.setFamily(familyResData[0]);
-                } else {
-                    throw Error('Family not found');
+        if (isOnFamilyTreePage) {
+            // Only fetch 1 family tree (all members in the family)
+            const { data: familyResData, error: familyError }: FetchTypeList<FamilyType> = await $fetch('/api/get-family-by-id', {
+                method: 'GET',
+                params: {
+                    table: 'families',
+                    select: '*',
+                    eq: ['id', 'family_name'],
+                    id: Number(route.params.familyId),
+                    family_name: route.params.familyName
                 }
+            });
 
-                const { data: membersResData, error: membersError }: FetchTypeList<PersonType> = await $fetch('/api/get-family-members-by-ids', {
-                    method: 'GET',
-                    params: {
-                        table: 'people',
-                        select: '*',
-                        column: 'id',
-                        ids: familyResData[0].members
-                    }
-                });
-                if (membersError) throw membersError;
+            if (familyError) throw familyError;
 
-                familyStore.updateFamilies(familyResData[0]);
-                return membersResData;
-                
-            } else if (familyStore.family) {
-                // Fetch ALL family trees (members) based on the last name (used in searches where multiple families can have the same last name)
-                const { data, error }: FetchTypeList<PersonType> = await $fetch('/api/get-families-by-name', {
-                    method: 'GET',
-                    params: {
-                        table: 'people',
-                        select: '*',
-                        eq: 'last_name',
-                        familyName: familyStore.family.family_name
-                    }
-                });
-                if (error) throw error;
-                return data;
+            if (familyResData.length) {
+                familyStore.setFamily(familyResData[0]);
+            } else {
+                throw Error('Family not found');
             }
 
-        } catch (err) {
-            throw err;
+            const { data: membersResData, error: membersError }: FetchTypeList<PersonType> = await $fetch('/api/get-family-members-by-ids', {
+                method: 'GET',
+                params: {
+                    table: 'people',
+                    select: '*',
+                    column: 'id',
+                    ids: familyResData[0].members
+                }
+            });
+            if (membersError) throw membersError;
+
+            familyStore.updateFamilies(familyResData[0]);
+            return membersResData;
+            
+        } else if (familyStore.family) {
+            // Fetch ALL family trees (members) based on the last name (used in searches where multiple families can have the same last name)
+            const { data, error }: FetchTypeList<PersonType> = await $fetch('/api/get-families-by-name', {
+                method: 'GET',
+                params: {
+                    table: 'people',
+                    select: '*',
+                    eq: 'last_name',
+                    familyName: familyStore.family.family_name
+                }
+            });
+            if (error) throw error;
+            return data;
         }
     };
 
     const getMarriages = async (families: PersonType[]): Promise<MarriageType[] | undefined> => {
-        try {
-            const { data: allMarriages, error: marriageError }: FetchTypeList<MarriageType> = await $fetch('/api/get-marriages-bulk', {
-                method: 'GET',
-                params: {
-                    table: 'marriages',
-                    select: '*',
-                    memberIds: families.map(f => f.id).join(',')
-                }
-            });
+        const { data: allMarriages, error: marriageError }: FetchTypeList<MarriageType> = await $fetch('/api/get-marriages-bulk', {
+            method: 'GET',
+            params: {
+                table: 'marriages',
+                select: '*',
+                memberIds: families.map(f => f.id).join(',')
+            }
+        });
 
-            if (marriageError) throw marriageError;
-            return allMarriages;
-        } catch (err) {
-            throw err;
-        }
+        if (marriageError) throw marriageError;
+        return allMarriages;
     }
 }

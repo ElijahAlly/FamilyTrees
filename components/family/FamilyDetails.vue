@@ -1,13 +1,16 @@
 <script setup lang="ts">
-import { useFamilyStore } from '@/stores/family';
+import { useFamilyStore } from '@/stores/useFamily';
 import { storeToRefs } from 'pinia';
-import { watch } from 'vue';
+import { ref, watch } from 'vue';
 import { useTypewriter } from '@/composables/useTypewriter';
+import FamilyDetailsCard from './FamilyDetailsCard.vue';
 
 const familyStore = useFamilyStore();
-const { curentFamilyTree, family, shownFamilyDetails } = storeToRefs(familyStore);
+const { curentFamilyTree, family, shownFamilyDetails, isFamilyTreePrivate } = storeToRefs(familyStore);
 
 const { displayText, isTyping, typeText, reset } = useTypewriter(`The ${family.value?.family_name || ''} Family`, 90, 300);
+
+const familyCodeInput = ref('');
 
 watch(isTyping, (newVal) => {
     if (!newVal) { 
@@ -45,10 +48,27 @@ watch(family, (newFamily) => {
             enter-to-class="transform translate-y-0 opacity-100" leave-active-class="transition duration-200 ease-in"
             leave-from-class="transform translate-y-0 opacity-100"
             leave-to-class="transform -translate-y-full opacity-0">
-            <div v-if="!isTyping"
-                class="w-full h-[calc(92vh-4rem)] z-30 p-8 shadow-lg border-b border-zinc-300 dark:border-zinc-600">
-                You have {{ family.members.length }} family member{{ family.members.length > 1 ? 's' : '' }} in your
-                tree.
+            <div v-if="!isTyping && family.id" class="w-full h-[calc(92vh-4rem)] z-30 p-8 shadow-lg border-b border-zinc-300 dark:border-zinc-600">
+                <FamilyDetailsCard 
+                    :text="`You have ${ family.members.length } family member${ family.members.length > 1 ? 's' : '' } in your tree.`"
+                    type="button" 
+                />
+                <FamilyDetailsCard :text="`Your family tree is ${isFamilyTreePrivate ? 'private & only visible by a link' : 'visible to anyone'}.`">
+                    <template #default v-if="isFamilyTreePrivate">
+                        <div class="w-fit flex flex-col">
+                            <input 
+                                v-model="familyCodeInput"
+                                name="family-code"
+                                class="!bg-transparent px-2 py-1 my-3 border rounded-md outline-none text-grass11 h-full w-full selection:bg-grass5 placeholder-mauve8 dark:text-white"
+                                placeholder="Create your family tree access code." 
+                            />
+                            <label for="family-code" class="flex flex-col text-sm text-zinc-800 dark:text-white font-light italic">
+                                Nobody outside your family will be able to visit your tree without this code. 
+                                <span>You can change it at anytime.</span>
+                            </label>
+                        </div>
+                    </template>
+                </FamilyDetailsCard>
             </div>
         </Transition>
     </div>

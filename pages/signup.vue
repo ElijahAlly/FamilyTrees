@@ -1,31 +1,84 @@
 <script lang="ts" setup>
 import { ref } from 'vue';
-import { Icon } from '@iconify/vue';
-import { useAuthStore } from '@/stores/auth';
+import { useAuthStore } from '@/stores/useAuth';
+import { useRoute } from 'nuxt/app';
+import { storeToRefs } from 'pinia';
 
-const mode = ref<'signin' | 'signup'>('signin');
-const isLoading = ref(false);
+type TabView = 'signup' | 'login';
 
-const auth = useAuthStore();
+const route = useRoute();
 
-type ProviderName = 'Google' | 'Apple' | 'Github' | 'Facebook';
-type ProviderType = {
-    name: ProviderName;
-    icon: string;
-    color: string;
+const email = ref('');
+const username = ref('');
+const otpCode = ref('');
+
+const curTab = ref<TabView>(route.query.existing ? 'login' : 'signup');
+
+const authStore = useAuthStore();
+const { handleSignUp, handleLogin, verifyOtp, resendOtp } = authStore;
+const {
+    user,
+    loading,
+    // otp
+    otpError,
+    isVerifying,
+    // resending otp
+    resendOtpLoading,
+    resendOtpError
+} = storeToRefs(authStore);
+
+const toggleTab = (to: TabView) => {
+    curTab.value = to;
+    otpCode.value = '';
+    email.value = '';
+    username.value = '';
+    otpError.value = null;
+    isVerifying.value = false;
+    loading.value = false;
+    resendOtpError.value = null;
+    resendOtpLoading.value = false;
 }
 
-const providers: ProviderType[] = [
-    // Google - Works !!! (In Development)
-    { name: 'Google', icon: 'flat-color-icons:google', color: 'text-neutral-200 bg-blue-700 hover:bg-blue-600' },
-    // Apple - Does not work :(
-    { name: 'Apple', icon: 'ri:apple-fill', color: 'text-neutral-200 dark:text-black dark:text-black bg-black hover:bg-gray-900 dark:bg-neutral-200 dark:hover:bg-gray-200' },
-    // Github - Works !!! (In Development)
-    { name: 'Github', icon: 'mdi:github', color: 'text-neutral-200 dark:text-black bg-gray-800 hover:bg-gray-900 dark:bg-neutral-200 dark:hover:bg-gray-200' },
-    // Facebook - Does not work :(
-    { name: 'Facebook', icon: 'logos:facebook', color: 'text-neutral-200 hover:bg-blue-600 bg-[#0C63D4]' },
-]
+const handleSubmit = async () => {
+    if (isVerifying.value) {
+        // Verify the otp, which then calls getProfile in the useAuth store 
+        const success = await verifyOtp(email.value, otpCode.value);
+    } else {
+        if (curTab.value === 'signup') {
+            handleSignUp(email.value, username.value);
+        } else {
+            handleLogin(email.value);
+        }
+    }
+}
 
+const baseTabStyles = 'transition-all duration-200 p-1 rounded select-none';
+const inactiveTabStyles = 'text-zinc-600 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-zinc-500 hover:text-white';
+const activeTabStyles = 'text-white bg-zinc-700 hover:bg-zinc-700 hover:text-white';
+
+const baseSubmitStyles = 'text-white rounded-md transition-all duration-200 p-1';
+const disabledSubmitStyles = 'bg-zinc-600 hover:bg-zinc-600 opacity-50 pointer-events-none';
+const activeSubmitStyles = 'bg-emerald-600 hover:bg-emerald-700';
+
+// * Below is for provider login
+// const isLoading = ref(false);
+// const auth = useAuthStore();
+// type ProviderName = 'Google' | 'Apple' | 'Github' | 'Facebook';
+// type ProviderType = {
+//     name: ProviderName;
+//     icon: string;
+//     color: string;
+// }
+// const providers: ProviderType[] = [
+//     // Google - Works !!! (In Development)
+//     { name: 'Google', icon: 'flat-color-icons:google', color: 'text-neutral-200 bg-blue-700 hover:bg-blue-600' },
+//     // Apple - Does not work :(
+//     { name: 'Apple', icon: 'ri:apple-fill', color: 'text-neutral-200 dark:text-black dark:text-black bg-black hover:bg-gray-900 dark:bg-neutral-200 dark:hover:bg-gray-200' },
+//     // Github - Works !!! (In Development)
+//     { name: 'Github', icon: 'mdi:github', color: 'text-neutral-200 dark:text-black bg-gray-800 hover:bg-gray-900 dark:bg-neutral-200 dark:hover:bg-gray-200' },
+//     // Facebook - Does not work :(
+//     { name: 'Facebook', icon: 'logos:facebook', color: 'text-neutral-200 hover:bg-blue-600 bg-[#0C63D4]' },
+// ]
 // const formData = reactive({
 //     firstName: '',
 //     middleName: '',
@@ -34,11 +87,9 @@ const providers: ProviderType[] = [
 //     birthDate: '',
 //     gender: ''
 // })
-
 // const handleSubmit = async () => {
 //     isLoading.value = true;
 //     // console.log('Form submitted:', formData);
-
 //     try {
 //       // Simulate an API call
 //       await new Promise(resolve => setTimeout(resolve, 2000));
@@ -49,18 +100,16 @@ const providers: ProviderType[] = [
 //       isLoading.value = false;
 //     }
 // }
-
-const signInWithProvider = async (providerName: ProviderName) => {
-    isLoading.value = true;
-    try {
-        await auth.signInWithProvider(providerName.toLowerCase())
-    } catch (error: any) {
-        console.error('Sign in error:', error.message)
-    } finally {
-        isLoading.value = false;
-    }
-}
-
+// const signInWithProvider = async (providerName: ProviderName) => {
+//     isLoading.value = true;
+//     try {
+//         await auth.signInWithProvider(providerName.toLowerCase())
+//     } catch (error: any) {
+//         console.error('Sign in error:', error.message)
+//     } finally {
+//         isLoading.value = false;
+//     }
+// }
 // const overlayTransition = {
 //     'enter-active-class': 'transition-opacity duration-300 ease-out',
 //     'enter-from-class': 'opacity-0',
@@ -72,12 +121,90 @@ const signInWithProvider = async (providerName: ProviderName) => {
 </script>
 
 <template>
-    <div 
+    <section class="w-full h-full flex justify-center">
+        <div
+            class="h-fit w-[50%] min-w-96 max-w-[360px] flex flex-col gap-3 border dark:border-zinc-500 rounded shadow-lg shadow-zinc-600/45 mt-48 p-9">
+            <!-- Tab buttons - only show if not verifying -->
+            <div v-if="!isVerifying" class="flex gap-3">
+                <div :class="[baseTabStyles, { [inactiveTabStyles]: curTab !== 'signup', [activeTabStyles]: curTab === 'signup' }]"
+                    role="button" @click="toggleTab('signup')">
+                    Signup
+                </div>
+                <div :class="[baseTabStyles, { [inactiveTabStyles]: curTab !== 'login', [activeTabStyles]: curTab === 'login' }]"
+                    role="button" @click="toggleTab('login')">
+                    Login
+                </div>
+            </div>
+
+            <!-- Error message -->
+            <p v-if="otpError || resendOtpError" class="text-red-500 text-sm">{{ otpError || resendOtpError }}</p>
+
+            <form class="row flex-center flex w-full" @submit.prevent="handleSubmit">
+
+                <!-- OTP Verification View -->
+                <div v-if="isVerifying" class="col-6 form-widget w-full">
+                    <button @click.prevent.stop="toggleTab('login')"
+                        class="text-zinc-500 dark:text-zinc-400 hover:text-red-500 dark:hover:text-red-400 text-sm transition-colors mb-4">
+                        {{ '<-' }} Cancel </button>
+                            <p class="dark:text-white">Enter the code sent to your email:</p>
+                            <p class="dark:text-zinc-200 my-2 italic">{{ email }}</p>
+                            <div class="my-4">
+                                <input v-model="otpCode" class="border rounded p-3 w-full" required
+                                    placeholder="Enter verification code" type="text" pattern="[0-9]*"
+                                    inputmode="numeric" />
+                            </div>
+                            <div class="w-full flex justify-between px-1">
+                                <p @click="() => resendOtp(email)"
+                                    class="text-zinc-500 dark:text-zinc-400 underline hover:text-zinc-800 dark:hover:text-zinc-200 cursor-pointer p-1 border border-zinc-500 hover:border-zinc-800 dark:border-zinc-400 dark:hover:border-zinc-200 rounded-md transition-colors">
+                                    {{ resendOtpLoading ? 'sending new code...' : 'resend code' }}
+                                </p>
+                                <input type="submit"
+                                    :class="[baseSubmitStyles, { [disabledSubmitStyles]: loading, [activeSubmitStyles]: !loading }]"
+                                    role="button" :value="loading ? 'Verifying...' : 'Verify Code'"
+                                    :disabled="loading" />
+                            </div>
+                </div>
+
+                <!-- Signup View -->
+                <div v-if="curTab === 'signup' && !isVerifying" class="col-6 form-widget">
+                    <div class="my-3">
+                        <input v-model="username" class="border rounded p-3" required placeholder="Your Username" />
+                    </div>
+                    <p class="dark:text-white">Sign up with your email</p>
+                    <div class="my-3">
+                        <input v-model="email" class="border rounded p-3" required type="email"
+                            placeholder="Your email" />
+                    </div>
+                    <div>
+                        <input type="submit"
+                            :class="[baseSubmitStyles, { [disabledSubmitStyles]: loading, [activeSubmitStyles]: !loading }]"
+                            role="button" :value="loading ? 'Loading...' : 'Signup'" :disabled="loading" />
+                    </div>
+                </div>
+
+                <!-- Login View -->
+                <div v-if="curTab === 'login' && !isVerifying" class="col-6 form-widget">
+                    <p class="my-3 dark:text-white">Login with your email</p>
+                    <div class="my-3">
+                        <input v-model="email" class="border rounded p-3" required type="email"
+                            placeholder="Your email" />
+                    </div>
+                    <div>
+                        <input type="submit"
+                            :class="[baseSubmitStyles, { [disabledSubmitStyles]: loading, [activeSubmitStyles]: !loading }]"
+                            role="button" :value="loading ? 'Loading...' : 'Login'" :disabled="loading" />
+                    </div>
+                </div>
+            </form>
+        </div>
+    </section>
+    <!-- 
+   <div 
         class="mt-[16vh] flex flex-col items-center justify-center"
     >
-        <div class="p-8 rounded-lg shadow-md w-96 relative bg-zinc-100 dark:bg-zinc-900">
-            <!-- Loading Overlay -->
-            <!-- <Transition v-bind="overlayTransition">
+        <div class="p-8 rounded-lg shadow-md w-96 relative bg-zinc-100 dark:bg-zinc-900"> -->
+    <!-- Loading Overlay -->
+    <!-- <Transition v-bind="overlayTransition">
                 <div 
                     v-if="isLoading"
                     class="absolute inset-0 bg-neutral-200/60 dark:bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 rounded-md select-none"
@@ -93,17 +220,17 @@ const signInWithProvider = async (providerName: ProviderName) => {
                 <button
                     class="mr-4 pb-2"
                     :class="{
-                        'text-zinc-600 border-b-2 border-zinc-600 dark:text-neutral-200 dark:border-neutral-200': mode === 'signin',
+                        'text-zinc-600 border-b-2 border-zinc-600 dark:text-neutral-200 dark:border-neutral-200': mode === 'login',
                         'text-neutral-400 hover:text-zinc-400': mode === 'signup'
                     }"
-                    @click="mode = 'signin'"
+                    @click="mode = 'login'"
                 >
-                    Sign In
+                    Login
                 </button>
                 <button
                     :class="{
                         'text-zinc-600 border-b-2 border-zinc-600 dark:text-neutral-200 dark:border-neutral-200': mode === 'signup',
-                        'text-neutral-400 hover:text-zinc-400': mode === 'signin'
+                        'text-neutral-400 hover:text-zinc-400': mode === 'login'
                     }"
                     class="pb-2"
                     @click="mode = 'signup'"
@@ -205,7 +332,7 @@ const signInWithProvider = async (providerName: ProviderName) => {
                     class="bg-zinc-500 hover:bg-zinc-700 dark:bg-transparent dark:bg-zinc-600 dark:hover:bg-zinc-300 dark:hover:text-black transition-colors duration-300 text-neutral-200 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full"
                     type="submit"
                 >
-                    {{ mode === 'signin' ? 'Sign In' : 'Sign Up' }}
+                    {{ mode === 'login' ? 'Login' : 'Sign Up' }}
                 </button>
 
                 Social Provider Buttons
@@ -219,7 +346,7 @@ const signInWithProvider = async (providerName: ProviderName) => {
                         </div>
                     </div> -->
 
-                    <h1 class="mt-3 mb-6 font-extralight text-center dark:text-white">Sign in/up with</h1>
+    <!-- <h1 class="mt-3 mb-6 font-extralight text-center dark:text-white">Sign in/up with</h1>
                     <div class="grid grid-cols-2 gap-3">
                         <button
                             v-for="provider in providers"
@@ -240,15 +367,16 @@ const signInWithProvider = async (providerName: ProviderName) => {
                                 {{ provider.name }}
                             </span>
                         </button>
-                    </div>
-                <!-- </div>
+                    </div> -->
+    <!-- </div>
             </form> -->
-        </div>
+    <!-- </div>
     </div>
+-->
 </template>
 
-<style scoped>
+<!-- <style scoped>
 .backdrop-blur-sm {
     backdrop-filter: blur(4px);
 }
-</style>
+</style> -->

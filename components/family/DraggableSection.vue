@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useDraggableZoneStore } from '@/stores/draggableZone';
+import { useDraggableZoneStore } from '@/stores/useDraggableZone';
 import { storeToRefs } from 'pinia';
 import PersonInfoSidebar from './PersonInfoSidebar.vue';
 import TreeViewSettingsSidebar from './TreeViewSettingsSidebar.vue';

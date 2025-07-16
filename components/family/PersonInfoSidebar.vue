@@ -2,7 +2,7 @@
 import { ref, computed, watch } from 'vue';
 import { storeToRefs } from 'pinia';
 import { Icon } from '@iconify/vue';
-import { usePersonStore } from '@/stores/person';
+import { usePersonStore } from '@/stores/usePerson';
 import { ShortcutSectionName, useHotkeys } from '../../composables/useHotkeys';
 
 const personStore = usePersonStore();

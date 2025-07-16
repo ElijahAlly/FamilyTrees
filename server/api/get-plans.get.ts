@@ -3,7 +3,9 @@ import { defineEventHandler, getQuery } from 'h3';
 
 export default defineEventHandler(async (event: any) => {
     const client = await serverSupabaseClient(event);
-    const { select, id } = getQuery(event);
+    let { select, id } = getQuery(event);
+    select = select as string;
+    id = id as string;
 
     try {
         let data = null;
