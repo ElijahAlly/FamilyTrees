@@ -1,39 +1,52 @@
 <script setup lang="ts">
 import type { PersonType } from '@/types/person';
-import type { FetchTypeList } from '@/types/fetch';
+import type { FetchTypeSingle } from '@/types/fetch';
 import { getFullName, getGenderLabel } from '@/utils/person';
 import { useBannerStore } from '@/stores/useBannerStore';
 import { formatDate } from '@/utils/person';
-import { ref, watchEffect, onUnmounted } from 'vue';
+import { ref, onUnmounted } from 'vue';
+import { useRoute } from 'nuxt/app';
 
 const route = useRoute();
-const personId = Number(route.params.personId);
 const bannerStore = useBannerStore();
-
-const response: FetchTypeList<PersonType> = await $fetch('/api/get-person-by-id', {
-  method: 'GET',
-  params: {
-    select: '*',
-    id: personId,
-  },
-});
-
 const person = ref<PersonType | null>(null);
 
-watchEffect(() => {
-  if (!personId || response.error) {
+const fetchPerson = async () => {
+  const personId = Number(route.params.personId);
+  if (!personId) return;
+
+  try {
+    const response: FetchTypeSingle<PersonType> = await $fetch('/api/get-person-by-id', {
+      method: 'GET',
+      params: {
+        select: '*',
+        id: personId,
+      },
+    });
+
+    if (response.data) {
+      person.value = response.data;
+      bannerStore.setBannerInfo(
+        'Person Details',
+        `Viewing details for ${getFullName(response.data)}`
+      );
+    } else {
+      person.value = null;
+    }
+  } catch (error) {
+    console.error('Error fetching person:', error);
     person.value = null;
-    return;
   }
-  if (response.data && response.data.length > 0) {
-    bannerStore.setBannerInfo(
-      'Person Details',
-      `Viewing details for ${getFullName(response.data[0])}`
-    );
-    person.value = response.data[0];
-    return;
-  }
-  person.value = null;
+};
+
+// Watch for route param changes
+watch(() => route.params.personId, () => {
+  fetchPerson();
+});
+
+// Initial fetch
+onMounted(() => {
+  fetchPerson();
 });
 
 onUnmounted(() => {

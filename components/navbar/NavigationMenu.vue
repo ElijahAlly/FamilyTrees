@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
 import { ref } from 'vue';
-import { useAuthStore } from '@/stores/auth';
+import { useAuthStore } from '@/stores/useAuth';
 import { storeToRefs } from 'pinia';
 import { 
     NavigationMenuItem, NavigationMenuTrigger, NavigationMenuContent, 
@@ -10,19 +10,12 @@ import {
 } from 'radix-vue';
 
 const authStore = useAuthStore();
-const { logout } = authStore;
-const { user } = storeToRefs(authStore);
+const { signOut } = authStore;
+const { isAuthenticated } = storeToRefs(authStore);
 
 const currentTrigger = ref('');
 
-const handleLogout = async () => {
-    try {
-        await logout();
-        await navigateTo('/')
-    } catch (error) {
-        console.error('Logout failed:', error)
-    }
-}
+const handleLogout = () => signOut();
 </script>
 
 <template>
@@ -76,13 +69,13 @@ const handleLogout = async () => {
 
             <NavigationMenuItem>
                 <NavigationMenuLink as-child>
-                    <NuxtLink v-if="!user" to="/signup"
+                    <NuxtLink v-if="!isAuthenticated" to="/signup"
                         class="flex dark:bg-transparent text-black dark:text-white hover:text-zinc-500 dark:hover:text-zinc-400 hover:bg-green3 border border-black dark:border-white hover:border-zinc-500 dark:hover:border-zinc-400 select-none rounded-md px-3 py-2 text-md font-normal leading-none no-underline outline-none focus:outline-none focus:shadow-none">
                         <Icon icon="mdi:user" class="text-inherit mr-2" />
-                        <span class="text-inherit">Sign Up/Sign in</span>
+                        <span class="text-inherit">Login/Sign Up</span>
                     </NuxtLink>
                     <button v-else @click="handleLogout"
-                        class="flex dark:bg-transparent text-black dark:text-white hover:text-zinc-500 dark:hover:text-zinc-400 hover:bg-green3 border border-black dark:border-white hover:border-zinc-500 dark:hover:border-zinc-400 select-none rounded-md px-3 py-2 text-md font-normal leading-none no-underline outline-none focus:outline-none focus:shadow-none">
+                        class="flex dark:bg-transparent text-red-600 dark:text-red-600 hover:text-red-700 dark:hover:text-red-400 hover:bg-green3 border border-red-600 hover:border-red-700 dark:hover:border-red-400 select-none rounded-md px-3 py-2 text-md font-normal leading-none no-underline outline-none focus:outline-none focus:shadow-none transition-all duration-150">
                         <Icon icon="mdi:logout" class="text-inherit mr-2" />
                         <span class="text-inherit">Logout</span>
                     </button>

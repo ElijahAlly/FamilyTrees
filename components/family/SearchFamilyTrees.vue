@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { ref, type PropType, watch, nextTick } from 'vue';
+import { ref, type PropType, watch } from 'vue';
 import { Icon } from '@iconify/vue';
 import { storeToRefs } from 'pinia';
-import { useFamilyStore } from '@/stores/family';
-import { usePersonStore } from '@/stores/person';
+import { useFamilyStore } from '@/stores/useFamily';
+import { usePersonStore } from '@/stores/usePerson';
 import type { FamilyType } from '@/types/family';
 import type { FetchTypeList } from '@/types/fetch';
 import { type PersonType } from '@/types/person';
@@ -175,12 +175,12 @@ const handlePersonClick = (person: PersonType) => {
                         class="!bg-transparent px-2 py-1 outline-none text-grass11 h-full w-full selection:bg-grass5 placeholder-mauve8 border-none dark:text-white"
                         :placeholder="placeholder" 
                     />
-                        <Icon 
-                            icon="mdi:clear-outline"
-                            v-if="userInput.length > 0" 
-                            class="absolute top-0 right-9 cursor-pointer dark:text-white hover:text-red-500 dark:hover:text-red-500 h-9 w-9 p-1" 
-                            @click="handleClearInput"
-                        />
+                    <Icon 
+                        icon="mdi:clear-outline"
+                        v-if="userInput.length > 0" 
+                        class="absolute top-0 right-9 cursor-pointer dark:text-white hover:text-red-500 dark:hover:text-red-500 h-9 w-9 p-1" 
+                        @click="handleClearInput"
+                    />
                 </div>
             </ComboboxAnchor>
 

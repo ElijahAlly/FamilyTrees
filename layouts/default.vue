@@ -2,17 +2,20 @@
 import { Icon } from '@iconify/vue';
 import { useBannerStore } from '@/stores/useBannerStore';
 import { useRoute } from 'nuxt/app';
-import { ref, computed, watch, onMounted } from 'vue';
+import { ref, computed, watch, onMounted, onBeforeMount } from 'vue';
 import { useRouter } from 'nuxt/app';
 import { useColorMode } from '@vueuse/core';
 import Navbar from '@/components/navbar/index.vue';
 import AppFooter from '@/components/AppFooter.vue';
+import { listOfAllShortcuts, ShortcutSectionName, useHotkeys } from '../composables/useHotkeys';
+import HotkeyHelperModal from '../components/HotkeyHelperModal.vue';
 
 const router = useRouter();
 const route = useRoute();
 const bannerStore = useBannerStore();
 const colorMode = useColorMode();
 
+const showHotkeyHelper = ref(false);
 const isNavigatingBack = ref(false);
 const showScrollBanner = ref(false);
 const mainRef = ref<HTMLElement | null>(null);
@@ -84,6 +87,23 @@ watch(colorMode, (newVal) => {
     }
 })
 
+const toggleShortcutHelperModal = () => showHotkeyHelper.value = !showHotkeyHelper.value;
+
+const { registerHotkeys } = useHotkeys(ShortcutSectionName.GLOBAL, {
+    '?': { action: toggleShortcutHelperModal },
+    't': {
+        action: scrollToTop,
+        condition: () => showScrollBanner.value
+    }
+});
+
+onBeforeMount(() => {
+    // Register all possible shortcuts with empty actions
+    listOfAllShortcuts.forEach(({ name, hotkeys, activeOnPages, active }) => {
+        registerHotkeys(name, hotkeys, activeOnPages, active);
+    });
+})
+
 onMounted(() => {
     if (colorMode.value === 'dark') {
         document.documentElement.style.backgroundColor = '#18181b';
@@ -119,9 +139,10 @@ onMounted(() => {
                     </div>
                     <button
                         @click="scrollToTop"
-                        class="px-3 py-1 text-sm bg-zinc-800 hover:bg-zinc-900 text-white dark:bg-zinc-200 dark:hover:bg-zinc-50 dark:text-black rounded-lg transition-colors duration-200 justify-end"
+                        class="flex gap-1 items-center px-3 py-1 text-sm bg-zinc-800 hover:bg-zinc-900 text-white dark:bg-zinc-200 dark:hover:bg-zinc-50 dark:text-black rounded-lg transition-colors duration-200 justify-end"
+                        title="Back to top of page (Shift+T)"
                     >
-                        Scroll to top <Icon icon="mdi:arrow-up" class="inline-block" />
+                        Scroll to top <Icon icon="mdi:arrow-up" class="h-4 w-4" />
                     </button>
                 </div>
             </Transition>
@@ -131,6 +152,14 @@ onMounted(() => {
             ]">
                 <slot></slot>
             </div>
+            <div 
+                class="fixed right-12 bottom-9 px-3 dark:text-white font-extralight rounded-full bg-zinc-200 dark:bg-zinc-900 border border-zinc-800 dark:border-zinc-100 cursor-help"
+                title="View the Shortcuts Menu (Shift+?)"
+                @click="toggleShortcutHelperModal"
+            >
+                ?
+            </div>
+            <HotkeyHelperModal v-model:isOpen="showHotkeyHelper" />
             <AppFooter v-if="showFooter"/>
         <!-- </AutoStyleWrapper> -->
     </main>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
-import { useFamilyStore } from '@/stores/family';
+import { useFamilyStore } from '@/stores/useFamily';
 import { storeToRefs } from 'pinia';
 import { type FamilyTreeNodeType } from '@/types/family';
 import { useWatchFamilyStore } from '@/composables/useWatchFamilyStore';

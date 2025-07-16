@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, watch, type PropType } from 'vue';
+import { onMounted, ref, watch, type PropType } from 'vue';
 import { type FamilyTreeNodeType } from '@/types/family';
 import * as d3 from 'd3';
-import { usePersonStore } from '@/stores/person';
-import { useDraggableZoneStore } from '@/stores/draggableZone';
+import { usePersonStore } from '@/stores/usePerson';
+import { useDraggableZoneStore } from '@/stores/useDraggableZone';
 import type { PersonType } from '@/types/person';
 import { storeToRefs } from 'pinia';
 import { getPersonPictureUrl } from '@/utils/supabase';
@@ -294,7 +294,7 @@ const renderTree = () => {
                 if (event.shiftKey) {
                     toggleChildren(d);
                 } else {
-                    setSelectedPersonInTree(d.data.attributes as any)
+                    setSelectedPersonInTree(d.data.attributes as any);
                 }
             });
         
