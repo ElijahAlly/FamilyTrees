@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Icon } from '@iconify/vue';
-import { useDraggableZoneStore } from '@/stores/draggableZone';
+import { useDraggableZoneStore } from '@/stores/useDraggableZone';
 import { storeToRefs } from 'pinia';
 import {
   DropdownMenuContent,

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Icon } from '@iconify/vue';
-import { useDraggableZoneStore } from '@/stores/draggableZone';
+import { useDraggableZoneStore } from '@/stores/useDraggableZone';
 import { storeToRefs } from 'pinia';
 import { ShortcutSectionName, useHotkeys } from '../../composables/useHotkeys';
 
@@ -45,7 +45,7 @@ useHotkeys(ShortcutSectionName.FAMILY_TREE_DETAILS, {
             leave-from-class="transform translate-y-0 opacity-100"
             leave-to-class="transform -translate-y-full opacity-0"
         >
-            <div v-if="isFullPageDropdownOpen" class="absolute top-0 left-0 w-full h-[92vh] bg-zinc-100/90 dark:bg-zinc-900/80 backdrop-blur-2xl dark:backdrop-blur-3xl z-30 p-8 shadow-lg border-b border-zinc-300 dark:border-zinc-600">
+            <div v-if="isFullPageDropdownOpen" class="absolute top-0 left-0 w-full h-[92vh] bg-zinc-100/90 dark:bg-zinc-900/95 backdrop-blur-2xl dark:backdrop-blur-3xl z-30 p-8 shadow-lg border-b border-zinc-300 dark:border-zinc-600">
                 <slot name="content"></slot>
             </div>
         </Transition>

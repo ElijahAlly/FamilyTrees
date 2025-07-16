@@ -3,12 +3,17 @@ import { defineEventHandler, getQuery } from 'h3';
 
 export default defineEventHandler(async (event: any) => {
     const client = await serverSupabaseClient(event)
-    const { table, select, ilike, name, searchBy } = getQuery(event);
+    let { table, select, ilike, name, searchBy } = getQuery(event);
+    table = table as string;
+    select = select as string;
+    ilike = ilike as string;
+    name = name as string;
+    searchBy = searchBy as string;
 
     try {
         if (searchBy === 'people' && name) {
-            const [firstName, middleName, lastName] = (name as string).split(' ').filter((term: string) => term.length > 0);
-            const { data: firstNameResults, firstNameError } = await client
+            const [firstName, middleName, lastName] = name.split(' ').filter((term: string) => term.length > 0);
+            const { data: firstNameResults, error: firstNameError } = await client
                 .from(table)
                 .select(select)
                 .or(`first_name.ilike.%${firstName}%`);
@@ -18,7 +23,7 @@ export default defineEventHandler(async (event: any) => {
 
             let middleNameResults = [];
             if (firstNameResults.length) {
-                const { data, middleNameError } = await client
+                const { data, error: middleNameError } = await client
                     .from(table)
                     .select(select)
                     .or(`middle_name.ilike.%${middleName}%`)
@@ -27,7 +32,7 @@ export default defineEventHandler(async (event: any) => {
                 if (middleNameError) throw middleNameError;
                 middleNameResults = data;
             } else {
-                const { data, middleNameError } = await client
+                const { data, error: middleNameError } = await client
                     .from(table)
                     .select(select)
                     .or(`middle_name.ilike.%${firstName}%`);
@@ -40,7 +45,7 @@ export default defineEventHandler(async (event: any) => {
             let lastNameResults = [];
 
             if (middleNameResults.length || firstNameResults.length) {
-                const { data, lastNameError } = await client
+                const { data, error: lastNameError } = await client
                     .from(table)
                     .select(select)
                     .or(`last_name.ilike.%${lastName}%`)
@@ -49,7 +54,7 @@ export default defineEventHandler(async (event: any) => {
                 if (lastNameError) throw lastNameError;
                 lastNameResults = data;
             } else {
-                const { data, lastNameError } = await client
+                const { data, error: lastNameError } = await client
                     .from(table)
                     .select(select)
                     .or(`last_name.ilike.%${firstName}%`);
