@@ -19,7 +19,7 @@ export default defineNuxtConfig({
   devtools: { 
     // `false` to hide devtools and animation 
     // ...or `true` to see devtools (this will add the Nuxt animation that takes way too long to go away after each change)
-    enabled: false,
+    enabled: true,
     // Timeline enables the inspection of when composable being executed and the route changes.
     timeline: {
       enabled: false
@@ -134,4 +134,9 @@ export default defineNuxtConfig({
       mode: 'out-in'
     }
   },
+  nitro: {
+    experimental: {
+      openAPI: true
+    }
+  }
 })
