@@ -1,35 +1,27 @@
-import { serverSupabaseClient } from '#supabase/server';
 import { defineEventHandler, getQuery } from 'h3';
+import { db } from '../db';
+import { plans } from '../db/schema';
+import { eq, asc } from 'drizzle-orm';
 
-export default defineEventHandler(async (event: any) => {
-    const client = await serverSupabaseClient(event);
-    let { select, id } = getQuery(event);
-    select = select as string;
-    id = id as string;
+export default defineEventHandler(async (event) => {
+    const { id } = getQuery(event);
 
     try {
-        let data = null;
-        let error = null;
+        if (id) {
+            const data = await db
+                .select()
+                .from(plans)
+                .where(eq(plans.id, id as string));
 
-        if (id && select) {
-            const { data: singlePlan, error: singleError } = await client
-                .from('plans')
-                .select(select)
-                .eq("id", id);
-            
-            data = singlePlan;
-            error = singleError;
+            return { data };
         } else {
-            const { data: allPlans, error: allError } = await client
-                .from('plans')
-                .select('*')
-                .order('sort_ids', { ascending: true });
-            
-            data = allPlans;
-            error = allError;
+            const data = await db
+                .select()
+                .from(plans)
+                .orderBy(asc(plans.sortIds));
+
+            return { data };
         }
-        if (error) throw error;
-        return { data };
     } catch (error) {
         return { error };
     }

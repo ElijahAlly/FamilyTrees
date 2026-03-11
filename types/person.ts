@@ -12,6 +12,7 @@ export type PersonType = {
     mother_id: number | null;
     father_id: number | null;
     pictures: string[];
+    profile_picture?: string;
 
     privacySettings: PrivacyControls;
 

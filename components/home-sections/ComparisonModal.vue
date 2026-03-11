@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { computed, type PropType } from 'vue';
 import Modal from '../ui/Modal.vue';
-import type { Plan } from '../../types/plans';
-import { getPlanText } from '../../types/plans';
+import { type Plan, getPlanText } from '@/types';
 import { Icon } from '@iconify/vue';
 
 const props = defineProps({

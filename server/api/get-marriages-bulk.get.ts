@@ -1,24 +1,28 @@
-import { serverSupabaseClient } from '#supabase/server';
 import { defineEventHandler, getQuery } from 'h3';
+import { db } from '../db';
+import { marriages } from '../db/schema';
+import { or, inArray } from 'drizzle-orm';
 
+export default defineEventHandler(async (event) => {
+    const { memberIds } = getQuery(event);
 
-export default defineEventHandler(async (event: any) => {
-    const client = await serverSupabaseClient(event)
-    let { table, select, memberIds } = getQuery(event);
-    table = table as string;
-    select = select as string;
-    memberIds = memberIds as any;
+    if (!memberIds) {
+        return { error: 'memberIds is required' };
+    }
 
     try {
-        // Split the comma-separated memberIds into an array
         const ids = (memberIds as string).split(',').map(Number);
-        
-        const { data, error } = await client
-            .from(table)
-            .select(select)
-            .or(`person1_id.in.(${ids}),person2_id.in.(${ids})`);
 
-        if (error) throw error;
+        const data = await db
+            .select()
+            .from(marriages)
+            .where(
+                or(
+                    inArray(marriages.person1Id, ids),
+                    inArray(marriages.person2Id, ids)
+                )
+            );
+
         return { data };
     } catch (error) {
         return { error };

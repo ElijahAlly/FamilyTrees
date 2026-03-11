@@ -9,6 +9,9 @@ const personStore = usePersonStore();
 const { clearSelectedPersonInTree, setGoToPersonInTree } = personStore;
 const { selectedPersonInTree } = storeToRefs(personStore);
 
+const familyStore = useFamilyStore();
+const { currentFamilyTree } = storeToRefs(familyStore);
+
 const collapsed = ref(false);
 const collapsedStyles = ref('');
 const computedClass = computed(() => `${selectedPersonInTree.value ? 'bg-neutral-50 dark:bg-zinc-950' : 'bg-transparent pointer-events-none'} ${size.value === 'sm' ? 'min-w-[330px]' : 'min-w-[600px]'}`);
@@ -54,6 +57,12 @@ watch(collapsed, (newValue) => {
         collapsedStyles.value = '';
     }
 });
+
+watch(currentFamilyTree, (newVal, oldVal) => {
+    if (newVal && (!oldVal || newVal.family_id !== oldVal.family_id)) {
+        clearSelectedPersonInTree();
+    }
+})
 
 useHotkeys(ShortcutSectionName.FAMILY_TREE_PERSON_DETAILS, {
     'p': { action: toggleCollapsed }
@@ -107,7 +116,7 @@ useHotkeys(ShortcutSectionName.FAMILY_TREE_PERSON_DETAILS, {
                         :class="[blurClass]"
                         :key="selectedPersonInTree.id"
                     >
-                        <NuxtLink :to="{ name: 'familyName-member-personId', params: { familyName: selectedPersonInTree.last_name, personId: selectedPersonInTree.id }}">
+                        <NuxtLink :to="{ name: 'member-personId', params: { personId: selectedPersonInTree.id }}">
                             <div class="w-full flex justify-center items-center text-lg hover:text-xl font-normal hover:font-medium text-zinc-950 dark:text-zinc-50 p-2 border-b transition-all duration-300 hover:bg-zinc-300 dark:hover:bg-zinc-800">
                                 View Person's Page
                                 <Icon icon="grommet-icons:link-next" class="w-3 h-3 ml-2" /> 

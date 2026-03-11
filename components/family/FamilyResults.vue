@@ -2,7 +2,7 @@
 import { Icon } from '@iconify/vue'
 import { useFamilyStore } from '@/stores/useFamily';
 import { storeToRefs } from 'pinia';
-import { type FamilyTreeNodeType } from '@/types/family';
+import type { FamilyTreeNodeType } from '@/types';
 import { useWatchFamilyStore } from '@/composables/useWatchFamilyStore';
 import FamilyTreeDropdown from './FamilyTreeDropdown.vue';
 import LoadingSpinner from '@/components/ui/LoadingSpinner.vue';
@@ -29,7 +29,7 @@ useWatchFamilyStore();
                 <span class="text-zinc-600 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200 underline underline-offset-1 hover:underline-offset-2 font-light cursor-pointer transition-all duration-300">Create Your Tree</span>
             </NuxtLink>
         </p>
-        <div v-else class="w-full" v-for="(familyTreeNode, i) in familyTrees" :key="familyTreeNode.familyId">
+        <div v-else class="w-full" v-for="(familyTreeNode, i) in familyTrees" :key="familyTreeNode.family_id">
             <div class="w-full border border-zinc-950 dark:border-zinc-100 rounded-md hover:shadow-md hover:shadow-zinc-300 dark:hover:shadow-zinc-600 p-3 mb-6">
                 <div class="w-fit max-w-56 py-1 px-2 text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-300 cursor-pointer hover:underline hover:underline-offset-4">
                     <NuxtLink 
@@ -38,7 +38,7 @@ useWatchFamilyStore();
                             name: 'familyName-familyId', 
                             params: { 
                                 familyName: familyTreeNode.member.last_name, 
-                                familyId: familyTreeNode.familyId 
+                                familyId: familyTreeNode.family_id 
                             }
                         }" 
                         @click="() => handleFamilyClick(familyTreeNode)"

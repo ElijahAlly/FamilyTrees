@@ -1,9 +1,6 @@
-import { onMounted, watch } from 'vue';
+import { onMounted } from 'vue';
 import { useFamilyStore } from '../stores/useFamily';
-import type { FetchTypeList } from '../types/fetch';
-import { type MarriageType } from '../types/marriage';
-import { type PersonType } from '../types/person';
-import { type FamilyTreeNodeType, type FamilyType } from '../types/family';
+import type { FetchTypeList, MarriageType, PersonType, FamilyTreeNodeType, FamilyType } from '@/types';
 import { removeDuplicateTrees } from '../utils/family'
 import { storeToRefs } from 'pinia';
 import { useRoute } from 'nuxt/app';
@@ -15,28 +12,28 @@ export function useWatchFamilyStore() {
     const familyStore = useFamilyStore();
     const { setLoadingFamily, setCurrentFamilyTree, updateFamilyTrees } = familyStore;
     const { family, loadingFamily } = storeToRefs(familyStore);
+    const route = useRoute();
+    const isOnFamilyTreePage = computed<boolean>(() => !!(route.params?.personId && route.params?.familyId));
 
     onMounted(() => {
         if (!loadingFamily.value) {
             setLoadingFamily(true);
-            const route = useRoute();
-            const isOnFamilyTreePage = !!(route.params?.familyName && route.params?.familyId);
             // console.time('family-tree-data-fetching-and-building-start')
-            getFamiliyTreeOrTrees(route, isOnFamilyTreePage);
+            getFamiliyTreeOrTrees();
         }
     })
     
-    watch(family, async (_newFamily, _oldFamilyName) => {
-        if (!loadingFamily.value) {
-            // console.time('family-tree-data-fetching-and-building-start')
-            setLoadingFamily(true);
-            await getFamiliyTreeOrTrees();
-        }
-    });
+    // watch(family, async (_newFamily, _oldFamilyName) => {
+    //     if (!loadingFamily.value) {
+    //         // console.time('family-tree-data-fetching-and-building-start')
+    //         setLoadingFamily(true);
+    //         await getFamiliyTreeOrTrees();
+    //     }
+    // });
 
-    const getFamiliyTreeOrTrees = async (route?: any, isOnFamilyTreePage?: boolean) => {
+    const getFamiliyTreeOrTrees = async () => {
         try {
-            const familyMembers: PersonType[] | undefined = await getFamilyMembers(route, isOnFamilyTreePage);
+            const familyMembers: PersonType[] | undefined = await getFamilyMembers();
 
             if (!familyMembers) throw Error('No family members found');
 
@@ -73,7 +70,7 @@ export function useWatchFamilyStore() {
                     updateFamilyTrees(uniqueTrees);
 
                     // Only set the current family tree right away if on a specific families page. Needed for when the persisted state is cleared.
-                    if (isOnFamilyTreePage) setCurrentFamilyTree(uniqueTrees[0]);
+                    if (isOnFamilyTreePage.value) setCurrentFamilyTree(uniqueTrees[0]);
                 } catch (err) {
                     console.error(err);
                 } finally {
@@ -149,21 +146,20 @@ export function useWatchFamilyStore() {
             spouse,
             level: currentLevel,
             children,
-            familyId: familyStore.getFamilyByPerson(currentMember)?.id || 0
+            family_id: familyStore.getFamilyByPerson(currentMember)?.id || 0
         };
     };
 
-    const getFamilyMembers = async (route?: any, isOnFamilyTreePage?: boolean): Promise<PersonType[] | undefined> => {
-        if (isOnFamilyTreePage) {
+    const getFamilyMembers = async (): Promise<PersonType[] | undefined> => {
+        if (isOnFamilyTreePage.value) {
             // Only fetch 1 family tree (all members in the family)
             const { data: familyResData, error: familyError }: FetchTypeList<FamilyType> = await $fetch('/api/get-family-by-id', {
                 method: 'GET',
                 params: {
                     table: 'families',
                     select: '*',
-                    eq: ['id', 'family_name'],
+                    eq: 'id',
                     id: Number(route.params.familyId),
-                    family_name: route.params.familyName
                 }
             });
 

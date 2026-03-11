@@ -4,9 +4,7 @@ import { Icon } from '@iconify/vue';
 import { storeToRefs } from 'pinia';
 import { useFamilyStore } from '@/stores/useFamily';
 import { usePersonStore } from '@/stores/usePerson';
-import type { FamilyType } from '@/types/family';
-import type { FetchTypeList } from '@/types/fetch';
-import { type PersonType } from '@/types/person';
+import type { FamilyType, PersonType, FetchTypeList } from '@/types';
 import { getFullName } from '@/utils/person';
 
 const familyStore = useFamilyStore();
@@ -36,7 +34,7 @@ watch(userInput, async (newInput) => {
     if (newInput && !loadingResults.value && !alreadySearchedForFamily) {
         userInputedCharAndDidNotClickOnResult.value = true;
         try {
-            // Already sorted alphabetically from supabase
+            // Search for matching families/people
             const { data: response, error }: FetchTypeList<FamilyType | PersonType> = await $fetch('/api/get-all-matching-by-name', {
                 method: 'GET',
                 params: {

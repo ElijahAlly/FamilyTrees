@@ -1,6 +1,6 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useDebounceFn } from '@vueuse/core';
-import type { Page } from '../types/page';
+import type { Page } from '@/types';
 
 export enum ShortcutSectionName {
     GLOBAL = 'Global',
@@ -45,7 +45,7 @@ interface HotkeySection {
     activeOnPages: Page[];
 }
 
-interface HotkeyUpdates {
+export interface HotkeyUpdates {
     action: () => void;
     condition?: () => boolean;
 }

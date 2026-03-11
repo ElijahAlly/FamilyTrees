@@ -40,7 +40,7 @@ import * as echarts from 'echarts';
 //   return transformedNode;
 // }
 
-// const echartsData = transformToEChartsSunburst(familyStore.curentFamilyTree);
+// const echartsData = transformToEChartsSunburst(familyStore.currentFamilyTree);
 
 // function calculateLevels(data: any, maxRadius = '100%') {
 //   const levels = [];
@@ -97,7 +97,7 @@ import * as echarts from 'echarts';
 
 // onMounted(async () => {
 //   try {
-//     if (familyStore.curentFamilyTree) {
+//     if (familyStore.currentFamilyTree) {
 //       return;
 //     }
 

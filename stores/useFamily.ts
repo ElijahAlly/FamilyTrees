@@ -1,5 +1,4 @@
-import type { FamilyTreeNodeType, FamilyType } from '../types/family';
-import type { PersonType } from '../types/person';
+import type { FamilyTreeNodeType, FamilyType, PersonType } from '@/types';
 import { defineStore } from 'pinia';
 import { computed, ref, watch } from 'vue';
 
@@ -11,7 +10,7 @@ export const useFamilyStore = defineStore('family', () => {
 
     // Family Tree Node Type (Current and All)
     const familyTrees = ref<FamilyTreeNodeType[]>([]);
-    const curentFamilyTree = ref<FamilyTreeNodeType | null>(null);
+    const currentFamilyTree = ref<FamilyTreeNodeType | null>(null);
 
     // Discover Page
     const searchedForFamily = ref<boolean>(false);
@@ -47,7 +46,7 @@ export const useFamilyStore = defineStore('family', () => {
     }
 
     function setCurrentFamilyTree(newFamily: FamilyTreeNodeType) {
-        curentFamilyTree.value = newFamily;
+        currentFamilyTree.value = newFamily;
     }
 
     function setSearchedForFamily(bool: boolean) {
@@ -67,10 +66,21 @@ export const useFamilyStore = defineStore('family', () => {
         shownFamilyDetails.value = bool;
     }
 
+    const clearStoresAfterSignout = () => {
+        family.value = null;
+        families.value = [];
+        familyTrees.value = [];
+        currentFamilyTree.value = null;
+        searchedForFamily.value = false;
+        searchedInput.value = '';
+        shownFamilyDetails.value = false;
+        loadingFamily.value = false;
+    }
+
     return {
         family,
         familyTrees,
-        curentFamilyTree,
+        currentFamilyTree,
         searchedForFamily,
         families,
         shownFamilyDetails,
@@ -85,7 +95,8 @@ export const useFamilyStore = defineStore('family', () => {
         setSearchedForFamily,
         setShownFamilyDetails,
         setLoadingFamily,
-        searchedInputChanged
+        searchedInputChanged,
+        clearStoresAfterSignout
     }
 }, {
     persist: {

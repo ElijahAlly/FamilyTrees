@@ -1,13 +1,11 @@
 <script setup lang="ts">
 import { Icon } from '@iconify/vue';
-import { type PersonType } from '@/types/person';
-import { type FamilyType } from '@/types/family';
-import type { FetchTypeList, PostType } from '@/types/fetch';
+import type { FetchTypeList, PostType, PersonType, FamilyType } from '@/types';
 import type { PropType } from 'vue';
 
 const { person } = defineProps({
     person: {
-        type: {} as PropType<PersonType | null>,
+        type: Object as PropType<PersonType>,
         required: true,
     }
 });
@@ -77,7 +75,8 @@ const handleFileUpload = async (event: Event) => {
     <div 
         v-if="person"
         @click="($refs.fileInput as any).click()"
-        class="flex items-center justify-center w-48 h-48 mx-9 border rounded-md hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-all duration-300 cursor-pointer"
+        class="flex items-center justify-center w-52 h-52 rounded-md mx-9 border hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-all duration-300 cursor-pointer"
+        title="Upload more photos (max of 3 at a time)"
     >
         <Icon icon="material-symbols:add-photo-alternate-outline" class="inline-block w-6 h-6" />
         <input

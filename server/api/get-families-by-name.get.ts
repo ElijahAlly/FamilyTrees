@@ -1,29 +1,37 @@
-import { serverSupabaseClient } from '#supabase/server';
 import { defineEventHandler, getQuery } from 'h3';
+import { db } from '../db';
+import { families, people } from '../db/schema';
+import { eq, sql } from 'drizzle-orm';
 
-export default defineEventHandler(async (event: any) => {
-    const client = await serverSupabaseClient(event)
-    let { table, select, eq, familyName, limit } = getQuery(event);
-    table = table as string;
-    select = select as string;
-    eq = eq as string;
-    familyName = familyName as string;
-    limit = limit as number;
+export default defineEventHandler(async (event) => {
+    const { table, eq: eqField, familyName, limit } = getQuery(event);
+    const limitNum = limit ? Number(limit) : 3;
 
     try {
-        let dataRes = [];
-        if (!familyName || !eq) {
-            const { data, error } = await client.from(table).select(select ? select : '*').limit(limit ? limit : 3);
-            if (error) throw error;
-            dataRes = data;
-            // console.log(dataRes);
+        if (table === 'people' && eqField && familyName) {
+            const data = await db
+                .select()
+                .from(people)
+                .where(eq(people[eqField as keyof typeof people] as any, familyName as string));
 
-        } else  {
-            const { data, error } = await client.from(table).select(select).eq(eq, familyName);
-            if (error) throw error;
-            dataRes = data;
+            return { data };
         }
-        return { data: dataRes };
+
+        if (!familyName || !eqField) {
+            const data = await db
+                .select()
+                .from(families)
+                .limit(limitNum);
+
+            return { data };
+        }
+
+        const data = await db
+            .select()
+            .from(families)
+            .where(eq(families[eqField as keyof typeof families] as any, familyName as string));
+
+        return { data };
     } catch (error) {
         return { error };
     }
