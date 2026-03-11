@@ -1,16 +1,23 @@
-import { serverSupabaseClient } from '#supabase/server';
 import { defineEventHandler, getQuery } from 'h3';
+import { db } from '../db';
+import { people } from '../db/schema';
+import { eq } from 'drizzle-orm';
 
-export default defineEventHandler(async (event: any) => {
-    const client = await serverSupabaseClient(event)
-    let { select, id } = getQuery(event);
-    select = select as string;
-    id = id as string;
+export default defineEventHandler(async (event) => {
+    const { id } = getQuery(event);
+
+    if (!id) {
+        return { error: 'id is required' };
+    }
 
     try {
-        const { data, error } = await client.from("people").select(select).eq("id", id).single();
-        if (error) throw error;
-        return { data };
+        const data = await db
+            .select()
+            .from(people)
+            .where(eq(people.id, Number(id)))
+            .limit(1);
+
+        return { data: data[0] ?? null };
     } catch (error) {
         return { error };
     }

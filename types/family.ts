@@ -8,30 +8,30 @@ export type FamilyType = {
     // Access control
     admins: number[]; // user IDs
     visibility: 'public' | 'private';
-    accessCode?: string;
+    access_code?: string;
     
     // Collaboration
     collaborators: CollaboratorType[];
-    tempAccess: TempAccessType[];
+    temp_access: TempAccessType[];
     
     // Import tracking
-    importSource?: {
+    import_source?: {
         platform: string;
-        importedAt: Date;
-        importedBy: number;
+        imported_at: string;
+        imported_by: number;
     };
     
     // Settings
     settings: {
-        requireMediaApproval: boolean;
-        allowMemberInvites: boolean;
-        minAdminsForApproval: number;
+        require_media_approval: boolean;
+        allow_member_invites: boolean;
+        min_admins_for_approval: number;
     };
     
-    createdBy: number;
-    createdAt: Date;
-    updatedAt: Date;
-    archivedAt?: Date;
+    created_by: number;
+    created_at: string;
+    updated_at: string;
+    archived_at?: string;
 }
 
 export type FamilyTreeNodeType = {
@@ -39,7 +39,7 @@ export type FamilyTreeNodeType = {
     marriages: PersonType[];
     spouse: PersonType | null;
     children: FamilyTreeNodeType[];
-    familyId: number;
+    family_id: number;
     level: number;
 }
 
@@ -62,18 +62,18 @@ export const _defaultFamilyTree = {
 }
 
 export type CollaboratorType = {
-    userId: number;
+    user_id: number;
     role: 'viewer' | 'editor' | 'admin';
-    addedBy: number;
-    addedAt: Date;
+    added_by: number;
+    added_at: string;
 }
 
 export type TempAccessType = {
     email: string;
-    accessType: 'family' | 'person';
-    targetId: number; // family or person ID
-    expiresAt: Date;
-    maxVisits?: number;
-    visitsUsed: number;
-    createdBy: number;
+    access_type: 'family' | 'person';
+    target_id: number; // family or person ID
+    expires_at: string;
+    max_visits?: number;
+    visits_used: number;
+    created_by: number;
 }

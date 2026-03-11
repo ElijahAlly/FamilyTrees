@@ -6,7 +6,7 @@ import { useTypewriter } from '@/composables/useTypewriter';
 import FamilyDetailsCard from './FamilyDetailsCard.vue';
 
 const familyStore = useFamilyStore();
-const { curentFamilyTree, family, shownFamilyDetails, isFamilyTreePrivate } = storeToRefs(familyStore);
+const { currentFamilyTree, family, shownFamilyDetails, isFamilyTreePrivate } = storeToRefs(familyStore);
 
 const { displayText, isTyping, typeText, reset } = useTypewriter(`The ${family.value?.family_name || ''} Family`, 90, 300);
 
@@ -29,7 +29,7 @@ watch(family, (newFamily) => {
 </script>
 
 <template>
-    <div v-if="family && curentFamilyTree"
+    <div v-if="family && currentFamilyTree"
         class="relative min-w-full mt-6 overflow-y-auto border rounded-md text-black dark:text-white"
         :class="{'h-fit': isTyping, 'h-full': !isTyping}">
         <h1

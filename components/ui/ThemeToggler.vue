@@ -10,15 +10,10 @@ const isDark = ref<boolean>(colorMode.value === 'dark');
 
 const toggleColorMode = (newVal: boolean) => {
     colorMode.value = newVal ? 'dark' : 'light';
-    if (newVal) {
-        document.documentElement.classList.add('dark-mode');
-        document.documentElement.classList.remove('light-mode');
-        localStorage.setItem('ft-theme', 'dark');
-    } else {
-        document.documentElement.classList.remove('dark-mode');
-        document.documentElement.classList.add('light-mode');
-        localStorage.setItem('ft-theme', 'light');
-    }
+    document.documentElement.style.backgroundColor = newVal ? '#18181b' : '#d4d4d8';
+    document.documentElement.classList.toggle('dark-mode', newVal);
+    document.documentElement.classList.toggle('light-mode', !newVal);
+    localStorage.setItem('ft-theme', newVal ? 'dark' : 'light');
 };
 
 watch(isDark, (newVal) => {
@@ -38,9 +33,11 @@ onMounted(() => {
 </script>
 
 <template>
-    <Toggle 
-        v-model="isDark" 
-        :title="`Enter ${isDark ? 'light' : 'dark'} mode (Shift+D)`" 
-        darkVariant 
-    />
+    <ClientOnly>
+        <Toggle 
+            v-model="isDark" 
+            :title="`Enter ${isDark ? 'light' : 'dark'} mode (Shift+D)`" 
+            darkVariant 
+        />
+    </ClientOnly>
 </template>

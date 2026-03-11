@@ -1,15 +1,23 @@
-import { serverSupabaseClient } from '#supabase/server';
 import { defineEventHandler, getQuery } from 'h3';
+import { db } from '../db';
+import { families } from '../db/schema';
+import { eq, sql } from 'drizzle-orm';
 
-export default defineEventHandler(async (event: any) => {
-    const client = await serverSupabaseClient(event)
-    let { familyName, id } = getQuery(event);
-    familyName = familyName as string;
-    id = id as string;
+export default defineEventHandler(async (event) => {
+    const { familyName, id } = getQuery(event);
+
+    if (!familyName || !id) {
+        return { error: 'familyName and id are required' };
+    }
 
     try {
-        const { data, error } = await client.from('families').select('*').eq('family_name', familyName).contains('members', [id]);
-        if (error) throw error;
+        const data = await db
+            .select()
+            .from(families)
+            .where(
+                sql`${families.familyName} = ${familyName} AND ${id}::uuid = ANY(${families.members})`
+            );
+
         return { data };
     } catch (error) {
         return { error };

@@ -49,7 +49,7 @@ const buttonClasses = computed(() => {
         'inline-flex items-center justify-center rounded-md text-sm font-medium',
         'transition-colors duration-200 ease-in-out',
         'focus:outline-none',
-        'cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed',
+        'cursor-pointer disabled:opacity-50 disabled:pointer-events-none',
         
         // Ring on focus classes
         props.ring ? 'focus:ring-2 focus:ring-zinc-500 dark:focus:ring-zinc-400 focus:ring-offset-2' : 'focus:ring-none',

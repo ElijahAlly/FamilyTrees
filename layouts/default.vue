@@ -4,16 +4,18 @@ import { useBannerStore } from '@/stores/useBannerStore';
 import { useRoute } from 'nuxt/app';
 import { ref, computed, watch, onMounted, onBeforeMount } from 'vue';
 import { useRouter } from 'nuxt/app';
-import { useColorMode } from '@vueuse/core';
 import Navbar from '@/components/navbar/index.vue';
 import AppFooter from '@/components/AppFooter.vue';
 import { listOfAllShortcuts, ShortcutSectionName, useHotkeys } from '../composables/useHotkeys';
 import HotkeyHelperModal from '../components/HotkeyHelperModal.vue';
+import { storeToRefs } from 'pinia';
 
 const router = useRouter();
 const route = useRoute();
 const bannerStore = useBannerStore();
-const colorMode = useColorMode();
+const authStore = useAuthStore();
+const { isAuthenticated, profile } = storeToRefs(authStore); 
+const isOnTreePage = computed<boolean>(() => route.name === 'member-personId-tree-familyId');
 
 const showHotkeyHelper = ref(false);
 const isNavigatingBack = ref(false);
@@ -25,11 +27,10 @@ router.beforeEach((to, from, next) => {
     next();
 })
 
-const showFooter = computed(() => {
-    const doesNotHaveFamilyName = !route.params?.familyName;
-    // const hasFamilyId = !!route.params?.familyId;
-    const isMemberPage = route.fullPath.includes('member');
-    return doesNotHaveFamilyName || isMemberPage;
+const showFooter = computed<boolean>(() => !isOnTreePage.value);
+
+const showFloatingToolbar = computed<boolean>(() => {
+    return isAuthenticated.value && !isOnTreePage.value;
 })
 
 const scrollToTop = () => {
@@ -53,39 +54,15 @@ const handleScroll = (event: Event) => {
 };
 
 watch(() => route.path, () => {
-    if (route.name === 'familyName-member-personId') {
-        bannerStore.setBannerInfo(
-            'Person Details',
-            `Viewing details for person ${route.params.personId} in family ${route.params.familyName}`
-        );
-    } 
-    // Can't remember why this is here
-    // else if (route.path.includes('member')) {
-    //     bannerStore.setBannerInfo(
-    //         'Member Area',
-    //         'Manage your family tree and personal settings'
-    //     );
-    // } 
-    else {
-        bannerStore.clearBannerInfo();
-    }
-
-    if (route.name !== 'familyName-familyId') {
+    bannerStore.clearBannerInfo();
+    if (isOnTreePage.value) {
+        bannerStore.hide();
+    } else {
         setTimeout(() => {
             scrollToTop();
         }, 420)
-    } else {
-        bannerStore.hide();
     }
 }, { immediate: true });
-
-watch(colorMode, (newVal) => {
-    if (newVal === 'dark') {
-        document.documentElement.style.backgroundColor = '#18181b';
-    } else {
-        document.documentElement.style.backgroundColor = '#d4d4d8';
-    }
-})
 
 const toggleShortcutHelperModal = () => showHotkeyHelper.value = !showHotkeyHelper.value;
 
@@ -105,18 +82,18 @@ onBeforeMount(() => {
 })
 
 onMounted(() => {
-    if (colorMode.value === 'dark') {
-        document.documentElement.style.backgroundColor = '#18181b';
-    } else {
-        document.documentElement.style.backgroundColor = '#d4d4d8'; 
-    }
+    watch(isAuthenticated, async (newVal) => {
+        if (newVal) {
+            await authStore.getProfile();
+        }
+    })
 })
 </script>
 
 <template>
     <main 
         ref="mainRef"
-        class="relative w-screen h-screen overflow-x-hidden overflow-y-auto bg-neutral-50 dark:bg-neutral-950" 
+        class="relative w-screen h-screen overflow-x-hidden overflow-y-auto bg-zinc-300 dark:bg-zinc-900" 
         @scroll="handleScroll"
     >
         <!-- <AutoStyleWrapper> -->
@@ -131,7 +108,7 @@ onMounted(() => {
             >
                 <div
                     v-if="showScrollBanner && bannerStore.isVisible"
-                    class="fixed top-0 left-0 right-0 pt-[9vh] backdrop-blur-md backdrop-brightness-100 dark:backdrop-brightness-50 z-30 border-b border-zinc-200 dark:border-zinc-700 py-2 px-4 flex justify-between items-center gap-2 shadow-lg text-zinc-950 dark:text-zinc-200 select-none"
+                    class="fixed top-0 left-0 right-0 pt-[9vh] backdrop-blur-md backdrop-brightness-100 dark:backdrop-brightness-50 z-40 border-b border-zinc-200 dark:border-zinc-700 py-2 px-4 flex justify-between items-center gap-2 shadow-lg text-zinc-950 dark:text-zinc-200 select-none"
                 >
                     <div class="flex flex-col">
                         <span class="text-sm font-medium">{{ bannerStore.title }}</span>
@@ -146,18 +123,16 @@ onMounted(() => {
                     </button>
                 </div>
             </Transition>
-            <div :class="[
-                `h-fit ${!route.params?.familyName && !route.params?.familyId ? 'min-h-screen' : ''} bg-neutral-50 dark:bg-neutral-950`,
-                isNavigatingBack ? 'is-navigating-back' : ''
-            ]">
+            <div :class="['h-fit bg-neutral-50 dark:bg-neutral-950', {'min-h-screen': !isOnTreePage }, {'is-navigating-back': isNavigatingBack }]">
                 <slot></slot>
             </div>
+            <MemberFloatingToolbar v-if="showFloatingToolbar" />
             <div 
-                class="fixed right-12 bottom-9 px-3 dark:text-white font-extralight rounded-full bg-zinc-200 dark:bg-zinc-900 border border-zinc-800 dark:border-zinc-100 cursor-help"
+                class="text-sm fixed right-9 bottom-6 p-2 dark:text-zinc-50 font-extralight rounded-full bg-zinc-200 dark:bg-zinc-900 border-[0.5px] border-zinc-800 dark:border-zinc-100 cursor-pointer"
                 title="View the Shortcuts Menu (Shift+?)"
                 @click="toggleShortcutHelperModal"
             >
-                ?
+                Keyboard Shortcuts
             </div>
             <HotkeyHelperModal v-model:isOpen="showHotkeyHelper" />
             <AppFooter v-if="showFooter"/>
@@ -165,15 +140,12 @@ onMounted(() => {
     </main>
 </template>
 
-<!-- ::selection {
-  @apply bg-violet-600 text-white dark:bg-violet-300 dark:text-black;
+<style lang="postcss">
+/* Highlighting colors throughout the app */
+::selection, ::-moz-selection {
+    @apply bg-teal-300/90 text-zinc-950 dark:bg-zinc-50;
 }
 
-::-moz-selection {
-  @apply bg-violet-600 text-white dark:bg-white dark:text-black;
-} -->
-
-<style>
 /* Layout transition */
 .layout-enter-active,
 .layout-leave-active {

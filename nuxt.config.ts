@@ -2,23 +2,21 @@ import glsl from 'vite-plugin-glsl';
 import { visualizer } from 'rollup-plugin-visualizer';
 import { defineNuxtConfig } from 'nuxt/config';
 
-declare module '@nuxt/schema' {
-  interface NuxtConfig {
-    colorMode?: {
-      classSuffix?: string
-      preference?: string
-      fallback?: string
-    }
-  }
-}
+// declare module '@nuxt/schema' {
+//   interface NuxtConfig {
+//     colorMode?: {
+//       classSuffix?: string
+//       preference?: string
+//       fallback?: string
+//     }
+//   }
+// }
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   // srcDir: 'src',
   compatibilityDate: '2024-04-03',
   devtools: { 
-    // `false` to hide devtools and animation 
-    // ...or `true` to see devtools (this will add the Nuxt animation that takes way too long to go away after each change)
     enabled: false,
     // Timeline enables the inspection of when composable being executed and the route changes.
     timeline: {
@@ -28,24 +26,6 @@ export default defineNuxtConfig({
   css: ['~/assets/css/main.css'],
   modules: [
     '@nuxtjs/tailwindcss',
-    ['@nuxtjs/supabase', {
-      url: process.env.NUXT_PUBLIC_SUPABASE_URL,
-      key: process.env.NUXT_PUBLIC_SUPABASE_ANON_KEY,
-      redirect: false,
-      cookieOptions: {
-        maxAge: 60 * 60 * 24, // 24 hours
-        sameSite: 'lax',
-        secure: process.env.NODE_ENV === 'production'
-      },
-      clientOptions: {
-        global: {
-          fetch: async (url: RequestInfo | URL, init?: RequestInit) => {
-            const { customSupabaseFetch } = await import('./utils/supabase');
-            return customSupabaseFetch()(url.toString(), init);
-          }
-        }
-      }
-    }],
     '@pinia/nuxt',
     '@formkit/auto-animate',
     '@nuxt/image',
@@ -94,16 +74,6 @@ export default defineNuxtConfig({
       })
     ],
   },
-  runtimeConfig: {
-    public: {
-      supabaseUrl: process.env.NUXT_PUBLIC_SUPABASE_URL,
-      supabaseKey: process.env.NUXT_PUBLIC_SUPABASE_ANON_KEY,
-      supabaseAppId: process.env.NUXT_PUBLIC_SUPABASE_APP_ID,
-      // supabase: {
-        
-      // },
-    }
-  },
   colorMode: {
     classSuffix: '-mode',
     preference: 'light',
@@ -124,6 +94,22 @@ export default defineNuxtConfig({
         { name: 'msapplication-TileColor', content: '#8b5cf6' },
         { name: 'theme-color', content: '#ffffff' },
       ],
+      script: [
+        {
+          innerHTML: `
+            (function() {
+              const theme = localStorage.getItem('ft-theme') || 'light';
+              if (theme === 'dark') {
+                document.documentElement.style.backgroundColor = '#18181b';
+                document.documentElement.classList.add('dark-mode');
+              } else {
+                document.documentElement.style.backgroundColor = '#d4d4d8';
+                document.documentElement.classList.add('light-mode');
+              }
+            })()
+          `,
+        },
+      ],
     },
     pageTransition: {
       name: 'page',
@@ -134,4 +120,9 @@ export default defineNuxtConfig({
       mode: 'out-in'
     }
   },
+  nitro: {
+    experimental: {
+      openAPI: true
+    }
+  }
 })
