@@ -1,16 +1,28 @@
 import { defineEventHandler, getQuery } from 'h3';
-import { serverSupabaseClient } from '#supabase/server';
+import { db } from '../db';
+import { marriages } from '../db/schema';
+import { eq, or } from 'drizzle-orm';
 
-export default defineEventHandler(async (event: any) => {
-    const client = await serverSupabaseClient(event)
-    const { table, select, or } = getQuery(event);
+export default defineEventHandler(async (event) => {
+    const { personId } = getQuery(event);
+
+    if (!personId) {
+        return { error: 'personId is required' };
+    }
+
+    const id = Number(personId);
 
     try {
-        if (!table || typeof table !== 'string' || !select || typeof select !== 'string' || !or || typeof or !== 'string') 
-            throw Error('Table, select, and or fields are required for getting marriages.');
+        const data = await db
+            .select()
+            .from(marriages)
+            .where(
+                or(
+                    eq(marriages.person1Id, id),
+                    eq(marriages.person2Id, id)
+                )
+            );
 
-        const { data, error } = await client.from(table).select(select).or(or);
-        if (error) throw error;
         return { data };
     } catch (error) {
         return { error };

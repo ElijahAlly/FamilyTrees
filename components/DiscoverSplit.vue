@@ -20,13 +20,12 @@ const _defaultSectionViews = {
         isFullPage: false
     }
 }
-
+const { profile } = storeToRefs(useAuthStore());
 const sectionViews = ref<SectionViewType>(_defaultSectionViews);
 const isTransitioning = ref(false);
 
 const handleToggleFullPage = (index: number) => {
     isTransitioning.value = true;
-    
     
     if (sectionViews.value[index].isFullPage) { // If we're collapsing a section, just toggle it
         sectionViews.value[index].isFullPage = false;
@@ -135,11 +134,8 @@ useHotkeys(ShortcutSectionName.DISCOVER_SPLIT, {
                         <SplitterPanel id="splitter-group-2-panel-2" :min-size="sectionViews[1].isFullPage ? 0 : 20"
                             class="border rounded-xl flex items-center justify-center border-zinc-950 dark:border-zinc-100"
                             :class="{'border-none': sectionViews[1].isFullPage}">
-                            <NuxtLink
-                                class="w-fit flex items-center justify-center mx-3 border border-zinc-500 dark:border-zinc-400 text-zinc-700 dark:text-zinc-300 rounded-md hover:bg-zinc-200 dark:hover:text-zinc-950 dark:hover:border-zinc-950 transition-colors duration-300 p-2"
-                                to="/create">
-                                <p class="flex flex-nowrap">Create New Family Tree</p>
-                            </NuxtLink>
+                            <FamilyCreateNewTreeButton v-if="profile" />
+                            <div v-else>Log in to create your family tree.</div>
                         </SplitterPanel>
                     </SplitterGroup>
                 </SplitterPanel>

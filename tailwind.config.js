@@ -14,6 +14,9 @@ export default {
     safelist: [
         'hover:shadow-gray-300',
         'hover:shadow-neutral-600',
+        'bg-zinc-200',
+        'dark:bg-zinc-700',
+        'animate-pulse'
         // Add any other dynamic shadow classes you might use
     ],
     theme: {

@@ -12,11 +12,8 @@ const { curBackgroundPattern, curBackgroundColor } = storeToRefs(draggableZoneSt
 </script>
 
 <template>
-  <div 
-    class="relative h-[92vh] w-full flex flex-col items-center justify-center overflow-visible" 
-    :class="[curBackgroundPattern]" 
-    :style="{ backgroundColor: curBackgroundColor.hex }"
-  >
+  <div class="relative h-[92vh] w-full flex flex-col items-center justify-center overflow-visible"
+    :class="[curBackgroundPattern]" :style="{ backgroundColor: curBackgroundColor.hex }">
     <TreeViewSettingsSidebar />
     <PersonInfoSidebar />
     <slot></slot>

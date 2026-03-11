@@ -1,27 +1,21 @@
 <script setup lang="ts">
 import { onMounted, ref, watch, type PropType } from 'vue';
-import { type FamilyTreeNodeType } from '@/types/family';
 import * as d3 from 'd3';
 import { usePersonStore } from '@/stores/usePerson';
 import { useDraggableZoneStore } from '@/stores/useDraggableZone';
-import type { PersonType } from '@/types/person';
+import type { PersonType, FamilyTreeNodeType } from '@/types';
 import { storeToRefs } from 'pinia';
-import { getPersonPictureUrl } from '@/utils/supabase';
+import { getPersonPictureUrl, getLegacyPersonPictureUrl } from '@/utils/pictures';
 
 const personStore = usePersonStore();
 const { setSelectedPersonInTree, clearGoToPersonInTree } = personStore;
 const { gotToPersonInTree } = storeToRefs(personStore);
 
+const familyStore = useFamilyStore();
+const { currentFamilyTree } = storeToRefs(familyStore);
+
 const draggableStore = useDraggableZoneStore();
 const { getSecondaryColorByCurrentColor } = draggableStore;
-
-const { treeNode } = defineProps({
-    treeNode: {
-        type: Object as PropType<FamilyTreeNodeType | null>,
-        required: false,
-        default: null
-    },
-});
 
 const emit = defineEmits<{
     (e: 'centerNode', position: { x: number, y: number }): void
@@ -390,8 +384,14 @@ const renderTree = () => {
                 const img = new Image();
                 let url = '';
 
-                if (!!d.data.attributes?.pictures && !!treeNode) {
-                    url = getPersonPictureUrl(treeNode.familyId, d.data.attributes.id as number, (d.data.attributes.pictures as string).split(ARRAY_TO_STRING_JOINER)[0])
+                if (!!d.data.attributes?.pictures && !!currentFamilyTree.value) {
+                    const firstPic = (d.data.attributes.pictures as string).split(ARRAY_TO_STRING_JOINER)[0];
+                    // Numeric strings are gpapics media IDs, otherwise legacy local filenames
+                    if (/^\d+$/.test(firstPic)) {
+                        url = getPersonPictureUrl(firstPic, 'thumb');
+                    } else {
+                        url = getLegacyPersonPictureUrl(currentFamilyTree.value.family_id, d.data.attributes.id as number, firstPic);
+                    }
                 } else {
                     const initials = getInitials(d);
                     url = createInitialsSvg(initials)
@@ -455,12 +455,12 @@ const renderTree = () => {
 };
 
 const setupFamilyTree = () => {
-    if (!treeNode) return;
+    if (!currentFamilyTree.value) return;
 
     familyTree.value = {
-        name: getNodeName(treeNode.member),
-        attributes: getAttributes(treeNode.member),
-        children: getChildren(treeNode)
+        name: getNodeName(currentFamilyTree.value.member),
+        attributes: getAttributes(currentFamilyTree.value.member),
+        children: getChildren(currentFamilyTree.value)
     };
 
     if (!hasSetFamilyTree.value) {
@@ -535,20 +535,19 @@ onMounted(() => {
     //     resizeObserver.disconnect();
     // });
 });
+
+watch(currentFamilyTree, (newVal, oldVal) => {
+    if (newVal && (!oldVal || newVal.family_id !== oldVal.family_id)) {
+        hasSetFamilyTree.value = false;
+        setupFamilyTree();
+    }
+})
 </script>
 
 <template>
-    <div
-        v-if="!!treeNode" 
-        ref="containerRef" 
-        class="w-full h-full flex flex-col items-center border hover:border-zinc-300 dark:border-zinc-600 dark:hover:border-zinc-100 rounded-md transition-all duration-300 overflow-auto" 
-        :class="{
-            'hover:shadow-gray-300': getSecondaryColorByCurrentColor.tailwind === 'gray-300',
-            'hover:shadow-neutral-600': getSecondaryColorByCurrentColor.tailwind === 'neutral-600'
-        }"
-    >
-        <svg ref="svgRef" :width="width" :height="height" preserveAspectRatio="xMidYMid meet">
-        </svg>
+    <div ref="containerRef"
+        class="relative flex flex-col items-center transition-all duration-300">
+        <svg ref="svgRef" :width="width" :height="height" preserveAspectRatio="xMidYMid meet"></svg>
     </div>
 </template>
 

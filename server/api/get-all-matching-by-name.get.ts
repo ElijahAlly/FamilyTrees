@@ -1,128 +1,87 @@
-import { serverSupabaseClient } from '#supabase/server';
 import { defineEventHandler, getQuery } from 'h3';
+import { db } from '../db';
+import { people, families } from '../db/schema';
+import { ilike, or } from 'drizzle-orm';
 
-export default defineEventHandler(async (event: any) => {
-    const client = await serverSupabaseClient(event)
-    let { table, select, ilike, name, searchBy } = getQuery(event);
-    table = table as string;
-    select = select as string;
-    ilike = ilike as string;
-    name = name as string;
-    searchBy = searchBy as string;
+export default defineEventHandler(async (event) => {
+    const { name, searchBy } = getQuery(event);
+
+    if (!name || !searchBy) {
+        return { error: 'name and searchBy are required' };
+    }
+
+    const nameStr = name as string;
 
     try {
-        if (searchBy === 'people' && name) {
-            const [firstName, middleName, lastName] = name.split(' ').filter((term: string) => term.length > 0);
-            const { data: firstNameResults, error: firstNameError } = await client
-                .from(table)
-                .select(select)
-                .or(`first_name.ilike.%${firstName}%`);
+        if (searchBy === 'people') {
+            const [firstName, middleName, lastName] = nameStr.split(' ').filter((term: string) => term.length > 0);
 
-            if (firstNameError) throw firstNameError;
-            if (!middleName && !lastName && firstNameResults.length) return { data: firstNameResults};
+            // Fetch all potential matches by first name, middle name, or last name
+            const results = await db
+                .select()
+                .from(people)
+                .where(
+                    or(
+                        ilike(people.firstName, `%${firstName}%`),
+                        middleName ? ilike(people.middleName, `%${middleName}%`) : ilike(people.middleName, `%${firstName}%`),
+                        lastName ? ilike(people.lastName, `%${lastName}%`) : ilike(people.lastName, `%${firstName}%`)
+                    )
+                );
 
-            let middleNameResults = [];
-            if (firstNameResults.length) {
-                const { data, error: middleNameError } = await client
-                    .from(table)
-                    .select(select)
-                    .or(`middle_name.ilike.%${middleName}%`)
-                    .not('id', 'in', `(${firstNameResults.map((result: any) => result.id).join(',')})`);
+            // Deduplicate by id
+            const uniqueResults = [...new Map(results.map(r => [r.id, r])).values()];
 
-                if (middleNameError) throw middleNameError;
-                middleNameResults = data;
-            } else {
-                const { data, error: middleNameError } = await client
-                    .from(table)
-                    .select(select)
-                    .or(`middle_name.ilike.%${firstName}%`);
-
-                if (middleNameError) throw middleNameError;
-                if (!middleName && !lastName && data.length) return { data };
-                middleNameResults = data;
-            }
-
-            let lastNameResults = [];
-
-            if (middleNameResults.length || firstNameResults.length) {
-                const { data, error: lastNameError } = await client
-                    .from(table)
-                    .select(select)
-                    .or(`last_name.ilike.%${lastName}%`)
-                    .not('id', 'in', `(${[...firstNameResults, ...middleNameResults].map((result: any) => result.id).join(',')})`);
-                
-                if (lastNameError) throw lastNameError;
-                lastNameResults = data;
-            } else {
-                const { data, error: lastNameError } = await client
-                    .from(table)
-                    .select(select)
-                    .or(`last_name.ilike.%${firstName}%`);
-
-                if (lastNameError) throw lastNameError;
-                if (!middleName && !lastName && data.length) return { data };
-                lastNameResults = data;
-            }
-
-            const results = [...firstNameResults, ...middleNameResults, ...lastNameResults];
-            
-            const filteredData = results.filter(result => {
-                const first_name = (result.first_name || '').toLowerCase();
-                const middle_name = (result.middle_name || '').toLowerCase();
-                const last_name = (result.last_name || '').toLowerCase();
+            // Apply the same filtering logic as before
+            const filteredData = uniqueResults.filter(result => {
+                const first_name = (result.firstName || '').toLowerCase();
+                const middle_name = (result.middleName || '').toLowerCase();
+                const last_name = (result.lastName || '').toLowerCase();
 
                 const firstNameInput = (firstName || '').toLowerCase();
                 const middleNameInput = (middleName || '').toLowerCase();
                 const lastNameInput = (lastName || '').toLowerCase();
 
                 // exact match
-                const check1: boolean = (first_name === firstNameInput) 
-                    && (middle_name === middleNameInput)
-                    && (last_name === lastNameInput);
-                if (check1) return true;
+                if (first_name === firstNameInput && middle_name === middleNameInput && last_name === lastNameInput) return true;
 
-                // just first name match (and middle and last name inputs are empty)
-                const check2: boolean = (first_name === firstNameInput && !middleNameInput && !lastNameInput);
-                if (check2) return true;
+                // just first name match
+                if (first_name === firstNameInput && !middleNameInput && !lastNameInput) return true;
 
                 // first name matches and middle name is a substring
-                const check3: boolean = first_name.includes(firstNameInput) &&
-                    ((middleNameInput ? middle_name.includes(middleNameInput) : true) 
-                        || (!lastNameInput ? last_name.includes(middleNameInput) : true)) 
-                    && (lastNameInput ? last_name.includes(lastNameInput) : true);
-                if (check3) return true;
+                if (first_name.includes(firstNameInput) &&
+                    ((middleNameInput ? middle_name.includes(middleNameInput) : true)
+                        || (!lastNameInput ? last_name.includes(middleNameInput) : true))
+                    && (lastNameInput ? last_name.includes(lastNameInput) : true)) return true;
 
                 // middle and last name match as substrings when first name matches
-                const check4: boolean = first_name.includes(firstNameInput) &&
-                    (middleNameInput ? middle_name.includes(middleNameInput) : true) 
-                    && (lastNameInput ? last_name.includes(lastNameInput) : true);
-                if (check4) return true;
-                
+                if (first_name.includes(firstNameInput) &&
+                    (middleNameInput ? middle_name.includes(middleNameInput) : true)
+                    && (lastNameInput ? last_name.includes(lastNameInput) : true)) return true;
+
                 // middle and last name check
-                const check5: boolean = middle_name.includes(firstNameInput) && last_name.includes(middleNameInput);
-                if (check5) return true;
+                if (middle_name.includes(firstNameInput) && last_name.includes(middleNameInput)) return true;
 
                 // first and last name exact match
-                const check6: boolean = (first_name + ' ' + last_name) === (firstNameInput + ' ' + lastNameInput);
-                if (check6) return true;
+                if ((first_name + ' ' + last_name) === (firstNameInput + ' ' + lastNameInput)) return true;
 
                 // middle and last name match
-                const check7: boolean = (middle_name + ' ' + last_name) === (middleNameInput + ' ' + lastNameInput);
-                if (check7) return true;
+                if ((middle_name + ' ' + last_name) === (middleNameInput + ' ' + lastNameInput)) return true;
 
                 return false;
-            })
+            });
 
             return { data: filteredData };
-        } else if (searchBy === 'families') {
-            const { data, error } = await client
-                .from(table)
-                .select(select)
-                .ilike(ilike, `%${name}%`);
 
-            if (error) throw error;
+        } else if (searchBy === 'families') {
+            const data = await db
+                .select()
+                .from(families)
+                .where(ilike(families.familyName, `%${nameStr}%`));
+
             return { data };
         }
+
+        return { data: [] };
     } catch (error) {
         return { error };
     }

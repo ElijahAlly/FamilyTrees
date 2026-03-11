@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { Icon } from '@iconify/vue';
-import type { FetchTypeList } from '../../types/fetch';
-import { getPlanText, type Plan, PlanName } from '../../types/plans';
+import type { FetchTypeList, Plan } from '@/types';
+import { getPlanText, PlanName } from '@/types';
 import ComparisonModal from './ComparisonModal.vue';
 
 const plans = ref<Plan[]>([]);
