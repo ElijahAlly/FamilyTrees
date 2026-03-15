@@ -2,36 +2,37 @@ import type { PersonType } from "./person";
 
 export type FamilyType = {
     id: number;
-    family_name: string;
-    members: number[];
+    familyName: string;
+    members: number[] | null;
 
     // Access control
-    admins: number[]; // user IDs
+    admins: number[]; // user IDs (legacy, prefer family_roles table)
+    ownerId?: string; // auth user UUID of the owner
     visibility: 'public' | 'private';
-    access_code?: string;
-    
+    accessCode?: string;
+
     // Collaboration
     collaborators: CollaboratorType[];
-    temp_access: TempAccessType[];
-    
+    tempAccess: TempAccessType[];
+
     // Import tracking
-    import_source?: {
+    importSource?: {
         platform: string;
-        imported_at: string;
-        imported_by: number;
+        importedAt: string;
+        importedBy: number;
     };
-    
+
     // Settings
     settings: {
-        require_media_approval: boolean;
-        allow_member_invites: boolean;
-        min_admins_for_approval: number;
+        requireMediaApproval: boolean;
+        allowMemberInvites: boolean;
+        minAdminsForApproval: number;
     };
-    
-    created_by: number;
-    created_at: string;
-    updated_at: string;
-    archived_at?: string;
+
+    createdBy: number;
+    createdAt: string;
+    updatedAt: string;
+    archivedAt?: string;
 }
 
 export type FamilyTreeNodeType = {
@@ -39,21 +40,21 @@ export type FamilyTreeNodeType = {
     marriages: PersonType[];
     spouse: PersonType | null;
     children: FamilyTreeNodeType[];
-    family_id: number;
+    familyId: number;
     level: number;
 }
 
 export const _defaultFamilyTree = {
     member: {
         id: 0,
-        first_name: '',
-        last_name: '',
-        birth_date: '',
-        death_date: null,
+        firstName: '',
+        lastName: '',
+        birthDate: '',
+        deathDate: null,
         gender: 'U', // not getting recognized
-        mother_id: null,
-        father_id: null,
-        middle_name:null,
+        motherId: null,
+        fatherId: null,
+        middleName: null,
     },
     marriages: [],
     spouse: null,
@@ -62,18 +63,23 @@ export const _defaultFamilyTree = {
 }
 
 export type CollaboratorType = {
-    user_id: number;
+    userId: number;
     role: 'viewer' | 'editor' | 'admin';
-    added_by: number;
-    added_at: string;
+    addedBy: number;
+    addedAt: string;
 }
 
 export type TempAccessType = {
+    id: string;
     email: string;
-    access_type: 'family' | 'person';
-    target_id: number; // family or person ID
-    expires_at: string;
-    max_visits?: number;
-    visits_used: number;
-    created_by: number;
+    accessType: 'family' | 'person';
+    targetId: string; // family or person ID (stored as string)
+    expiresAt: string;
+    maxVisits?: number | null;
+    visitsUsed: number;
+    createdBy: string;
+    createdAt: string;
+    // Enriched fields from API
+    isExpired?: boolean;
+    visitsExhausted?: boolean;
 }

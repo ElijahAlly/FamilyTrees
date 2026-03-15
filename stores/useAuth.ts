@@ -1,11 +1,12 @@
 import { defineStore } from 'pinia';
 import type { Ref, ComputedRef } from 'vue';
-import type { FamilyType, PersonType } from '@/types';
+import type { FamilyType, PersonType, ApiResponse, VerifyOtpResponse } from '@/types';
+import { useToast } from '@/composables/useToast';
 
 interface AuthUser {
     id: string;
     email: string;
-    created_at: string;
+    createdAt: string;
 }
 
 interface AuthStoreProps {
@@ -25,7 +26,7 @@ interface AuthStoreProps {
     signOut: () => void;
     handleLogin: (email: string) => void;
     getProfile: () => Promise<void>;
-    handleSignUp: (email: string, username: string) => void;
+    handleSignUp: (email: string, firstName: string, lastName: string) => void;
     checkIfUserExists: (email: { email?: string }) => Promise<boolean>;
 }
 
@@ -47,56 +48,67 @@ export const useAuthStore = defineStore('auth', (): AuthStoreProps => {
     const resendOtpLoading = ref<boolean>(false);
     const resendOtpError = ref<string | null>(null);
 
-    // Restore user from localStorage on mount
-    onMounted(() => {
-        const stored = localStorage.getItem('mft-auth-user');
-        if (stored) {
+    // Migrate old localStorage key to new persist key (one-time)
+    if (import.meta.client) {
+        const oldUser = localStorage.getItem('mft-auth-user');
+        if (oldUser && !localStorage.getItem('mft-auth')) {
             try {
-                user.value = JSON.parse(stored);
-            } catch {
-                localStorage.removeItem('mft-auth-user');
-            }
-        }
-    });
-
-    const persistUser = (authUser: AuthUser | null) => {
-        user.value = authUser;
-        if (authUser) {
-            localStorage.setItem('mft-auth-user', JSON.stringify(authUser));
-        } else {
+                const parsed = JSON.parse(oldUser);
+                localStorage.setItem('mft-auth', JSON.stringify({ user: parsed }));
+            } catch { /* ignore */ }
             localStorage.removeItem('mft-auth-user');
         }
+    }
+
+    const persistUser = (authUser: AuthUser | null, token?: string) => {
+        user.value = authUser;
+        if (import.meta.client) {
+            if (token) {
+                localStorage.setItem('mft-auth-token', token);
+            }
+            if (!authUser) {
+                localStorage.removeItem('mft-auth-token');
+            }
+        }
     };
+
+    const { showToast } = useToast();
+
+    const profileLoading = ref<boolean>(false);
 
     const getProfile = async () => {
         if (!user.value) return;
         try {
-            loading.value = true;
+            profileLoading.value = true;
 
-            const { data, error: fetchError } = await $fetch('/api/auth/get-profile', {
+            const { data, error: fetchError } = await $fetch<{ data: PersonType | null; error?: string }>('/api/auth/get-profile', {
                 method: 'GET',
-                params: { userId: user.value.id }
-            }) as any;
+            });
 
-            if (!data || fetchError) {
-                console.error('Could not find user profile.', fetchError);
-                loading.value = false;
+            if (fetchError) {
+                showToast('Could not load your profile. Please sign in again.', 'error');
                 signOut();
                 await navigateTo(`/signup?existing=true`);
                 return;
             }
 
-            profile.value = data as PersonType;
-            loading.value = false;
+            // Profile may be null if person record hasn't been created yet (e.g. during onboarding)
+            profile.value = (data as PersonType) || null;
         } catch (error) {
-            console.error(error);
+            showToast('Failed to load profile.', 'error');
+        } finally {
+            profileLoading.value = false;
         }
     }
 
     const goToProfile = async () => {
         try {
             await getProfile();
-            if (!profile.value) return;
+            if (!profile.value) {
+                // No person record yet — redirect to onboarding to create one
+                router.replace({ path: '/onboarding' });
+                return;
+            }
             router.replace({
                 name: 'member-personId',
                 params: { personId: `${profile.value.id}` }
@@ -108,10 +120,10 @@ export const useAuthStore = defineStore('auth', (): AuthStoreProps => {
 
     const checkIfUserExists = async ({ email }: { email?: string }): Promise<boolean> => {
         try {
-            const { exists } = await $fetch('/api/auth/check-user-exists', {
+            const { exists } = await $fetch<{ exists: boolean }>('/api/auth/check-user-exists', {
                 method: 'GET',
                 params: { email }
-            }) as any;
+            });
             return !!exists;
         } catch (err: any) {
             console.error('Failed to check if user exists:', err);
@@ -119,7 +131,7 @@ export const useAuthStore = defineStore('auth', (): AuthStoreProps => {
         }
     }
 
-    const handleSignUp = async (email: string, username: string) => {
+    const handleSignUp = async (email: string, firstName: string, lastName: string) => {
         try {
             loading.value = true;
             otpError.value = null;
@@ -130,19 +142,25 @@ export const useAuthStore = defineStore('auth', (): AuthStoreProps => {
                 return;
             }
 
-            const result = await $fetch('/api/auth/signup', {
+            const result = await $fetch<ApiResponse & { otp?: string }>('/api/auth/signup', {
                 method: 'POST',
-                body: { email, username }
-            }) as any;
+                body: { email, firstName, lastName }
+            });
 
             if (!result.success) {
                 throw new Error(result.error);
             }
 
+            // In dev mode, the server returns the OTP directly — skip verification UI
+            if (result.otp) {
+                await verifyOtp(email, result.otp);
+                return;
+            }
+
             isVerifying.value = true;
 
         } catch (error: any) {
-            console.error(error);
+            showToast('An error occurred during signup.', 'error');
             otpError.value = 'An error occurred during signup';
         } finally {
             loading.value = false;
@@ -159,19 +177,25 @@ export const useAuthStore = defineStore('auth', (): AuthStoreProps => {
                 return;
             }
 
-            const result = await $fetch('/api/auth/login', {
+            const result = await $fetch<ApiResponse & { otp?: string }>('/api/auth/login', {
                 method: 'POST',
                 body: { email }
-            }) as any;
+            });
 
             if (!result.success) {
                 throw new Error(result.error);
             }
 
+            // In dev mode, the server returns the OTP directly — skip verification UI
+            if (result.otp) {
+                await verifyOtp(email, result.otp);
+                return;
+            }
+
             isVerifying.value = true;
 
         } catch (error) {
-            console.error(error);
+            showToast('An error occurred during login.', 'error');
             otpError.value = 'An error occurred during login';
         } finally {
             loading.value = false;
@@ -181,6 +205,8 @@ export const useAuthStore = defineStore('auth', (): AuthStoreProps => {
     const clearStoresAfterSignout = () => {
         const familyStore = useFamilyStore();
         familyStore.clearStoresAfterSignout();
+        const claimsStore = useClaimsStore();
+        claimsStore.clearStore();
     }
 
     const signOut = async () => {
@@ -203,30 +229,36 @@ export const useAuthStore = defineStore('auth', (): AuthStoreProps => {
             loading.value = true;
             otpError.value = null;
 
-            const result = await $fetch('/api/auth/verify-otp', {
+            const result = await $fetch<VerifyOtpResponse>('/api/auth/verify-otp', {
                 method: 'POST',
                 body: { email, token }
-            }) as any;
+            });
 
             if (!result.success) {
                 throw new Error(result.error);
             }
 
-            persistUser(result.user);
+            persistUser(result.user, result.token);
             if (result.profile) {
                 profile.value = result.profile;
             }
 
-            goToProfile();
+            // Redirect to onboarding if not completed, otherwise go to profile
+            if (result.onboardingCompleted === false) {
+                router.replace({ path: '/onboarding' });
+            } else {
+                goToProfile();
+            }
 
             isVerifying.value = false;
-            loading.value = false;
             return true;
 
         } catch (error) {
-            console.error(error);
+            showToast('Invalid or expired code.', 'error');
             otpError.value = 'Invalid or expired code';
             return false;
+        } finally {
+            loading.value = false;
         }
     }
 
@@ -235,10 +267,10 @@ export const useAuthStore = defineStore('auth', (): AuthStoreProps => {
             resendOtpLoading.value = true;
             resendOtpError.value = null;
 
-            const result = await $fetch('/api/auth/login', {
+            const result = await $fetch<ApiResponse>('/api/auth/login', {
                 method: 'POST',
                 body: { email }
-            }) as any;
+            });
 
             if (!result.success) {
                 throw new Error(result.error);
@@ -274,4 +306,9 @@ export const useAuthStore = defineStore('auth', (): AuthStoreProps => {
         handleSignUp,
         checkIfUserExists
     }
+}, {
+    persist: {
+        key: 'mft-auth',
+        pick: ['user'],
+    },
 });

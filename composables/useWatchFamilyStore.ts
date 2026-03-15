@@ -37,7 +37,7 @@ export function useWatchFamilyStore() {
 
             if (!familyMembers) throw Error('No family members found');
 
-            if (familyMembers && family.value?.id) {
+            if (familyMembers.length > 0 && family.value?.id) {
                 try {
                     // Fetch all marriages at once instead of per member
                     const allMarriages: MarriageType[] | undefined = await getMarriages(familyMembers);
@@ -47,7 +47,7 @@ export function useWatchFamilyStore() {
                     // Create a map of marriages for quick lookup
                     const marriageMap = new Map() as MarriageMap;
                     allMarriages.forEach(marriage => {
-                        [marriage.person1_id, marriage.person2_id].forEach(personId => {
+                        [marriage.person1Id, marriage.person2Id].forEach(personId => {
                             if (!marriageMap.has(personId)) {
                                 marriageMap.set(personId, []);
                             }
@@ -89,7 +89,7 @@ export function useWatchFamilyStore() {
         marriageMap: MarriageMap, 
         membersMap: MembersMap
     ): Promise<FamilyTreeNodeType[]> => {
-        const startingMembers = members.filter(member => member.father_id === null && member.mother_id === null);
+        const startingMembers = members.filter(member => member.fatherId === null && member.motherId === null);
         const familyTrees: FamilyTreeNodeType[] = [];
 
         for (const startingMember of startingMembers) {
@@ -109,7 +109,14 @@ export function useWatchFamilyStore() {
     ): FamilyTreeNodeType => {
         currentLevel++;
         const children = members
-            .filter(member => member.father_id === currentMember.id || member.mother_id === currentMember.id)
+            .filter(member => member.fatherId === currentMember.id || member.motherId === currentMember.id)
+            .sort((a, b) => {
+                // Sort by birth date ascending (oldest first = leftmost in tree)
+                if (a.birthDate && b.birthDate) return a.birthDate.localeCompare(b.birthDate);
+                if (a.birthDate) return -1; // has date comes first
+                if (b.birthDate) return 1;
+                return 0; // preserve original order if no dates
+            })
             .map(member => buildTreeRecursively(member, members, marriageMap, membersMap, currentLevel))
 
         let marriagesExcludingCurrentSpouse: PersonType[] = [];
@@ -118,9 +125,9 @@ export function useWatchFamilyStore() {
         const memberMarriages = marriageMap.get(currentMember.id) || [];
         const spouses: PersonType[] = memberMarriages
             .map(marriage => {
-                const spouseId = marriage.person1_id === currentMember.id
-                    ? marriage.person2_id
-                    : marriage.person1_id;
+                const spouseId = marriage.person1Id === currentMember.id
+                    ? marriage.person2Id
+                    : marriage.person1Id;
                 return membersMap.get(spouseId);
             })
             .filter((spouse): spouse is PersonType => spouse !== undefined);
@@ -128,8 +135,8 @@ export function useWatchFamilyStore() {
         if (spouses.length > 0) {
             const currentSpouseIndex = spouses.findIndex(spouse =>
                 memberMarriages.some(marriage =>
-                    (marriage.person1_id === spouse.id || marriage.person2_id === spouse.id)
-                    && !marriage.divorce_date
+                    (marriage.person1Id === spouse.id || marriage.person2Id === spouse.id)
+                    && !marriage.divorceDate
                 )
             );
 
@@ -146,7 +153,7 @@ export function useWatchFamilyStore() {
             spouse,
             level: currentLevel,
             children,
-            family_id: familyStore.getFamilyByPerson(currentMember)?.id || 0
+            familyId: familyStore.getFamilyByPerson(currentMember)?.id || 0
         };
     };
 
@@ -171,13 +178,19 @@ export function useWatchFamilyStore() {
                 throw Error('Family not found');
             }
 
+            const members = familyResData[0].members;
+            if (!members || members.length === 0) {
+                familyStore.updateFamilies(familyResData[0]);
+                return [];
+            }
+
             const { data: membersResData, error: membersError }: FetchTypeList<PersonType> = await $fetch('/api/get-family-members-by-ids', {
                 method: 'GET',
                 params: {
                     table: 'people',
                     select: '*',
                     column: 'id',
-                    ids: familyResData[0].members
+                    ids: members
                 }
             });
             if (membersError) throw membersError;
@@ -193,7 +206,7 @@ export function useWatchFamilyStore() {
                     table: 'people',
                     select: '*',
                     eq: 'last_name',
-                    familyName: familyStore.family.family_name
+                    familyName: familyStore.family.familyName
                 }
             });
             if (error) throw error;
@@ -214,4 +227,14 @@ export function useWatchFamilyStore() {
         if (marriageError) throw marriageError;
         return allMarriages;
     }
+
+    /**
+     * Public method to refresh the family tree data without a full page reload.
+     */
+    const refreshFamilyTree = async () => {
+        setLoadingFamily(true);
+        await getFamiliyTreeOrTrees();
+    };
+
+    return { refreshFamilyTree };
 }

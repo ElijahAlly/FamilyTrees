@@ -15,14 +15,14 @@ const visibilityTitle: { public: string, private: string } = {
 
 const setTreesCreators = async () => {
     familiesCreatedByMember.value.forEach(async (fam) => {
-        if (fam.created_by === props.person?.id) {
+        if (fam.createdBy === props.person?.id) {
             treeCreatedBy.value[fam.id] = getFullName(props.person);
         } else {
             const { data: personData, error: personError }: FetchTypeSingle<PersonType> = await $fetch('/api/get-person-by-id', {
                 method: 'GET',
                 params: {
                     select: '*',
-                    id: fam.created_by,
+                    id: fam.createdBy,
                 }
             })
                 
@@ -71,14 +71,14 @@ onMounted(async () => {
                     class="max-w-fit">
                     <span
                         class="max-w-fit hover:text-zinc-900 hover:bg-zinc-200 rounded p-1 transition-all font-semibold underline underline-offset-2"
-                        :title="`Click to view the ${family.family_name} tree`">
-                        The {{ family.family_name }} family
+                        :title="`Click to view the ${family.familyName} tree`">
+                        The {{ family.familyName }} family
                     </span>
                 </NuxtLink>
                 <ul class="pl-6 list-disc">
                     <li>Created by {{ treeCreatedBy[family.id] }}</li>
-                    <li>Has {{ family.members.length }} member{{family.members.length > 1 ? 's' : ''}}</li>
-                    <li>Created on {{ formatDate(family.created_at) }}</li>
+                    <li>Has {{ (family.members || []).length }} member{{(family.members || []).length > 1 ? 's' : ''}}</li>
+                    <li>Created on {{ formatDate(family.createdAt) }}</li>
 
                     <!-- <li>Has {{ family.collaborators.length }} collaborator{{family.collaborators.length > 1 ? 's' : ''}}</li> -->
                 </ul>

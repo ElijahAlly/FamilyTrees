@@ -64,11 +64,11 @@ const rotateGalacticPeople = async () => {
 }
 
 function getGalaxyPosition(index: number): [number, number, number] {
-    const timeRotation = props.elapsedTime * props.parameters.speed;
+    const nameRadius = props.parameters.radius * 1.2;
+    // Match shader rotation: angleOffset = (1.0 / distanceToCenter) * uTime * uSpeed
+    const timeRotation = (1.0 / nameRadius) * props.elapsedTime * props.parameters.speed;
     const baseAngle = (index / numOfPeopleToShow.value) * Math.PI * 2;
     const angle = baseAngle + timeRotation;
-
-    const nameRadius = props.parameters.radius * 1.2;
 
     if (!upDownPos.value[index]) {
         upDownPos.value[index] = { 

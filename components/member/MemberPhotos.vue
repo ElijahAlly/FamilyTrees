@@ -1,18 +1,28 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { getFullName } from '@/utils/person';
 import { getPersonPictureUrl, getLegacyPersonPictureUrl } from '@/utils/pictures';
 import type { FetchTypeList, FamilyType, PersonType } from '@/types';
 import UploadPictures from '../UploadPictures.vue';
+import { usePermissions } from '@/composables/usePermissions';
 
 const props = defineProps<{
     person: PersonType | null
 }>();
 
+const authStore = useAuthStore();
+const { user, profile } = storeToRefs(authStore);
+const { userRole, isAdmin, fetchRole, canUploadPhotos } = usePermissions();
+
 const familyId = ref<number | null>(null);
 
 const currentImageIndex = ref(0);
 const isLoading = ref(false);
+
+const canUpload = computed(() => {
+    if (!user.value || !props.person || !profile.value) return false;
+    return canUploadPhotos(profile.value, props.person, user.value.id);
+});
 
 const getPictureUrl = (index: number) => {
     if (!props.person || !familyId.value) return '';
@@ -26,7 +36,10 @@ const getPictureUrl = (index: number) => {
 
 const nextImage = () => {
     if (!props.person) return;
-    if (currentImageIndex.value < props.person.pictures.length) {
+    // Allow going up to pictures.length (which shows the upload form)
+    if (currentImageIndex.value < props.person.pictures.length && canUpload.value) {
+        currentImageIndex.value++;
+    } else if (currentImageIndex.value < props.person.pictures.length - 1) {
         currentImageIndex.value++;
     }
 }
@@ -46,28 +59,33 @@ watch(() => props.person?.pictures.length, () => {
     currentImageIndex.value = 0;
 });
 
-onMounted(async () => {
-    watch(() => props.person, async () => {
-        if (!props.person) return;
-        isLoading.value = true;
+watch(() => props.person, async (newPerson) => {
+    if (!newPerson) return;
+    isLoading.value = true;
+    try {
         const { data: familyData, error: familyError }: FetchTypeList<FamilyType> = await $fetch('/api/get-family-by-name-and-person-id', {
             method: 'GET',
             params: {
-                familyName: props.person.last_name,
-                id: props.person.id
+                familyName: newPerson.lastName,
+                id: newPerson.id
             }
         });
 
-        if (familyError) {
-            console.error(familyError);
-            isLoading.value = false;
+        if (familyError || !familyData?.length) {
+            if (familyError) console.error(familyError);
             return;
         }
 
         familyId.value = familyData[0].id;
+
+        // Fetch user's role for permission checks
+        if (user.value && familyId.value) {
+            fetchRole(user.value.id, familyId.value);
+        }
+    } finally {
         isLoading.value = false;
-    })
-});
+    }
+}, { immediate: true });
 
 const handleUploadedPictures = (pictures: string[]) => {
     if (props.person) {
@@ -89,7 +107,10 @@ const handleUploadedPictures = (pictures: string[]) => {
             <NuxtImg v-if="familyId && person.pictures.length > 0 && !showUpload"
                 :src="getPictureUrl(currentImageIndex)"
                 :alt="`Picture of ${getFullName(person)}`" class="w-52 h-52 object-cover rounded-md mx-9" />
-            <UploadPictures v-if="showUpload" :person="person" @picturesUploaded="handleUploadedPictures" />
+            <UploadPictures v-if="showUpload && canUpload" :person="person" @picturesUploaded="handleUploadedPictures" />
+            <div v-else-if="showUpload && !canUpload" class="flex flex-col items-center justify-center w-52 h-52 mx-9 text-zinc-400 dark:text-zinc-500 text-sm text-center">
+                <span>No photos yet</span>
+            </div>
             <button v-if="person.pictures.length" :disabled="showUpload" @click="nextImage"
                 class="absolute right-0 top-1/2 -translate-y-1/2 h-12 text-white dark:text-black bg-zinc-900 dark:bg-zinc-200 px-2 rounded-full disabled:bg-black/20 dark:disabled:bg-zinc-200/30 disabled:cursor-not-allowed"
                 aria-label="Next image">

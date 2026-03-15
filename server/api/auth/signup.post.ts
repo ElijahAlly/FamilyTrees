@@ -1,15 +1,28 @@
-import { defineEventHandler, readBody } from 'h3';
+import { defineEventHandler } from 'h3';
+import { z } from 'zod/v4';
 import { db } from '../../db';
-import { authUsers, people } from '../../db/schema';
+import { authUsers, people, otpCodes } from '../../db/schema';
 import { eq } from 'drizzle-orm';
 import crypto from 'crypto';
+import { validateBody } from '../../utils/validate';
+import { checkRateLimit, signupLimiter } from '../../utils/rate-limit';
+import { sendOtpEmail } from '../../utils/email';
+
+const signupSchema = z.object({
+    email: z.email(),
+    firstName: z.string().min(1).optional(),
+    lastName: z.string().optional(),
+    username: z.string().optional(),
+});
 
 export default defineEventHandler(async (event) => {
-    const { email, username } = await readBody(event);
+    checkRateLimit(event, signupLimiter, 'signup');
 
-    if (!email) {
-        return { success: false, error: 'Email is required' };
-    }
+    const { email, firstName, lastName, username } = await validateBody(event, signupSchema);
+
+    // Support both old (username) and new (firstName/lastName) formats
+    const resolvedFirstName = firstName || username || email.split('@')[0];
+    const resolvedLastName = lastName || '';
 
     try {
         // Check if user already exists
@@ -33,19 +46,27 @@ export default defineEventHandler(async (event) => {
         const [newPerson] = await db
             .insert(people)
             .values({
-                firstName: username || email.split('@')[0],
-                lastName: '',
+                firstName: resolvedFirstName,
+                lastName: resolvedLastName,
                 userId: newUser.id,
                 createdBy: newUser.id,
+                onboardingCompleted: false,
             })
             .returning();
 
-        // Generate a simple OTP (in production, send this via email)
+        // Generate OTP and store in database
         const otp = crypto.randomInt(100000, 999999).toString();
+        const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
 
-        // TODO: Store OTP in a temporary store (Redis, DB table, or in-memory)
-        // and send it via email. For now, return it in development.
+        await db.delete(otpCodes).where(eq(otpCodes.email, email));
+        await db.insert(otpCodes).values({ email, code: otp, expiresAt });
+
         const isDev = process.env.NODE_ENV !== 'production';
+
+        // Send OTP email in production
+        if (!isDev && process.env.RESEND_API_KEY) {
+            await sendOtpEmail(email, otp);
+        }
 
         return {
             success: true,

@@ -1,12 +1,15 @@
 import { defineEventHandler, readMultipartFormData } from 'h3';
 import { db } from '../db';
-import { people } from '../db/schema';
+import { people, mediaSubmissions } from '../db/schema';
 import { eq } from 'drizzle-orm';
+import { canManagePhotosFor } from '../utils/permissions';
+import { requireAuth } from '../utils/auth';
 
 const GPAPICS_URL = process.env.GPAPICS_URL || 'http://localhost:3000';
 const GPAPICS_API_KEY = process.env.GPAPICS_API_KEY || '';
 
 export default defineEventHandler(async (event) => {
+    const { userId } = requireAuth(event);
     const formData = await readMultipartFormData(event);
     if (!formData) throw new Error('No form data received');
 
@@ -20,6 +23,29 @@ export default defineEventHandler(async (event) => {
     }
 
     try {
+        // Permission check
+        const permission = await canManagePhotosFor(userId, Number(id), Number(familyId));
+        if (!permission.allowed) {
+            return { success: false, error: 'You do not have permission to upload photos for this person' };
+        }
+
+        // If requires approval (teenager uploading for self), create pending submission instead
+        if (permission.requiresApproval) {
+            for (const fileData of files) {
+                // For pending submissions, store a placeholder - the actual upload happens on approval
+                await db
+                    .insert(mediaSubmissions)
+                    .values({
+                        mediaUrl: `pending:${fileData.filename || 'upload'}`,
+                        familyId: Number(familyId),
+                        personId: Number(id),
+                        submittedBy: userId,
+                        status: 'pending',
+                        contentRating: 'general',
+                    });
+            }
+            return { success: true, data: pictures.filter(Boolean), pendingApproval: true };
+        }
         const uploadedMediaIds: string[] = [];
 
         // Upload each file to gpapics

@@ -23,7 +23,7 @@ const isHovering = ref(false);
         <span @mouseenter="isHovering = true" @mouseleave="isHovering = false"
             class="flex items-center justify-center w-fit bg-zinc-200 hover:text-white hover:bg-zinc-600 dark:text-white dark:hover:text-zinc-950 dark:bg-zinc-600 dark:hover:bg-zinc-300 rounded-md py-1 pl-2 select-none transition-all duration-500"
             :class="{ 'pr-2': !isHovering, 'pr-3': isHovering }">
-            <p v-if="!text" class="w-fit mr-2">{{ person.first_name }} {{ person.last_name }}</p>
+            <p v-if="!text" class="w-fit mr-2">{{ person.firstName }} {{ person.lastName }}</p>
             <p v-else class="w-fit mr-2">{{ text }}</p>
             <Icon icon="grommet-icons:link-next" class="w-3 h-3 transition-transform duration-300 ease-in-out"
                 :class="{ 'translate-x-1': isHovering }" />

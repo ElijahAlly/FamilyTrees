@@ -29,7 +29,7 @@ const placeholder = searchBy === 'families' ? 'Enter Family Name (Your last name
 const familiesByName = ref<Map<string, FamilyType>>(new Map());
 
 watch(userInput, async (newInput) => {
-    const alreadySearchedForFamily = familyFromStore.value?.family_name === newInput;
+    const alreadySearchedForFamily = familyFromStore.value?.familyName === newInput;
 
     if (newInput && !loadingResults.value && !alreadySearchedForFamily) {
         userInputedCharAndDidNotClickOnResult.value = true;
@@ -51,14 +51,14 @@ watch(userInput, async (newInput) => {
             if (response?.length) {
                 if (searchBy === 'families') {
                     (response as FamilyType[]).forEach((family: FamilyType) => {
-                        familiesByName.value.set(family.family_name, family);
+                        familiesByName.value.set(family.familyName, family);
                     });
 
                     const removeDuplicateFamilyNames = (families: FamilyType[]): FamilyType[] => {
                         const seenFamilyNames = new Set();
                         return families.filter(family => {
-                            if (!seenFamilyNames.has(family.family_name)) {
-                                seenFamilyNames.add(family.family_name);
+                            if (!seenFamilyNames.has(family.familyName)) {
+                                seenFamilyNames.add(family.familyName);
                                 return true; // Keep the first occurrence
                             }
                             return false; // Filter out duplicates
@@ -129,17 +129,17 @@ const handleClearInput = () => {
 
 const handleFamilyNameClick = (family: FamilyType) => {
     userInputedCharAndDidNotClickOnResult.value = false;
-    userInput.value = family.family_name;
+    userInput.value = family.familyName;
 
     // Already fetched results for this family
-    if (family.family_name === familyFromStore.value?.family_name) return;
+    if (family.familyName === familyFromStore.value?.familyName) return;
 
     loadingResults.value = true;
-    searchedInputChanged(family.family_name);
+    searchedInputChanged(family.familyName);
     setSearchedForFamily(true);
     setFamily(family);
 
-    const familyFromDb = familiesByName.value.get(family.family_name);
+    const familyFromDb = familiesByName.value.get(family.familyName);
     if (familyFromDb) {
         updateFamilies(familyFromDb);
         return;
@@ -203,11 +203,11 @@ const handlePersonClick = (person: PersonType) => {
                             :key="index"
                             class="text-[13px] leading-none text-grass11 rounded-[3px] flex items-center h-[25px] pr-[35px] pl-[25px] relative select-none hover:bg-neutral-200 dark:hover:bg-neutral-700 data-[disabled]:text-mauve8 data-[disabled]:pointer-events-none data-[highlighted]:outline-none data-[highlighted]:bg-grass9 data-[highlighted]:text-grass1"
                             :class="{ 'bg-neutral-200 dark:bg-neutral-700': selectedIndex === index }"
-                            :value="family.family_name" 
+                            :value="family.familyName" 
                             @click="() => handleFamilyNameClick(family)"
                         >
                             <span>
-                                {{ family.family_name }}
+                                {{ family.familyName }}
                             </span>
                         </ComboboxItem>
                         <ComboboxSeparator class="h-[1px] bg-grass6 m-[5px]" />

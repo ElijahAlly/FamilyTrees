@@ -3,6 +3,7 @@ import { db } from '../db';
 import { families } from '../db/schema';
 import { eq, sql } from 'drizzle-orm';
 
+
 export default defineEventHandler(async (event) => {
     const { familyName, id } = getQuery(event);
 
@@ -15,7 +16,7 @@ export default defineEventHandler(async (event) => {
             .select()
             .from(families)
             .where(
-                sql`${families.familyName} = ${familyName} AND ${id}::uuid = ANY(${families.members})`
+                sql`${families.familyName} = ${familyName} AND ${Number(id)} = ANY(${families.members})`
             );
 
         return { data };

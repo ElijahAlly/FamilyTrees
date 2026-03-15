@@ -3,6 +3,7 @@ import { db } from '../db';
 import { families, people } from '../db/schema';
 import { eq, sql } from 'drizzle-orm';
 
+
 export default defineEventHandler(async (event) => {
     const { table, eq: eqField, familyName, limit } = getQuery(event);
     const limitNum = limit ? Number(limit) : 3;

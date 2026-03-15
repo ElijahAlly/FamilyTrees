@@ -54,6 +54,63 @@ export interface HotkeyUpdates {
 const hotkeyRegistry = ref(new Map<string, HotkeySection>());
 const isProcessingHotkey = ref(false);
 
+// Hotkey hint toast state
+const HINT_COOLDOWN_MS = 5 * 60 * 1000; // 5 minutes
+const hotkeyHintDismissed = ref(false);
+let lastHintShownAt = 0;
+const showHotkeyHint = ref(false);
+
+/**
+ * Initialize hint state from the user's profile preferences (call once after profile loads).
+ */
+function initHotkeyHintFromProfile(dismissed: boolean) {
+    hotkeyHintDismissed.value = dismissed;
+    if (dismissed) {
+        showHotkeyHint.value = false;
+    }
+}
+
+/**
+ * Call this when the user performs an action via mouse/click that has a keyboard shortcut equivalent.
+ * Shows a toast suggesting Shift+? if the user hasn't dismissed it and cooldown has passed.
+ */
+function notifyHotkeyAvailable() {
+    if (hotkeyHintDismissed.value) return;
+    // No keyboard shortcuts on mobile devices
+    if (window.innerWidth <= 768) return;
+    const now = Date.now();
+    if (now - lastHintShownAt < HINT_COOLDOWN_MS) return;
+    lastHintShownAt = now;
+    showHotkeyHint.value = true;
+}
+
+/**
+ * Called when the user uses Shift+? — permanently dismisses the hint
+ * and persists the preference to the user's account.
+ */
+async function markHotkeyHintDismissed() {
+    hotkeyHintDismissed.value = true;
+    showHotkeyHint.value = false;
+
+    // Persist to user account
+    try {
+        const authStore = useAuthStore();
+        const user = authStore.user;
+        if (user) {
+            await $fetch('/api/auth/update-preferences', {
+                method: 'POST',
+                body: { userId: user.id, preferences: { hotkeyHintDismissed: true } },
+            });
+        }
+    } catch {
+        // Non-critical — hint is already dismissed in memory for this session
+    }
+}
+
+function dismissHotkeyHint() {
+    showHotkeyHint.value = false;
+}
+
 // Helper to create a unique key for the hotkey
 // const createHotkeyKey = (key: string, modifier?: string) => modifier ? `${modifier}+${key}` : key;
 
@@ -161,6 +218,12 @@ export function useHotkeys(sectionName?: ShortcutSectionName, actions?: Partial<
         if (!hotkey.condition || hotkey.condition()) {
             event.preventDefault();
             isProcessingHotkey.value = true;
+
+            // If the user pressed Shift+?, permanently dismiss the hotkey hint
+            if (hotkey.key === '?' && event.shiftKey) {
+                markHotkeyHintDismissed();
+            }
+
             Promise.resolve(hotkey.action()).finally(() => {
                 setTimeout(() => {
                     isProcessingHotkey.value = false;
@@ -192,6 +255,10 @@ export function useHotkeys(sectionName?: ShortcutSectionName, actions?: Partial<
         unregisterHotkeys,
         setHotkeysActions,
         hotkeyList,
+        notifyHotkeyAvailable,
+        showHotkeyHint,
+        dismissHotkeyHint,
+        initHotkeyHintFromProfile,
     };
 }
 

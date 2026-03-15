@@ -9,7 +9,8 @@ type TabView = 'signup' | 'login';
 const route = useRoute();
 
 const email = ref('');
-const username = ref('');
+const firstName = ref('');
+const lastName = ref('');
 const otpCode = ref('');
 
 const curTab = ref<TabView>(route.query.existing ? 'login' : 'signup');
@@ -31,7 +32,8 @@ const toggleTab = (to: TabView) => {
     curTab.value = to;
     otpCode.value = '';
     email.value = '';
-    username.value = '';
+    firstName.value = '';
+    lastName.value = '';
     otpError.value = null;
     isVerifying.value = false;
     loading.value = false;
@@ -41,100 +43,119 @@ const toggleTab = (to: TabView) => {
 
 const handleSubmit = async () => {
     if (isVerifying.value) {
-        // Verify the otp, which then calls getProfile in the useAuth store 
-        const success = await verifyOtp(email.value, otpCode.value);
+        await verifyOtp(email.value, otpCode.value);
     } else {
         if (curTab.value === 'signup') {
-            handleSignUp(email.value, username.value);
+            handleSignUp(email.value, firstName.value, lastName.value);
         } else {
             handleLogin(email.value);
         }
     }
 }
-
-const baseTabStyles = 'transition-all duration-200 p-1 rounded select-none';
-const inactiveTabStyles = 'text-zinc-600 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-zinc-500 hover:text-white';
-const activeTabStyles = 'text-white bg-zinc-700 hover:bg-zinc-700 hover:text-white';
-
-const baseSubmitStyles = 'text-white rounded-md transition-all duration-200 p-1';
-const disabledSubmitStyles = 'bg-zinc-600 hover:bg-zinc-600 opacity-50 pointer-events-none';
-const activeSubmitStyles = 'bg-emerald-600 hover:bg-emerald-700';
 </script>
 
 <template>
-    <section class="w-full h-full flex justify-center">
-        <div
-            class="h-fit w-[50%] min-w-96 max-w-[360px] flex flex-col gap-3 border dark:border-zinc-500 rounded shadow-lg shadow-zinc-600/45 mt-48 p-9">
+    <section class="w-full min-h-screen flex justify-center items-start pt-32 px-4">
+        <div class="w-full max-w-sm flex flex-col gap-4 border border-zinc-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-900 shadow-lg p-8">
             <!-- Tab buttons - only show if not verifying -->
-            <div v-if="!isVerifying" class="flex gap-3">
-                <div :class="[baseTabStyles, { [inactiveTabStyles]: curTab !== 'signup', [activeTabStyles]: curTab === 'signup' }]"
-                    role="button" @click="toggleTab('signup')">
-                    Signup
-                </div>
-                <div :class="[baseTabStyles, { [inactiveTabStyles]: curTab !== 'login', [activeTabStyles]: curTab === 'login' }]"
-                    role="button" @click="toggleTab('login')">
-                    Login
-                </div>
+            <div v-if="!isVerifying" class="flex gap-1 bg-zinc-100 dark:bg-zinc-800 rounded-md p-1">
+                <button
+                    :class="[
+                        'flex-1 py-1.5 px-3 rounded text-sm font-medium transition-all duration-200 select-none',
+                        curTab === 'signup'
+                            ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100 shadow-sm'
+                            : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200'
+                    ]"
+                    @click="toggleTab('signup')"
+                >
+                    Sign Up
+                </button>
+                <button
+                    :class="[
+                        'flex-1 py-1.5 px-3 rounded text-sm font-medium transition-all duration-200 select-none',
+                        curTab === 'login'
+                            ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100 shadow-sm'
+                            : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200'
+                    ]"
+                    @click="toggleTab('login')"
+                >
+                    Log In
+                </button>
             </div>
 
             <!-- Error message -->
             <p v-if="otpError || resendOtpError" class="text-red-500 text-sm">{{ otpError || resendOtpError }}</p>
 
-            <form class="row flex-center flex w-full" @submit.prevent="handleSubmit">
+            <form class="flex flex-col w-full" @submit.prevent="handleSubmit">
 
                 <!-- OTP Verification View -->
-                <div v-if="isVerifying" class="col-6 form-widget w-full">
-                    <button @click.prevent.stop="toggleTab('login')"
-                        class="text-zinc-500 dark:text-zinc-400 hover:text-red-500 dark:hover:text-red-400 text-sm transition-colors mb-4">
-                        {{ '<-' }} Cancel </button>
-                            <p class="dark:text-white">Enter the code sent to your email:</p>
-                            <p class="dark:text-zinc-200 my-2 italic">{{ email }}</p>
-                            <div class="my-4">
-                                <input v-model="otpCode" class="border rounded p-3 w-full" required
-                                    placeholder="Enter verification code" type="text" pattern="[0-9]*"
-                                    inputmode="numeric" />
-                            </div>
-                            <div class="w-full flex justify-between px-1">
-                                <p @click="() => resendOtp(email)"
-                                    class="text-zinc-500 dark:text-zinc-400 underline hover:text-zinc-800 dark:hover:text-zinc-200 cursor-pointer p-1 border border-zinc-500 hover:border-zinc-800 dark:border-zinc-400 dark:hover:border-zinc-200 rounded-md transition-colors">
-                                    {{ resendOtpLoading ? 'sending new code...' : 'resend code' }}
-                                </p>
-                                <input type="submit"
-                                    :class="[baseSubmitStyles, { [disabledSubmitStyles]: loading, [activeSubmitStyles]: !loading }]"
-                                    role="button" :value="loading ? 'Verifying...' : 'Verify Code'"
-                                    :disabled="loading" />
-                            </div>
+                <div v-if="isVerifying" class="flex flex-col gap-3 w-full">
+                    <button @click.prevent.stop="toggleTab('login')" type="button"
+                        class="text-zinc-500 dark:text-zinc-400 hover:text-red-500 dark:hover:text-red-400 text-sm transition-colors self-start">
+                        &larr; Cancel
+                    </button>
+                    <p class="text-zinc-900 dark:text-white text-sm">Enter the code sent to your email:</p>
+                    <p class="text-zinc-600 dark:text-zinc-300 text-sm italic">{{ email }}</p>
+                    <input v-model="otpCode"
+                        class="w-full border border-zinc-300 dark:border-zinc-600 rounded-md px-3 py-2.5 bg-transparent text-zinc-900 dark:text-white text-sm outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors"
+                        required placeholder="Enter verification code" type="text" pattern="[0-9]*" inputmode="numeric" />
+                    <div class="flex justify-between items-center">
+                        <button type="button" @click="() => resendOtp(email)"
+                            class="text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 text-sm underline transition-colors">
+                            {{ resendOtpLoading ? 'Sending...' : 'Resend code' }}
+                        </button>
+                        <button type="submit"
+                            :disabled="loading"
+                            :class="[
+                                'px-4 py-2 text-sm font-medium text-white rounded-md transition-all duration-200',
+                                loading ? 'bg-zinc-400 cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-700'
+                            ]"
+                        >
+                            {{ loading ? 'Verifying...' : 'Verify Code' }}
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Signup View -->
-                <div v-if="curTab === 'signup' && !isVerifying" class="col-6 form-widget">
-                    <div class="my-3">
-                        <input v-model="username" class="border rounded p-3" required placeholder="Your Username" />
+                <div v-if="curTab === 'signup' && !isVerifying" class="flex flex-col gap-3 w-full">
+                    <div class="flex gap-2">
+                        <input v-model="firstName"
+                            class="w-full border border-zinc-300 dark:border-zinc-600 rounded-md px-3 py-2.5 bg-transparent text-zinc-900 dark:text-white text-sm outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors"
+                            required placeholder="First Name" />
+                        <input v-model="lastName"
+                            class="w-full border border-zinc-300 dark:border-zinc-600 rounded-md px-3 py-2.5 bg-transparent text-zinc-900 dark:text-white text-sm outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors"
+                            required placeholder="Last Name" />
                     </div>
-                    <p class="dark:text-white">Sign up with your email</p>
-                    <div class="my-3">
-                        <input v-model="email" class="border rounded p-3" required type="email"
-                            placeholder="Your email" />
-                    </div>
-                    <div>
-                        <input type="submit"
-                            :class="[baseSubmitStyles, { [disabledSubmitStyles]: loading, [activeSubmitStyles]: !loading }]"
-                            role="button" :value="loading ? 'Loading...' : 'Signup'" :disabled="loading" />
-                    </div>
+                    <p class="text-zinc-600 dark:text-zinc-300 text-sm">Sign up with your email</p>
+                    <input v-model="email"
+                        class="w-full border border-zinc-300 dark:border-zinc-600 rounded-md px-3 py-2.5 bg-transparent text-zinc-900 dark:text-white text-sm outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors"
+                        required type="email" placeholder="Your email" />
+                    <button type="submit"
+                        :disabled="loading"
+                        :class="[
+                            'w-full py-2.5 text-sm font-medium text-white rounded-md transition-all duration-200',
+                            loading ? 'bg-zinc-400 cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-700'
+                        ]"
+                    >
+                        {{ loading ? 'Loading...' : 'Sign Up' }}
+                    </button>
                 </div>
 
                 <!-- Login View -->
-                <div v-if="curTab === 'login' && !isVerifying" class="col-6 form-widget">
-                    <p class="my-3 dark:text-white">Login with your email</p>
-                    <div class="my-3">
-                        <input v-model="email" class="border rounded p-3" required type="email"
-                            placeholder="Your email" />
-                    </div>
-                    <div>
-                        <input type="submit"
-                            :class="[baseSubmitStyles, { [disabledSubmitStyles]: loading, [activeSubmitStyles]: !loading }]"
-                            role="button" :value="loading ? 'Loading...' : 'Login'" :disabled="loading" />
-                    </div>
+                <div v-if="curTab === 'login' && !isVerifying" class="flex flex-col gap-3 w-full">
+                    <p class="text-zinc-600 dark:text-zinc-300 text-sm">Log in with your email</p>
+                    <input v-model="email"
+                        class="w-full border border-zinc-300 dark:border-zinc-600 rounded-md px-3 py-2.5 bg-transparent text-zinc-900 dark:text-white text-sm outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors"
+                        required type="email" placeholder="Your email" />
+                    <button type="submit"
+                        :disabled="loading"
+                        :class="[
+                            'w-full py-2.5 text-sm font-medium text-white rounded-md transition-all duration-200',
+                            loading ? 'bg-zinc-400 cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-700'
+                        ]"
+                    >
+                        {{ loading ? 'Loading...' : 'Log In' }}
+                    </button>
                 </div>
             </form>
         </div>

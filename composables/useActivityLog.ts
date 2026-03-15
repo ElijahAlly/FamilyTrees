@@ -5,7 +5,9 @@ export function useActivityLog() {
         familyId: number,
         personId: number,
         actionType: ActionType,
-        details: ActivityDetails
+        details: ActivityDetails,
+        performedBy?: string,
+        reason?: string,
     ) {
         try {
             const { data, error } = await $fetch('/api/log-activity', {
@@ -14,7 +16,9 @@ export function useActivityLog() {
                     personId,
                     familyId,
                     actionType,
-                    details
+                    details,
+                    performedBy,
+                    reason,
                 }
             }) as any;
 

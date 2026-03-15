@@ -2,17 +2,17 @@ import type { PrivacyControls } from "./privacy";
 
 export type PersonType = {
     id: number;
-    first_name: string;
-    middle_name: string | null;
-    last_name: string;
-    birth_date: string | null;
-    death_date: string | null;
-    is_living: boolean;
+    firstName: string;
+    middleName: string | null;
+    lastName: string;
+    birthDate: string | null;
+    deathDate: string | null;
+    isLiving: boolean;
     gender: GenderType;
-    mother_id: number | null;
-    father_id: number | null;
+    motherId: number | null;
+    fatherId: number | null;
     pictures: string[];
-    profile_picture?: string;
+    profilePicture?: string;
 
     privacySettings: PrivacyControls;
 
@@ -33,6 +33,10 @@ export type PersonType = {
         // etc
     };
 
+    onboardingCompleted?: boolean;
+
+    preferences?: UserPreferences;
+
     createdBy: number; // user ID
     updatedBy: number; // user ID
     createdAt: Date;
@@ -40,3 +44,7 @@ export type PersonType = {
 }
 
 export type GenderType = 'M' | 'F' | 'N' | 'U';
+
+export interface UserPreferences {
+    hotkeyHintDismissed?: boolean;
+}
