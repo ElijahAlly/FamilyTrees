@@ -1,11 +1,12 @@
 import { defineStore } from 'pinia';
 import type { Ref, ComputedRef } from 'vue';
-import type { FamilyType, PersonType } from '@/types';
+import type { FamilyType, PersonType, ApiResponse, VerifyOtpResponse } from '@/types';
+import { useToast } from '@/composables/useToast';
 
 interface AuthUser {
     id: string;
     email: string;
-    created_at: string;
+    createdAt: string;
 }
 
 interface AuthStoreProps {
@@ -25,7 +26,7 @@ interface AuthStoreProps {
     signOut: () => void;
     handleLogin: (email: string) => void;
     getProfile: () => Promise<void>;
-    handleSignUp: (email: string, username: string) => void;
+    handleSignUp: (email: string, firstName: string, lastName: string) => void;
     checkIfUserExists: (email: { email?: string }) => Promise<boolean>;
 }
 
@@ -47,56 +48,76 @@ export const useAuthStore = defineStore('auth', (): AuthStoreProps => {
     const resendOtpLoading = ref<boolean>(false);
     const resendOtpError = ref<string | null>(null);
 
-    // Restore user from localStorage on mount
-    onMounted(() => {
-        const stored = localStorage.getItem('mft-auth-user');
-        if (stored) {
+    // Migrate old localStorage key to new persist key (one-time)
+    if (import.meta.client) {
+        const oldUser = localStorage.getItem('mft-auth-user');
+        if (oldUser && !localStorage.getItem('mft-auth')) {
             try {
-                user.value = JSON.parse(stored);
-            } catch {
-                localStorage.removeItem('mft-auth-user');
-            }
-        }
-    });
-
-    const persistUser = (authUser: AuthUser | null) => {
-        user.value = authUser;
-        if (authUser) {
-            localStorage.setItem('mft-auth-user', JSON.stringify(authUser));
-        } else {
+                const parsed = JSON.parse(oldUser);
+                localStorage.setItem('mft-auth', JSON.stringify({ user: parsed }));
+            } catch { /* ignore */ }
             localStorage.removeItem('mft-auth-user');
         }
+    }
+
+    const persistUser = (authUser: AuthUser | null, token?: string) => {
+        user.value = authUser;
+        if (import.meta.client) {
+            if (token) {
+                localStorage.setItem('mft-auth-token', token);
+            }
+            if (!authUser) {
+                localStorage.removeItem('mft-auth-token');
+            }
+        }
     };
+
+    const { showToast } = useToast();
+
+    const profileLoading = ref<boolean>(false);
 
     const getProfile = async () => {
         if (!user.value) return;
         try {
-            loading.value = true;
+            profileLoading.value = true;
 
-            const { data, error: fetchError } = await $fetch('/api/auth/get-profile', {
+            const { data, error: fetchError } = await $fetch<{ data: PersonType | null; error?: string }>('/api/auth/get-profile', {
                 method: 'GET',
-                params: { userId: user.value.id }
-            }) as any;
+            });
 
-            if (!data || fetchError) {
-                console.error('Could not find user profile.', fetchError);
-                loading.value = false;
-                signOut();
-                await navigateTo(`/signup?existing=true`);
+            if (fetchError) {
+                // Stale persisted user with a bad/missing token. Clear state
+                // silently — the route guard or current page will handle the
+                // redirect. Toasting here would alarm users whose stale token
+                // just expired naturally.
+                persistUser(null);
+                profile.value = null;
                 return;
             }
 
-            profile.value = data as PersonType;
-            loading.value = false;
-        } catch (error) {
-            console.error(error);
+            // Profile may be null if person record hasn't been created yet (e.g. during onboarding)
+            profile.value = (data as PersonType) || null;
+        } catch (error: any) {
+            // 401 from the auth middleware (expired/invalid JWT) — clear state
+            // silently. Other errors aren't actionable for the user either, so
+            // don't toast; rely on the calling page to recover.
+            if (error?.status === 401 || error?.statusCode === 401) {
+                persistUser(null);
+                profile.value = null;
+            }
+        } finally {
+            profileLoading.value = false;
         }
     }
 
     const goToProfile = async () => {
         try {
             await getProfile();
-            if (!profile.value) return;
+            if (!profile.value) {
+                // No person record yet — redirect to onboarding to create one
+                router.replace({ path: '/onboarding' });
+                return;
+            }
             router.replace({
                 name: 'member-personId',
                 params: { personId: `${profile.value.id}` }
@@ -108,10 +129,10 @@ export const useAuthStore = defineStore('auth', (): AuthStoreProps => {
 
     const checkIfUserExists = async ({ email }: { email?: string }): Promise<boolean> => {
         try {
-            const { exists } = await $fetch('/api/auth/check-user-exists', {
+            const { exists } = await $fetch<{ exists: boolean }>('/api/auth/check-user-exists', {
                 method: 'GET',
                 params: { email }
-            }) as any;
+            });
             return !!exists;
         } catch (err: any) {
             console.error('Failed to check if user exists:', err);
@@ -119,7 +140,7 @@ export const useAuthStore = defineStore('auth', (): AuthStoreProps => {
         }
     }
 
-    const handleSignUp = async (email: string, username: string) => {
+    const handleSignUp = async (email: string, firstName: string, lastName: string) => {
         try {
             loading.value = true;
             otpError.value = null;
@@ -130,19 +151,25 @@ export const useAuthStore = defineStore('auth', (): AuthStoreProps => {
                 return;
             }
 
-            const result = await $fetch('/api/auth/signup', {
+            const result = await $fetch<ApiResponse & { otp?: string }>('/api/auth/signup', {
                 method: 'POST',
-                body: { email, username }
-            }) as any;
+                body: { email, firstName, lastName }
+            });
 
             if (!result.success) {
                 throw new Error(result.error);
             }
 
+            // In dev mode, the server returns the OTP directly — skip verification UI
+            if (result.otp) {
+                await verifyOtp(email, result.otp);
+                return;
+            }
+
             isVerifying.value = true;
 
         } catch (error: any) {
-            console.error(error);
+            showToast('An error occurred during signup.', 'error');
             otpError.value = 'An error occurred during signup';
         } finally {
             loading.value = false;
@@ -155,23 +182,37 @@ export const useAuthStore = defineStore('auth', (): AuthStoreProps => {
             otpError.value = null;
 
             if (!(await checkIfUserExists({ email }))) {
+                // Dev convenience: skip the "create an account first" step so
+                // any email lands you logged in. Real production accounts must
+                // still go through /signup.
+                if (import.meta.dev) {
+                    const localPart = email.split('@')[0] || 'dev';
+                    await handleSignUp(email, localPart, '');
+                    return;
+                }
                 otpError.value = 'No account found with this email';
                 return;
             }
 
-            const result = await $fetch('/api/auth/login', {
+            const result = await $fetch<ApiResponse & { otp?: string }>('/api/auth/login', {
                 method: 'POST',
                 body: { email }
-            }) as any;
+            });
 
             if (!result.success) {
                 throw new Error(result.error);
             }
 
+            // In dev mode, the server returns the OTP directly — skip verification UI
+            if (result.otp) {
+                await verifyOtp(email, result.otp);
+                return;
+            }
+
             isVerifying.value = true;
 
         } catch (error) {
-            console.error(error);
+            showToast('An error occurred during login.', 'error');
             otpError.value = 'An error occurred during login';
         } finally {
             loading.value = false;
@@ -181,6 +222,8 @@ export const useAuthStore = defineStore('auth', (): AuthStoreProps => {
     const clearStoresAfterSignout = () => {
         const familyStore = useFamilyStore();
         familyStore.clearStoresAfterSignout();
+        const claimsStore = useClaimsStore();
+        claimsStore.clearStore();
     }
 
     const signOut = async () => {
@@ -203,30 +246,87 @@ export const useAuthStore = defineStore('auth', (): AuthStoreProps => {
             loading.value = true;
             otpError.value = null;
 
-            const result = await $fetch('/api/auth/verify-otp', {
+            const result = await $fetch<VerifyOtpResponse>('/api/auth/verify-otp', {
                 method: 'POST',
                 body: { email, token }
-            }) as any;
+            });
 
             if (!result.success) {
                 throw new Error(result.error);
             }
 
-            persistUser(result.user);
+            persistUser(result.user, result.token);
             if (result.profile) {
                 profile.value = result.profile;
             }
 
-            goToProfile();
+            // Honor ?return_to=… for cross-app sign-in (photos.mytrees.family,
+            // cinderella.photography). Internal paths get a SPA navigate;
+            // absolute URLs get a window.location bounce with #token=<jwt>
+            // so the destination can capture the identity.
+            //
+            // New users (onboardingCompleted=false) always go through
+            // /onboarding first regardless of return_to — we just pass it
+            // through so onboarding → profile → return_to can resume the flow.
+            const returnTo = (router.currentRoute.value.query.return_to as string | undefined) || null;
+            const isOnboarded = result.onboardingCompleted !== false;
+
+            if (returnTo && isOnboarded) {
+                if (returnTo.startsWith('/')) {
+                    // Split path + query/hash explicitly: vue-router's
+                    // `{ path }` form treats the whole string as the path
+                    // and silently drops the query string, which would lose
+                    // response_type, client_id, etc. on the OAuth bounce.
+                    const url = new URL(returnTo, 'http://_');
+                    router.replace({
+                        path: url.pathname,
+                        query: Object.fromEntries(url.searchParams),
+                        hash: url.hash || undefined,
+                    });
+                    isVerifying.value = false;
+                    return true;
+                } else if (import.meta.client) {
+                    try {
+                        const url = new URL(returnTo);
+                        // Reject anything not under the mytrees.family or
+                        // cinderella.photography ecosystem.
+                        const isAllowed =
+                            /\.mytrees\.family$/.test(url.host) ||
+                            url.host === 'mytrees.family' ||
+                            /\.cinderella\.photography$/.test(url.host) ||
+                            url.host === 'cinderella.photography' ||
+                            url.host === 'localhost' || url.host.startsWith('localhost:');
+                        if (isAllowed) {
+                            url.hash = `token=${result.token}`;
+                            window.location.href = url.toString();
+                            isVerifying.value = false;
+                            return true;
+                        }
+                    } catch { /* fall through to default */ }
+                }
+            }
+
+            // New user or no return_to: route through onboarding/profile.
+            // return_to (if any) rides along in the query so the profile page
+            // can resume the cross-app flow after the user finishes setting up.
+            if (!isOnboarded) {
+                router.replace({
+                    path: '/onboarding',
+                    query: returnTo ? { return_to: returnTo } : {},
+                });
+            } else {
+                goToProfile();
+            }
 
             isVerifying.value = false;
-            loading.value = false;
             return true;
 
         } catch (error) {
-            console.error(error);
+            showToast('Invalid or expired code.', 'error');
             otpError.value = 'Invalid or expired code';
             return false;
+        } finally {
+            loading.value = false;
         }
     }
 
@@ -235,10 +335,10 @@ export const useAuthStore = defineStore('auth', (): AuthStoreProps => {
             resendOtpLoading.value = true;
             resendOtpError.value = null;
 
-            const result = await $fetch('/api/auth/login', {
+            const result = await $fetch<ApiResponse>('/api/auth/login', {
                 method: 'POST',
                 body: { email }
-            }) as any;
+            });
 
             if (!result.success) {
                 throw new Error(result.error);
@@ -274,4 +374,9 @@ export const useAuthStore = defineStore('auth', (): AuthStoreProps => {
         handleSignUp,
         checkIfUserExists
     }
+}, {
+    persist: {
+        key: 'mft-auth',
+        pick: ['user'],
+    },
 });

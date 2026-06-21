@@ -1,7 +1,8 @@
 import { defineEventHandler, getQuery } from 'h3';
 import { db } from '../db';
-import { families, people } from '../db/schema';
+import { families } from '../db/schema';
 import { eq } from 'drizzle-orm';
+
 
 export default defineEventHandler(async (event) => {
     const { id } = getQuery(event);
@@ -16,7 +17,13 @@ export default defineEventHandler(async (event) => {
             .from(families)
             .where(eq(families.id, Number(id)));
 
-        return { data };
+        // Normalize null members to empty array
+        const normalized = data.map(f => ({
+            ...f,
+            members: f.members ?? [],
+        }));
+
+        return { data: normalized };
     } catch (error) {
         return { error };
     }

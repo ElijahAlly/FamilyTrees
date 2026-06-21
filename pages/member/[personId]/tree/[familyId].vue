@@ -13,24 +13,29 @@ import DraggableSection from '@/components/family/DraggableSection.vue';
 import LoadingSpinner from '@/components/ui/LoadingSpinner.vue';
 import FamilyDetailsDropdown from '@/components/family/FamilyDetailsDropdown.vue';
 import FamilyDetails from '@/components/family/FamilyDetails.vue';
+import AddPersonToTree from '@/components/family/AddPersonToTree.vue';
+import FindPersonPanel from '@/components/family/FindPersonPanel.vue';
+import UiToast from '@/components/ui/Toast.vue';
 import { useRoute } from 'nuxt/app';
 import { ShortcutSectionName, useHotkeys } from '@/composables/useHotkeys';
 import type { FamilyTreeNodeType } from '@/types';
 
 export default {
     setup() {
-        useWatchFamilyStore();
+        const { refreshFamilyTree } = useWatchFamilyStore();
 
         const familyStore = useFamilyStore();
-        const { currentFamilyTree, loadingFamily } = storeToRefs(familyStore);
+        const { currentFamilyTree, loadingFamily, family } = storeToRefs(familyStore);
         const route = useRoute();
+
+        const { isMobile } = useDevice();
 
         const draggableZoneStore = useDraggableZoneStore();
         const { curDisplayType } = storeToRefs(draggableZoneStore);
-        const { setHotkeysActions, unregisterHotkeys } = useHotkeys();
+        const { setHotkeysActions, unregisterHotkeys, notifyHotkeyAvailable } = useHotkeys();
 
         const maxScale = ref(3.6);
-        const minScale = ref(0.3);
+        const minScale = ref(0.5);
         const currentZoomPercent = ref(1);
         const sliderValue = ref([1, maxScale.value]);
         const stepValue = ref(0.03);
@@ -39,12 +44,23 @@ export default {
 
         const isMountedAndTriedToFetchFamilyTree = ref(false);
 
+        const toastVisible = ref(false);
+        const toastMessage = ref('');
+        const toastType = ref<'info' | 'warning' | 'success'>('info');
+        const toastActionLabel = ref('');
+        const toastActionFn = ref<(() => void) | undefined>(undefined);
+        let boundaryToastCooldown = false;
+
+        const showFindPerson = ref(false);
+
         return {
+            showFindPerson,
             isMountedAndTriedToFetchFamilyTree,
             loadingFamily,
             panzoom,
             familyStore,
             draggableZoneStore,
+            family,
             currentFamilyTree,
             sliderValue,
             stepValue,
@@ -55,7 +71,16 @@ export default {
             route,
             setHotkeysActions,
             unregisterHotkeys,
-            ShortcutSectionName
+            ShortcutSectionName,
+            toastVisible,
+            toastMessage,
+            toastType,
+            toastActionLabel,
+            toastActionFn,
+            boundaryToastCooldown,
+            notifyHotkeyAvailable,
+            refreshFamilyTree,
+            isMobile,
         }
     },
     components: {
@@ -63,7 +88,10 @@ export default {
         DraggableSection,
         LoadingSpinner,
         FamilyDetailsDropdown,
-        FamilyDetails
+        FamilyDetails,
+        AddPersonToTree,
+        FindPersonPanel,
+        UiToast,
     },
     mounted() {
         this.isMountedAndTriedToFetchFamilyTree = true;
@@ -74,36 +102,20 @@ export default {
         this.panzoom = Panzoom(element, {
             minScale: this.minScale,
             maxScale: this.maxScale,
-            step: this.stepValue, // Controls the zoom speed. Larger number === faster zoom
+            step: this.stepValue,
             startScale: 1,
             startX: 0,
             startY: 0,
             isSVG: true,
             relative: false,
-            // Center the content initially
-            // setTransform: (elem: any, { scale, x, y }: any) => {
-            //   // Center the initial position
-            //   console.log("\n== scale ==\n", scale, "\n");
-            //   console.log("\n== x ==\n", x, "\n");
-            //   console.log("\n== y ==\n", y, "\n");
-            //   if (x === 0 && y === 0) {
-            //     const rect = elem.getBoundingClientRect();
-            //     const centerX = (9999 - rect.width) / 2;
-            //     const centerY = (9999 - rect.height) / 2;
-            //     elem.style.transform = `translate(${centerX}px, ${centerY}px) scale(${scale})`;
-            //   } else {
-            //     elem.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
-            //   }
-            // }
         });
 
-        element.addEventListener('panzoomchange', (e) => {
+        element.addEventListener('panzoomchange', () => {
             if (!this.panzoom) return;
-            // console.log(this.panzoom.getPan());
-            // console.log(this.panzoom.getScale());
             const scale = this.panzoom.getScale();
-            this.sliderValue[0] = scale;  // Update the first element in the sliderValue array with the new scale
+            this.sliderValue[0] = scale;
             this.currentZoomPercent = scale / this.maxScale;
+            this.enforcePanBounds();
         });
 
         element.parentElement.addEventListener('wheel', (event: any) => {
@@ -113,10 +125,8 @@ export default {
             let scale;
 
             if (event.deltaY < 0) {
-                // Zoom in on mouse/touchpad scroll
                 scale = Math.min(currentScale * (1 + this.stepValue), this.maxScale);
             } else {
-                // Zoom out on mouse/touchpad scroll
                 scale = Math.max(currentScale * (1 - this.stepValue), this.minScale);
             }
 
@@ -275,13 +285,72 @@ export default {
                 duration: 300, // milliseconds
                 easing: 'ease-in-out'
             });
-        }
+        },
+        enforcePanBounds() {
+            if (!this.panzoom) return;
+
+            const container = this.$refs.treeContainer as HTMLElement;
+            if (!container || !container.parentElement) return;
+
+            const parentRect = container.parentElement.getBoundingClientRect();
+            const treeRect = container.getBoundingClientRect();
+            const scale = this.panzoom.getScale();
+            const { x: panX, y: panY } = this.panzoom.getPan();
+
+            // Allow at least 15% of the tree to remain visible on each side
+            const marginX = parentRect.width * 0.15;
+            const marginY = parentRect.height * 0.15;
+
+            // Calculate how far the tree can move before it's mostly off-screen
+            const maxPanRight = parentRect.width - marginX;
+            const maxPanLeft = -(treeRect.width - marginX);
+            const maxPanDown = parentRect.height - marginY;
+            const maxPanUp = -(treeRect.height - marginY);
+
+            let clampedX = panX;
+            let clampedY = panY;
+            let wasClamped = false;
+
+            if (panX > maxPanRight) { clampedX = maxPanRight; wasClamped = true; }
+            if (panX < maxPanLeft) { clampedX = maxPanLeft; wasClamped = true; }
+            if (panY > maxPanDown) { clampedY = maxPanDown; wasClamped = true; }
+            if (panY < maxPanUp) { clampedY = maxPanUp; wasClamped = true; }
+
+            if (wasClamped) {
+                this.panzoom.pan(clampedX, clampedY, { animate: false });
+
+                // Show toast (with cooldown to avoid spam)
+                if (!this.boundaryToastCooldown) {
+                    this.boundaryToastCooldown = true;
+                    const msg = this.isMobile
+                        ? 'You\'ve reached the edge! Tap the reset button to re-center.'
+                        : 'You\'ve reached the edge! Press Shift+R or click the reset button to re-center.';
+                    this.showToast(
+                        msg,
+                        'warning',
+                        'Reset View',
+                        () => this.resetZoomAndPan(),
+                    );
+                    setTimeout(() => { this.boundaryToastCooldown = false; }, 5000);
+                }
+            }
+        },
+        showToast(message: string, type: 'info' | 'warning' | 'success' = 'info', actionLabel?: string, actionFn?: () => void) {
+            this.toastMessage = message;
+            this.toastType = type;
+            this.toastActionLabel = actionLabel || '';
+            this.toastActionFn = actionFn;
+            this.toastVisible = true;
+        },
+        closeToast() {
+            this.toastVisible = false;
+        },
     }
 };
 </script>
 
 <template>
-    <div class="relative min-h-[92vh] max-h-[92vh] w-full overflow-hidden">
+    <div class="relative min-h-[calc(100vh-3.5rem)] max-h-[calc(100vh-3.5rem)] w-full overflow-hidden">
         <FamilyDetailsDropdown v-show="currentFamilyTree" title="Family Details"
             @toggle:familyDetails="handleToggleFamilyDetails">
             <template #content>
@@ -291,14 +360,14 @@ export default {
         <DraggableSection v-show="currentFamilyTree && !loadingFamily">
             <div ref="treeContainer">
                 <FamilyTree v-if="curDisplayType === 'mdi:family-tree'" @centerNode="centerOnNode" />
-                <!-- <FamilySunburstChart />  -->
+                <FamilySunburstChart />
             </div>
         </DraggableSection>
 
-        <!-- SliderRange for zoom -->
-        <div v-if="currentFamilyTree && !loadingFamily"
+        <!-- SliderRange for zoom (hidden on mobile) -->
+        <div v-if="currentFamilyTree && !loadingFamily && !isMobile"
             class="flex flex-col items-center absolute bottom-[51px] left-[0px] translate-x-[30px] bg-white dark:bg-black border hover:border-zinc-300 dark:border-zinc-600 dark:hover:border-zinc-100 rounded p-2">
-            <Icon name="iconamoon:zoom-in-duotone" @click.stop="zoomIn"
+            <Icon name="iconamoon:zoom-in-duotone" @click.stop="() => { zoomIn(); notifyHotkeyAvailable(); }"
                 class="h-5 w-5 text-black dark:text-white cursor-pointer" />
             <ui-slider-root v-model="sliderValue"
                 class="relative flex items-center justify-center select-none touch-none h-[200px] w-3 my-3"
@@ -312,17 +381,60 @@ export default {
                     class="block w-5 h-5 bg-zinc-950 dark:bg-zinc-300 hover:bg-zinc-900 dark:hover:bg-zinc-200 shadow-none focus:shadow-none rounded-full outline-none cursor-ns-resize"
                     aria-label="Volume" :title="`${(currentZoomPercent * 100).toFixed(2)}%`" />
             </ui-slider-root>
-            <Icon name="iconamoon:zoom-out-duotone" @click.stop="zoomOut"
+            <Icon name="iconamoon:zoom-out-duotone" @click.stop="() => { zoomOut(); notifyHotkeyAvailable(); }"
                 class="h-5 w-5 text-black dark:text-white cursor-pointer" />
         </div>
+        <!-- Reset button: bottom-left on desktop, top-right on mobile (above bottom toolbar) -->
         <div v-if="currentFamilyTree && !loadingFamily"
-            class="flex items-center absolute bottom-[12px] left-[0px] translate-x-[30px] bg-white dark:bg-black border hover:border-zinc-300 dark:border-zinc-600 dark:hover:border-zinc-100 rounded py-1 px-2 cursor-pointer"
-            @click.stop="resetZoomAndPan" title="Reset Zoom & Pan to original view (Shift+R)">
+            :class="[
+                'flex items-center absolute bg-white/95 dark:bg-black/95 backdrop-blur-sm border hover:border-zinc-300 dark:border-zinc-600 dark:hover:border-zinc-100 rounded py-1 px-2 cursor-pointer z-20',
+                isMobile ? 'top-3 right-3' : 'bottom-[12px] left-[0px] translate-x-[30px]'
+            ]"
+            @click.stop="() => { resetZoomAndPan(); notifyHotkeyAvailable(); }" title="Reset Zoom & Pan to original view (Shift+R)">
             <Icon name="carbon:zoom-reset" class="h-5 w-5 text-black dark:text-white" />
         </div>
 
-        <!-- Error Loading tree -->
-        <div v-else-if="isMountedAndTriedToFetchFamilyTree && !loadingFamily && !currentFamilyTree"
+        <!-- Find Person button -->
+        <div v-if="currentFamilyTree && !loadingFamily"
+            :class="[
+                'flex items-center absolute bg-white/95 dark:bg-black/95 backdrop-blur-sm border hover:border-zinc-300 dark:border-zinc-600 dark:hover:border-zinc-100 rounded py-1 px-2 cursor-pointer z-20 gap-1.5',
+                isMobile ? 'top-3 left-3' : 'bottom-[12px] left-[0px] translate-x-[100px]'
+            ]"
+            @click.stop="showFindPerson = true"
+            title="Find & add a person to the tree"
+        >
+            <Icon name="lucide:user-search" class="h-5 w-5 text-black dark:text-white" />
+            <span v-if="!isMobile" class="text-xs font-medium text-black dark:text-white">Find Person</span>
+        </div>
+
+        <!-- Find Person Panel -->
+        <FindPersonPanel
+            v-if="showFindPerson"
+            @close="showFindPerson = false"
+            @person-linked="refreshFamilyTree"
+        />
+
+        <!-- Toast notification -->
+        <UiToast
+            :message="toastMessage"
+            :visible="toastVisible"
+            :type="toastType"
+            :action-label="toastActionLabel"
+            :action-fn="toastActionFn"
+            @close="closeToast"
+        />
+
+        <div v-if="isMountedAndTriedToFetchFamilyTree && !loadingFamily && !currentFamilyTree && family"
+            class="absolute inset-0 w-full h-full flex flex-col items-center justify-center">
+            <p class="text-zinc-600 dark:text-zinc-300 font-medium text-lg">
+                This family tree has no members yet.
+            </p>
+            <p class="text-zinc-500 dark:text-zinc-400 text-sm mt-2 mb-4">
+                Add the first person to start building the {{ family.familyName }} family tree.
+            </p>
+            <AddPersonToTree :familyId="family.id" @personAdded="refreshFamilyTree" />
+        </div>
+        <div v-else-if="isMountedAndTriedToFetchFamilyTree && !loadingFamily && !currentFamilyTree && !family"
             class="absolute inset-0 w-full h-full flex flex-col items-center">
             <p class="text-red-500 dark:text-red-500 font-medium text-lg mt-80">
                 Error loading the family tree! Please refresh or go back to
@@ -333,9 +445,7 @@ export default {
                 and try again.
             </p>
         </div>
-
-        <!-- Loading tree -->
-        <div v-else class="absolute inset-0 w-full h-full flex flex-col items-center justify-center">
+        <div v-else-if="loadingFamily || !isMountedAndTriedToFetchFamilyTree" class="absolute inset-0 w-full h-full flex flex-col items-center justify-center">
             <LoadingSpinner />
             <p class="text-black dark:text-white mt-3 font-extralight text-sm">Loading the{{ ` ${route.params.familyName
                 ||

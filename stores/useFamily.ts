@@ -49,13 +49,35 @@ export const useFamilyStore = defineStore('family', () => {
         currentFamilyTree.value = newFamily;
     }
 
+    let searchedForFamilyTimer: ReturnType<typeof setTimeout> | null = null;
+    let searchedForFamilyWatchStop: (() => void) | null = null;
+
     function setSearchedForFamily(bool: boolean) {
         searchedForFamily.value = bool;
-        
-        setTimeout(() => {
-            watch(() => familyTrees.value, () => searchedForFamily.value = false)
+
+        // Clean up any previous timer/watch
+        if (searchedForFamilyTimer) clearTimeout(searchedForFamilyTimer);
+        if (searchedForFamilyWatchStop) searchedForFamilyWatchStop();
+
+        // After a short delay, start watching for familyTrees changes to auto-clear
+        searchedForFamilyTimer = setTimeout(() => {
+            searchedForFamilyWatchStop = watch(() => familyTrees.value, () => {
+                searchedForFamily.value = false;
+                if (searchedForFamilyWatchStop) {
+                    searchedForFamilyWatchStop();
+                    searchedForFamilyWatchStop = null;
+                }
+            });
         }, 2100);
-        setTimeout(() => searchedForFamily.value = false, 4200);
+
+        // Fallback: clear after 4200ms regardless
+        setTimeout(() => {
+            searchedForFamily.value = false;
+            if (searchedForFamilyWatchStop) {
+                searchedForFamilyWatchStop();
+                searchedForFamilyWatchStop = null;
+            }
+        }, 4200);
     }
 
     function searchedInputChanged(newInput: string) {

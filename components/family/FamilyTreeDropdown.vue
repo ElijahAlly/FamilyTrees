@@ -21,7 +21,7 @@ const { treeNode } = defineProps({
 
         <div v-if="treeNode.marriages.length > 0" class="my-2">
             <details>
-                <summary class="w-fit rounded-md p-1 cursor-pointer dark:text-white dark:hover:bg-neutral-600 hover:bg-neutral-200 select-none" :style="{ marginLeft: `1.5rem` }" :title="'Past Marriages of ' + treeNode.member.first_name">Past Marriages With:</summary>
+                <summary class="w-fit rounded-md p-1 cursor-pointer dark:text-white dark:hover:bg-neutral-600 hover:bg-neutral-200 select-none" :style="{ marginLeft: `1.5rem` }" :title="'Past Marriages of ' + treeNode.member.firstName">Past Marriages With:</summary>
                 <ul :style="{ paddingLeft: `${(treeNode.level + 1) * 1}rem` }">
                     <li v-for="(spouse, i) in treeNode.marriages" :key="spouse.id" class="w-fit my-2">
                         <MemberLink :person="spouse"/>
@@ -32,7 +32,7 @@ const { treeNode } = defineProps({
 
         <div v-if="treeNode.children.length > 0" class="my-2">
             <details>
-                <summary class="w-fit rounded-md p-1 cursor-pointer dark:text-white dark:hover:bg-neutral-600 hover:bg-neutral-200 select-none" :style="{ marginLeft: `1.5rem` }" :title="'Children of ' + treeNode.member.first_name">Children</summary>
+                <summary class="w-fit rounded-md p-1 cursor-pointer dark:text-white dark:hover:bg-neutral-600 hover:bg-neutral-200 select-none" :style="{ marginLeft: `1.5rem` }" :title="'Children of ' + treeNode.member.firstName">Children</summary>
                 <ul :style="{ paddingLeft: `${(treeNode.level + 1) * 1}rem` }">
                     <li v-for="child in treeNode.children" :key="child.member.id" class="w-fit mb-2">
                         <FamilyTreeDropdown :treeNode="child" />

@@ -35,6 +35,7 @@ export default defineNuxtConfig({
     '@tresjs/nuxt',
   ],
   plugins: [
+    '~/plugins/api.ts',
     '~/plugins/ui.ts',
     '~/plugins/console.client.ts'
   ],
@@ -91,6 +92,7 @@ export default defineNuxtConfig({
       ],
       meta: [
         { name: 'description', content: 'View your family trees, and discover your lineage.' },
+        { name: 'viewport', content: 'width=device-width, initial-scale=1.0, viewport-fit=cover' },
         { name: 'msapplication-TileColor', content: '#8b5cf6' },
         { name: 'theme-color', content: '#ffffff' },
       ],
@@ -123,6 +125,9 @@ export default defineNuxtConfig({
   nitro: {
     experimental: {
       openAPI: true
+    },
+    prerender: {
+      failOnError: false,
     }
   }
 })

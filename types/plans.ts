@@ -47,7 +47,7 @@ export interface Plan {
     supportLevel: 'basic' | 'priority' | 'dedicated agent';
 
     // Misc
-    sort_ids: number;
+    sortIds: number;
 }
 
 export interface PlanFeature {

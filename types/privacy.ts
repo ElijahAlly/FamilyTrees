@@ -3,7 +3,8 @@ export interface PrivacyControls {
     friendsView: boolean;
     publicView: boolean;
     timeBasedRules: PrivacyTimeRule[];
-    ageRestrictions: boolean;
+    ageRestrictions: AgeRestriction | null;
+    requireSameLastName: boolean;
 }
 
 export type PrivacyTimeRule = {
@@ -11,3 +12,10 @@ export type PrivacyTimeRule = {
     showAfter: Date | null;
     hideAfter: Date | null;
 }
+
+export type AgeRestriction = {
+    minAge: number;
+    restrictedFields: string[];
+}
+
+export type ViewType = 'private' | 'family' | 'friends' | 'public';

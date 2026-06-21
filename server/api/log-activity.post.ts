@@ -1,10 +1,11 @@
 import { defineEventHandler, readBody } from 'h3';
 import { db } from '../db';
 import { activityLogs } from '../db/schema';
-import { eq, desc } from 'drizzle-orm';
+import { requireAuth } from '../utils/auth';
 
 export default defineEventHandler(async (event) => {
-    const { personId, familyId, actionType, details } = await readBody(event);
+    const { userId } = requireAuth(event);
+    const { personId, familyId, actionType, details, reason } = await readBody(event);
 
     if (!personId || !familyId || !actionType) {
         return { error: 'personId, familyId, and actionType are required' };
@@ -18,6 +19,8 @@ export default defineEventHandler(async (event) => {
                 familyId: Number(familyId),
                 actionType,
                 details: details || {},
+                performedBy: userId,
+                reason: reason || null,
             })
             .returning();
 

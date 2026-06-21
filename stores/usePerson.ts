@@ -2,11 +2,14 @@ import type { PersonType } from '@/types';
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 
+export type QuickAddRelationship = 'child' | 'spouse' | 'parent' | 'sibling' | null;
+
 export const usePersonStore = defineStore('person', () => {
     const person = ref<PersonType | null>(null);
     const searchedForPerson = ref<boolean>(false);
     const selectedPersonInTree = ref<PersonType | null>(null);
     const gotToPersonInTree = ref<PersonType | null>(null);
+    const quickAddRelationship = ref<QuickAddRelationship>(null);
 
     function setPerson(newPerson: PersonType) {
         person.value = newPerson;
@@ -34,16 +37,28 @@ export const usePersonStore = defineStore('person', () => {
         gotToPersonInTree.value = null;
     }
 
+    function triggerQuickAdd(person: PersonType, relationship: QuickAddRelationship) {
+        selectedPersonInTree.value = person;
+        quickAddRelationship.value = relationship;
+    }
+
+    function clearQuickAdd() {
+        quickAddRelationship.value = null;
+    }
+
     return {
         person,
         searchedForPerson,
         selectedPersonInTree,
         gotToPersonInTree,
+        quickAddRelationship,
         setPerson,
         setSearchedForPerson,
         setSelectedPersonInTree,
         clearSelectedPersonInTree,
         setGoToPersonInTree,
-        clearGoToPersonInTree
+        clearGoToPersonInTree,
+        triggerQuickAdd,
+        clearQuickAdd,
     }
 })

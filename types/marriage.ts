@@ -1,9 +1,9 @@
 export type MarriageType = {
     id: number;
-    person1_id: number;
-    person2_id: number;
-    marriage_date: Date;
-    divorce_date: Date;
+    person1Id: number;
+    person2Id: number;
+    marriageDate: Date;
+    divorceDate: Date;
 
     // Additional details
     location: string;

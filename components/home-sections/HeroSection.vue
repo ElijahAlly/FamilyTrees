@@ -8,7 +8,7 @@ const GalaxyGenerator = shallowRef<any>(undefined);
 const GalaxyGeneratorComponent = defineAsyncComponent(() => import('../content/galaxy-generator/index.vue'));
 
 const router = useRouter();
-const { isMobile } = useDevice();
+const { isMobile, isNative } = useDevice();
 const isHoveringHero = ref<boolean>(false);
 const isGalaxyAnimationPaused = ref<boolean>(false);
 const showGalacticPeople = ref<boolean>(true);
@@ -34,17 +34,23 @@ onMounted(() => {
 })
 
 watch(isMobile, (newVal) => {
-    if (newVal) {
+    if (newVal || isNative) {
         showGalacticPeople.value = false;
     } else {
         showGalacticPeople.value = true;
     }
 })
+
+// On native, disable galactic people by default for performance
+if (isNative) {
+    showGalacticPeople.value = false;
+}
 </script>
 
 <template>
     <div class="relative h-[420px] w-full overflow-hidden bg-gradient-to-t from-zinc-50 to-zinc-100 dark:from-zinc-900 dark:to-zinc-950 border-b border-zinc-200 dark:border-zinc-700"
-        @mouseenter="isHoveringHero = true" @mouseleave="isHoveringHero = false">
+        @mouseenter="!isNative && (isHoveringHero = true)" @mouseleave="!isNative && (isHoveringHero = false)"
+        @touchstart="isNative && (isHoveringHero = true)" @touchend="isNative && (isHoveringHero = false)">
         <!-- Galaxy Background -->
         <div class="absolute inset-0 right-0 w-full h-full z-10">
             <Suspense>

@@ -3,6 +3,7 @@ import { db } from '../db';
 import { people, families } from '../db/schema';
 import { ilike, or } from 'drizzle-orm';
 
+
 export default defineEventHandler(async (event) => {
     const { name, searchBy } = getQuery(event);
 
@@ -33,39 +34,39 @@ export default defineEventHandler(async (event) => {
 
             // Apply the same filtering logic as before
             const filteredData = uniqueResults.filter(result => {
-                const first_name = (result.firstName || '').toLowerCase();
-                const middle_name = (result.middleName || '').toLowerCase();
-                const last_name = (result.lastName || '').toLowerCase();
+                const resultFirstName = (result.firstName || '').toLowerCase();
+                const resultMiddleName = (result.middleName || '').toLowerCase();
+                const resultLastName = (result.lastName || '').toLowerCase();
 
                 const firstNameInput = (firstName || '').toLowerCase();
                 const middleNameInput = (middleName || '').toLowerCase();
                 const lastNameInput = (lastName || '').toLowerCase();
 
                 // exact match
-                if (first_name === firstNameInput && middle_name === middleNameInput && last_name === lastNameInput) return true;
+                if (resultFirstName === firstNameInput && resultMiddleName === middleNameInput && resultLastName === lastNameInput) return true;
 
                 // just first name match
-                if (first_name === firstNameInput && !middleNameInput && !lastNameInput) return true;
+                if (resultFirstName === firstNameInput && !middleNameInput && !lastNameInput) return true;
 
                 // first name matches and middle name is a substring
-                if (first_name.includes(firstNameInput) &&
-                    ((middleNameInput ? middle_name.includes(middleNameInput) : true)
-                        || (!lastNameInput ? last_name.includes(middleNameInput) : true))
-                    && (lastNameInput ? last_name.includes(lastNameInput) : true)) return true;
+                if (resultFirstName.includes(firstNameInput) &&
+                    ((middleNameInput ? resultMiddleName.includes(middleNameInput) : true)
+                        || (!lastNameInput ? resultLastName.includes(middleNameInput) : true))
+                    && (lastNameInput ? resultLastName.includes(lastNameInput) : true)) return true;
 
                 // middle and last name match as substrings when first name matches
-                if (first_name.includes(firstNameInput) &&
-                    (middleNameInput ? middle_name.includes(middleNameInput) : true)
-                    && (lastNameInput ? last_name.includes(lastNameInput) : true)) return true;
+                if (resultFirstName.includes(firstNameInput) &&
+                    (middleNameInput ? resultMiddleName.includes(middleNameInput) : true)
+                    && (lastNameInput ? resultLastName.includes(lastNameInput) : true)) return true;
 
                 // middle and last name check
-                if (middle_name.includes(firstNameInput) && last_name.includes(middleNameInput)) return true;
+                if (resultMiddleName.includes(firstNameInput) && resultLastName.includes(middleNameInput)) return true;
 
                 // first and last name exact match
-                if ((first_name + ' ' + last_name) === (firstNameInput + ' ' + lastNameInput)) return true;
+                if ((resultFirstName + ' ' + resultLastName) === (firstNameInput + ' ' + lastNameInput)) return true;
 
                 // middle and last name match
-                if ((middle_name + ' ' + last_name) === (middleNameInput + ' ' + lastNameInput)) return true;
+                if ((resultMiddleName + ' ' + resultLastName) === (middleNameInput + ' ' + lastNameInput)) return true;
 
                 return false;
             });

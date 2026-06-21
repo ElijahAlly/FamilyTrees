@@ -27,7 +27,7 @@ const handleFileUpload = async (event: Event) => {
     const { data: familyData, error: familyError }: FetchTypeList<FamilyType> = await $fetch('/api/get-family-by-name-and-person-id', {
         method: 'GET',
         params: {
-            familyName: person.last_name,
+            familyName: person.lastName,
             id: person.id
         }
     });

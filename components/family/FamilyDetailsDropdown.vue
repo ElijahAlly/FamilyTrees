@@ -18,7 +18,7 @@ const toggleDropdown = () => {
     emit('toggle:familyDetails', isFullPageDropdownOpen.value);
 }
 
-useHotkeys(ShortcutSectionName.FAMILY_TREE_DETAILS, {
+const { notifyHotkeyAvailable } = useHotkeys(ShortcutSectionName.FAMILY_TREE_DETAILS, {
     'f': { action: toggleDropdown },
 });
 </script>
@@ -26,7 +26,7 @@ useHotkeys(ShortcutSectionName.FAMILY_TREE_DETAILS, {
 <template>
     <div class="relative w-full">
         <button 
-            @click="toggleDropdown"
+            @click="() => { toggleDropdown(); notifyHotkeyAvailable(); }"
             class="absolute top-0 left-1/2 -translate-x-1/2 z-40 px-3 py-1 text-black dark:text-white bg-zinc-100 dark:bg-zinc-800 rounded-b-md shadow-md hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors duration-200 flex items-center border border-t-0 hover:border-zinc-300 dark:border-zinc-600 dark:hover:border-zinc-100"
         >
         <span>{{ isFullPageDropdownOpen ? 'Hide' : 'Show' }} {{ title }}</span>

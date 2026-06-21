@@ -16,10 +16,10 @@ export const getGenderLabel = (genderChar: GenderType | null | undefined) => {
 
 export const getFullName = (person: PersonType | null | undefined) => {
     if (!person) return '';
-    return `${person.first_name} ${person.middle_name ? person.middle_name + ' ' : ''}${person.last_name}`;
+    return `${person.firstName} ${person.middleName ? person.middleName + ' ' : ''}${person.lastName}`;
 }
 
 export const getFirstAndLastName = (person: PersonType | null | undefined) => {
     if (!person) return '';
-    return `${person.first_name} ${person.last_name}`;
+    return `${person.firstName} ${person.lastName}`;
 }

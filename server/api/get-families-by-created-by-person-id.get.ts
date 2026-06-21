@@ -3,6 +3,7 @@ import { db } from '../db';
 import { families } from '../db/schema';
 import { eq } from 'drizzle-orm';
 
+
 export default defineEventHandler(async (event) => {
     const { personId, limit } = getQuery(event);
 

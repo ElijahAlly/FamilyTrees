@@ -10,7 +10,7 @@ const props = defineProps({
     position: { type: Array as PropType<number[]>, default: [0, 0, 0], required: true },
 });
 
-const text = computed<string>(() => props.person ? props.person.first_name : '');
+const text = computed<string>(() => props.person ? props.person.firstName : '');
 const colorMode = useColorMode();
 const { isMobile } = useDevice();
 const isHoveringPerson = ref<boolean>(false);

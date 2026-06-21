@@ -1,6 +1,10 @@
 import { defineNuxtPlugin } from "nuxt/app";
+import { Capacitor } from '@capacitor/core';
 
 export default defineNuxtPlugin(() => {
+    // Skip console utilities on native apps (no DevTools access)
+    if (Capacitor.isNativePlatform()) return;
+
     if (process.env.NODE_ENV === 'production') {
         const styles = {
             title: 'font-size: 24px; font-weight: bold; color: #a855f7; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);',

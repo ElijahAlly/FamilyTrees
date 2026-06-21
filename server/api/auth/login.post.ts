@@ -1,15 +1,21 @@
-import { defineEventHandler, readBody } from 'h3';
+import { defineEventHandler } from 'h3';
+import { z } from 'zod/v4';
 import { db } from '../../db';
-import { authUsers } from '../../db/schema';
+import { authUsers, otpCodes } from '../../db/schema';
 import { eq } from 'drizzle-orm';
 import crypto from 'crypto';
+import { validateBody } from '../../utils/validate';
+import { checkRateLimit, authLimiter } from '../../utils/rate-limit';
+import { sendOtpEmail } from '../../utils/email';
+
+const loginSchema = z.object({
+    email: z.email(),
+});
 
 export default defineEventHandler(async (event) => {
-    const { email } = await readBody(event);
+    checkRateLimit(event, authLimiter, 'login');
 
-    if (!email) {
-        return { success: false, error: 'Email is required' };
-    }
+    const { email } = await validateBody(event, loginSchema);
 
     try {
         // Check if user exists
@@ -26,8 +32,24 @@ export default defineEventHandler(async (event) => {
         // Generate OTP
         const otp = crypto.randomInt(100000, 999999).toString();
 
-        // TODO: Store OTP and send via email service
+        // Store OTP in database with 10-minute expiry
+        const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+
+        // Delete any existing OTPs for this email
+        await db.delete(otpCodes).where(eq(otpCodes.email, email));
+
+        await db.insert(otpCodes).values({
+            email,
+            code: otp,
+            expiresAt,
+        });
+
         const isDev = process.env.NODE_ENV !== 'production';
+
+        // Send OTP email in production
+        if (!isDev && process.env.RESEND_API_KEY) {
+            await sendOtpEmail(email, otp);
+        }
 
         return {
             success: true,
