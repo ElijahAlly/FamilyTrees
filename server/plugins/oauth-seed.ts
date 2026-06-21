@@ -35,7 +35,7 @@ const SEEDS: ClientSeed[] = [
     },
     {
         clientId: 'cinderella',
-        name: 'cinderella.photography',
+        name: 'Beba Photography',
         secretEnv: 'CINDERELLA_OAUTH_CLIENT_SECRET',
         redirectUrisEnv: 'CINDERELLA_OAUTH_REDIRECT_URIS',
         // cinderella's NestJS backend uses a global `/api` prefix, so its OAuth
