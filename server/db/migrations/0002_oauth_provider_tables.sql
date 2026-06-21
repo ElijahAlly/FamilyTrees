@@ -84,18 +84,31 @@ CREATE TABLE "otp_codes" (
 );
 --> statement-breakpoint
 ALTER TABLE "activity_logs" ALTER COLUMN "id" SET DATA TYPE integer;--> statement-breakpoint
+ALTER TABLE "activity_logs" ALTER COLUMN "id" DROP DEFAULT;--> statement-breakpoint
+DROP SEQUENCE IF EXISTS "activity_logs_id_seq";--> statement-breakpoint
 ALTER TABLE "activity_logs" ALTER COLUMN "id" ADD GENERATED ALWAYS AS IDENTITY (sequence name "activity_logs_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1);--> statement-breakpoint
 ALTER TABLE "claim_requests" ALTER COLUMN "id" SET DATA TYPE integer;--> statement-breakpoint
+ALTER TABLE "claim_requests" ALTER COLUMN "id" DROP DEFAULT;--> statement-breakpoint
+DROP SEQUENCE IF EXISTS "claim_requests_id_seq";--> statement-breakpoint
 ALTER TABLE "claim_requests" ALTER COLUMN "id" ADD GENERATED ALWAYS AS IDENTITY (sequence name "claim_requests_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1);--> statement-breakpoint
 ALTER TABLE "families" ALTER COLUMN "id" SET DATA TYPE integer;--> statement-breakpoint
+ALTER TABLE "families" ALTER COLUMN "id" DROP DEFAULT;--> statement-breakpoint
+DROP SEQUENCE IF EXISTS "families_id_seq";--> statement-breakpoint
 ALTER TABLE "families" ALTER COLUMN "id" ADD GENERATED ALWAYS AS IDENTITY (sequence name "families_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1);--> statement-breakpoint
-ALTER TABLE "families" ALTER COLUMN "members" SET DATA TYPE integer[];--> statement-breakpoint
+ALTER TABLE "families" DROP COLUMN "members";--> statement-breakpoint
+ALTER TABLE "families" ADD COLUMN "members" integer[] DEFAULT '{}';--> statement-breakpoint
 ALTER TABLE "families" ALTER COLUMN "members" SET DEFAULT '{}';--> statement-breakpoint
 ALTER TABLE "marriages" ALTER COLUMN "id" SET DATA TYPE integer;--> statement-breakpoint
+ALTER TABLE "marriages" ALTER COLUMN "id" DROP DEFAULT;--> statement-breakpoint
+DROP SEQUENCE IF EXISTS "marriages_id_seq";--> statement-breakpoint
 ALTER TABLE "marriages" ALTER COLUMN "id" ADD GENERATED ALWAYS AS IDENTITY (sequence name "marriages_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1);--> statement-breakpoint
 ALTER TABLE "media_submissions" ALTER COLUMN "id" SET DATA TYPE integer;--> statement-breakpoint
+ALTER TABLE "media_submissions" ALTER COLUMN "id" DROP DEFAULT;--> statement-breakpoint
+DROP SEQUENCE IF EXISTS "media_submissions_id_seq";--> statement-breakpoint
 ALTER TABLE "media_submissions" ALTER COLUMN "id" ADD GENERATED ALWAYS AS IDENTITY (sequence name "media_submissions_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1);--> statement-breakpoint
 ALTER TABLE "people" ALTER COLUMN "id" SET DATA TYPE integer;--> statement-breakpoint
+ALTER TABLE "people" ALTER COLUMN "id" DROP DEFAULT;--> statement-breakpoint
+DROP SEQUENCE IF EXISTS "people_id_seq";--> statement-breakpoint
 ALTER TABLE "people" ALTER COLUMN "id" ADD GENERATED ALWAYS AS IDENTITY (sequence name "people_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1);--> statement-breakpoint
 ALTER TABLE "activity_logs" ADD COLUMN "performed_by" uuid;--> statement-breakpoint
 ALTER TABLE "activity_logs" ADD COLUMN "reason" text;--> statement-breakpoint
