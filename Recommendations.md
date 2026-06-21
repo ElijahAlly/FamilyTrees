@@ -33,6 +33,3 @@
   15. Add .env.example - The .env is gitignored but there's no example file documenting required environment variables.                                                           
   16. Galaxy generator / 3D visualization - The Three.js GalacticPeople component is a nice touch but may be pulling in a large bundle. Consider lazy-loading it.                 
   17. Add aria-label and keyboard navigation - Several interactive elements (color pickers, tree nodes, sidebar toggles) lack accessibility attributes.                           
-   
-
-CBA storage collections number 2402022760

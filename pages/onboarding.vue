@@ -167,10 +167,13 @@ const completeOnboarding = async () => {
         // Refresh profile
         await authStore.getProfile();
 
-        // Navigate to profile
+        // Preserve any cross-app return_to so the profile page can resume the
+        // OAuth (or other) handoff after the user lands on their tree.
+        const returnTo = router.currentRoute.value.query.return_to as string | undefined;
         router.replace({
             name: 'member-personId',
             params: { personId: `${profile.value.id}` },
+            query: returnTo ? { return_to: returnTo } : {},
         });
     } catch (err) {
         console.error('Error completing onboarding:', err);
@@ -213,11 +216,14 @@ onMounted(async () => {
         }
     }
 
-    // If already completed onboarding, go to profile
+    // If already completed onboarding, go to profile (preserving any
+    // cross-app return_to so the resume flow keeps working).
     if (profile.value && (profile.value as any).onboardingCompleted) {
+        const returnTo = router.currentRoute.value.query.return_to as string | undefined;
         router.replace({
             name: 'member-personId',
             params: { personId: `${profile.value.id}` },
+            query: returnTo ? { return_to: returnTo } : {},
         });
         return;
     }

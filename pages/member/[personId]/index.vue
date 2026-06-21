@@ -223,6 +223,53 @@ watch(() => route.params.personId, () => {
     setBanner();
 });
 
+// Cross-app handoff: when the user lands here as the tail end of an OAuth
+// (or similar) flow, ?return_to=<path|url> tells us to resume after a short
+// pause so they can see their freshly-created profile before bouncing out.
+const returnTo = computed(() => (route.query.return_to as string | undefined) || null);
+const returnToSeconds = ref(3);
+let returnToTimer: ReturnType<typeof setInterval> | null = null;
+
+const performReturn = () => {
+    const dest = returnTo.value;
+    if (!dest) return;
+    if (dest.startsWith('/')) {
+        // Parse path + query explicitly — `{ path: '/foo?a=1' }` drops the
+        // query in vue-router, which would strip response_type from the
+        // OAuth bounce-back URL.
+        const url = new URL(dest, 'http://_');
+        router.replace({
+            path: url.pathname,
+            query: Object.fromEntries(url.searchParams),
+            hash: url.hash || undefined,
+        });
+        return;
+    }
+    // Absolute URL — only allow our ecosystem.
+    try {
+        const url = new URL(dest);
+        const isAllowed =
+            /\.mytrees\.family$/.test(url.host) ||
+            url.host === 'mytrees.family' ||
+            /\.cinderella\.photography$/.test(url.host) ||
+            url.host === 'cinderella.photography' ||
+            url.host === 'localhost' || url.host.startsWith('localhost:');
+        if (isAllowed) window.location.href = url.toString();
+    } catch { /* ignore malformed return_to */ }
+};
+
+const startReturnTimer = () => {
+    if (!returnTo.value || returnToTimer) return;
+    returnToTimer = setInterval(() => {
+        returnToSeconds.value -= 1;
+        if (returnToSeconds.value <= 0) {
+            if (returnToTimer) clearInterval(returnToTimer);
+            returnToTimer = null;
+            performReturn();
+        }
+    }, 1000);
+};
+
 // Initial fetch
 onMounted(async () => {
     if (!profile.value || (profile.value && profile.value.id !== Number(route.params.personId))) {
@@ -241,16 +288,38 @@ onMounted(async () => {
         await claimsStore.fetchMyMemberships(user.value.id);
         await fetchUserFamilyRoles();
     }
+
+    startReturnTimer();
 });
 
 onUnmounted(() => {
     bannerStore.clearBannerInfo();
+    if (returnToTimer) clearInterval(returnToTimer);
 });
 </script>
 
 <template>
     <div class="min-h-screen w-full p-4 text-zinc-950 dark:text-zinc-50">
         <div class="min-h-screen w-full p-4 text-zinc-950 dark:text-zinc-50">
+
+            <!-- Cross-app handoff banner -->
+            <div
+                v-if="returnTo"
+                class="mb-4 flex items-center justify-between gap-3 rounded-lg border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm text-emerald-900 dark:border-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-100"
+            >
+                <span>
+                    Welcome! Returning you to finish signing in elsewhere in
+                    <strong>{{ returnToSeconds }}</strong>
+                    {{ returnToSeconds === 1 ? 'second' : 'seconds' }}…
+                </span>
+                <button
+                    type="button"
+                    class="rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700"
+                    @click="performReturn"
+                >
+                    Continue now
+                </button>
+            </div>
 
             <!-- Header with avatar and name -->
             <div class="w-full flex justify-center my-3 p-2 gap-2 items-center">

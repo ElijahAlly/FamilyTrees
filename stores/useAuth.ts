@@ -86,16 +86,25 @@ export const useAuthStore = defineStore('auth', (): AuthStoreProps => {
             });
 
             if (fetchError) {
-                showToast('Could not load your profile. Please sign in again.', 'error');
-                signOut();
-                await navigateTo(`/signup?existing=true`);
+                // Stale persisted user with a bad/missing token. Clear state
+                // silently — the route guard or current page will handle the
+                // redirect. Toasting here would alarm users whose stale token
+                // just expired naturally.
+                persistUser(null);
+                profile.value = null;
                 return;
             }
 
             // Profile may be null if person record hasn't been created yet (e.g. during onboarding)
             profile.value = (data as PersonType) || null;
-        } catch (error) {
-            showToast('Failed to load profile.', 'error');
+        } catch (error: any) {
+            // 401 from the auth middleware (expired/invalid JWT) — clear state
+            // silently. Other errors aren't actionable for the user either, so
+            // don't toast; rely on the calling page to recover.
+            if (error?.status === 401 || error?.statusCode === 401) {
+                persistUser(null);
+                profile.value = null;
+            }
         } finally {
             profileLoading.value = false;
         }
@@ -173,6 +182,14 @@ export const useAuthStore = defineStore('auth', (): AuthStoreProps => {
             otpError.value = null;
 
             if (!(await checkIfUserExists({ email }))) {
+                // Dev convenience: skip the "create an account first" step so
+                // any email lands you logged in. Real production accounts must
+                // still go through /signup.
+                if (import.meta.dev) {
+                    const localPart = email.split('@')[0] || 'dev';
+                    await handleSignUp(email, localPart, '');
+                    return;
+                }
                 otpError.value = 'No account found with this email';
                 return;
             }
@@ -243,9 +260,60 @@ export const useAuthStore = defineStore('auth', (): AuthStoreProps => {
                 profile.value = result.profile;
             }
 
-            // Redirect to onboarding if not completed, otherwise go to profile
-            if (result.onboardingCompleted === false) {
-                router.replace({ path: '/onboarding' });
+            // Honor ?return_to=… for cross-app sign-in (photos.mytrees.family,
+            // cinderella.photography). Internal paths get a SPA navigate;
+            // absolute URLs get a window.location bounce with #token=<jwt>
+            // so the destination can capture the identity.
+            //
+            // New users (onboardingCompleted=false) always go through
+            // /onboarding first regardless of return_to — we just pass it
+            // through so onboarding → profile → return_to can resume the flow.
+            const returnTo = (router.currentRoute.value.query.return_to as string | undefined) || null;
+            const isOnboarded = result.onboardingCompleted !== false;
+
+            if (returnTo && isOnboarded) {
+                if (returnTo.startsWith('/')) {
+                    // Split path + query/hash explicitly: vue-router's
+                    // `{ path }` form treats the whole string as the path
+                    // and silently drops the query string, which would lose
+                    // response_type, client_id, etc. on the OAuth bounce.
+                    const url = new URL(returnTo, 'http://_');
+                    router.replace({
+                        path: url.pathname,
+                        query: Object.fromEntries(url.searchParams),
+                        hash: url.hash || undefined,
+                    });
+                    isVerifying.value = false;
+                    return true;
+                } else if (import.meta.client) {
+                    try {
+                        const url = new URL(returnTo);
+                        // Reject anything not under the mytrees.family or
+                        // cinderella.photography ecosystem.
+                        const isAllowed =
+                            /\.mytrees\.family$/.test(url.host) ||
+                            url.host === 'mytrees.family' ||
+                            /\.cinderella\.photography$/.test(url.host) ||
+                            url.host === 'cinderella.photography' ||
+                            url.host === 'localhost' || url.host.startsWith('localhost:');
+                        if (isAllowed) {
+                            url.hash = `token=${result.token}`;
+                            window.location.href = url.toString();
+                            isVerifying.value = false;
+                            return true;
+                        }
+                    } catch { /* fall through to default */ }
+                }
+            }
+
+            // New user or no return_to: route through onboarding/profile.
+            // return_to (if any) rides along in the query so the profile page
+            // can resume the cross-app flow after the user finishes setting up.
+            if (!isOnboarded) {
+                router.replace({
+                    path: '/onboarding',
+                    query: returnTo ? { return_to: returnTo } : {},
+                });
             } else {
                 goToProfile();
             }

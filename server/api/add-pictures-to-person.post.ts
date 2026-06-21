@@ -60,6 +60,10 @@ export default defineEventHandler(async (event) => {
                 method: 'POST',
                 headers: {
                     'X-API-Key': GPAPICS_API_KEY,
+                    // photos.mytrees.family records this as the media owner so
+                    // it shows up in the person's library and in /api/media
+                    // scoped to that user.
+                    'X-On-Behalf-Of': userId,
                 },
                 body: gpapicsForm,
             });

@@ -16,6 +16,14 @@ const PUBLIC_ROUTES = [
     '/api/get-all-matching-by-name',
     '/api/invites/verify',
     '/api/temp-access/verify',
+    // OAuth provider — /authorize requires auth (handled inside the handler),
+    // /token and /userinfo use client credentials / bearer tokens of their own.
+    // /client exposes only the public display name so the consent page can
+    // render it before the user has signed in.
+    '/api/oauth/token',
+    '/api/oauth/userinfo',
+    '/api/oauth/revoke',
+    '/api/oauth/client',
 ];
 
 function isPublicRoute(path: string): boolean {

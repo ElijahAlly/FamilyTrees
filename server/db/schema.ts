@@ -464,6 +464,63 @@ export const otpCodes = pgTable('otp_codes', {
 ]);
 
 
+// ============================================================================
+// === OAuth2 Provider ========================================================
+// ----------------------------------------------------------------------------
+// mytrees.family acts as the identity provider for the rest of the ecosystem
+// (photos.mytrees.family, cinderella.photography, and any future client).
+// Authorization Code flow with PKCE. Access tokens are JWTs signed with the
+// same secret as the existing OTP-issued tokens (so resource servers only
+// need to share JWT_SECRET).
+// ============================================================================
+
+// Registered third-party / internal clients (e.g. cinderella, photos).
+export const oauthClients = pgTable('oauth_clients', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  clientId: text('client_id').unique().notNull(),                  // public — e.g. 'cinderella'
+  name: text('name').notNull(),                                    // human-readable
+  clientSecretHash: text('client_secret_hash').notNull(),          // sha256 of the secret
+  redirectUris: text('redirect_uris').array().notNull().default([]),
+  allowedScopes: text('allowed_scopes').array().notNull().default([]),
+  isInternal: boolean('is_internal').notNull().default(false),     // first-party clients (photos)
+  isPublic: boolean('is_public').notNull().default(false),         // SPA/mobile clients (no secret)
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  index('oauth_clients_client_id_idx').on(table.clientId),
+]);
+
+// One-time authorization codes (single-use, short-lived).
+export const oauthAuthorizationCodes = pgTable('oauth_authorization_codes', {
+  code: text('code').primaryKey(),
+  clientId: text('client_id').notNull().references(() => oauthClients.clientId, { onDelete: 'cascade' }),
+  userId: uuid('user_id').notNull().references(() => authUsers.id, { onDelete: 'cascade' }),
+  redirectUri: text('redirect_uri').notNull(),
+  scope: text('scope').notNull().default(''),
+  codeChallenge: text('code_challenge').notNull(),
+  codeChallengeMethod: text('code_challenge_method').notNull().default('S256'),
+  expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+  usedAt: timestamp('used_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  index('oauth_codes_client_idx').on(table.clientId),
+  index('oauth_codes_user_idx').on(table.userId),
+]);
+
+// Refresh tokens — long-lived, rotateable.
+export const oauthRefreshTokens = pgTable('oauth_refresh_tokens', {
+  token: text('token').primaryKey(),                               // opaque random string
+  clientId: text('client_id').notNull().references(() => oauthClients.clientId, { onDelete: 'cascade' }),
+  userId: uuid('user_id').notNull().references(() => authUsers.id, { onDelete: 'cascade' }),
+  scope: text('scope').notNull().default(''),
+  expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+  revokedAt: timestamp('revoked_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  index('oauth_refresh_user_idx').on(table.userId),
+  index('oauth_refresh_client_idx').on(table.clientId),
+]);
+
+
 // Types for Drizzle
 export type SelectPerson = InferSelectModel<typeof people>;
 export type InsertPerson = InferInsertModel<typeof people>;

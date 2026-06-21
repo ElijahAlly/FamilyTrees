@@ -35,7 +35,6 @@ export default defineNuxtConfig({
     '@tresjs/nuxt',
   ],
   plugins: [
-    { src: '~/plugins/pinia-persist.ts', mode: 'client' },
     '~/plugins/api.ts',
     '~/plugins/ui.ts',
     '~/plugins/console.client.ts'
