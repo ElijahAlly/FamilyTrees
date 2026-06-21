@@ -13,6 +13,12 @@
  * If the user isn't logged in to mytrees.family we bounce them to /signup
  * with return_to set so they come back here after OTP verification.
  */
+import { Icon } from '@iconify/vue';
+import LoadingSpinner from '@/components/ui/LoadingSpinner.vue';
+
+// Standalone screen: drop the app navbar/footer so only the MyTrees logo shows.
+definePageMeta({ layout: false });
+
 const route = useRoute();
 const router = useRouter();
 const auth = useAuthStore();
@@ -144,52 +150,136 @@ const submit = async (decision: 'allow' | 'deny') => {
 </script>
 
 <template>
-  <div class="flex min-h-[100dvh] items-center justify-center bg-zinc-100 px-4">
-    <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
-      <div v-if="error" class="text-red-600">
-        <h1 class="text-xl font-bold">Something's off</h1>
-        <p class="mt-2 text-sm">{{ error }}</p>
-      </div>
-      <div v-else-if="!sessionReady">
-        <p class="text-sm text-gray-500">Checking your session…</p>
-      </div>
-      <div v-else>
-        <h1 class="text-xl font-bold text-gray-900">
-          <span class="text-gray-500">{{ clientName ?? params.client_id }}</span> wants to
-          access your mytrees.family account
+  <div
+    class="flex min-h-[100dvh] flex-col items-center justify-center bg-neutral-50 px-4 py-10 dark:bg-neutral-950"
+  >
+    <!-- Brand mark only — no full navbar -->
+    <NuxtLink to="/" class="mb-8 select-none">
+      <img
+        src="/my-trees-logo-with-name.png"
+        alt="MyTrees.family"
+        class="h-12 w-auto"
+      />
+    </NuxtLink>
+
+    <div
+      class="w-full max-w-md rounded-2xl border border-zinc-200 bg-white p-7 shadow-xl shadow-zinc-900/5 dark:border-zinc-800 dark:bg-zinc-900"
+    >
+      <!-- Error -->
+      <div v-if="error" class="text-center">
+        <div
+          class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-950"
+        >
+          <Icon
+            icon="mdi:alert-circle-outline"
+            class="h-7 w-7 text-red-600 dark:text-red-400"
+          />
+        </div>
+        <h1 class="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+          Something's off
         </h1>
-        <p class="mt-2 text-sm text-gray-600">
-          Signed in as <strong>{{ auth.userEmail }}</strong>
+        <p class="mt-2 text-sm text-zinc-600 dark:text-zinc-400">{{ error }}</p>
+        <button
+          class="mt-5 text-sm font-medium text-violet-600 hover:text-violet-500"
+          @click="goToSignIn"
+        >
+          Back to sign in
+        </button>
+      </div>
+
+      <!-- Verifying session -->
+      <div v-else-if="!sessionReady" class="flex flex-col items-center py-6">
+        <LoadingSpinner />
+        <p class="mt-4 text-sm text-zinc-500 dark:text-zinc-400">
+          Checking your session…
+        </p>
+      </div>
+
+      <!-- Consent -->
+      <div v-else>
+        <h1
+          class="text-center text-xl font-semibold leading-snug text-zinc-900 dark:text-zinc-100"
+        >
+          <span class="text-violet-600 dark:text-violet-400">{{
+            clientName ?? params.client_id
+          }}</span>
+          wants to use your MyTrees.family account
+        </h1>
+        <p class="mt-2 text-center text-sm text-zinc-500 dark:text-zinc-400">
+          Grant permission?
         </p>
 
-        <ul class="mt-5 space-y-2">
-          <li
-            v-for="scope in requestedScopes"
-            :key="scope"
-            class="flex items-start gap-2 text-sm"
+        <!-- Signed-in identity (one account per user — no switcher) -->
+        <div
+          class="mt-5 flex items-center gap-3 rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 dark:border-zinc-800 dark:bg-zinc-800/50"
+        >
+          <div
+            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-violet-600 text-sm font-semibold uppercase text-white"
           >
-            <span class="mt-0.5 text-green-500">✓</span>
-            <span>{{ friendlyScope(scope) }}</span>
-          </li>
-        </ul>
+            {{ (auth.userEmail || '?').charAt(0) }}
+          </div>
+          <div class="min-w-0">
+            <p
+              class="truncate text-sm font-medium text-zinc-900 dark:text-zinc-100"
+            >
+              {{ auth.userEmail }}
+            </p>
+            <p class="text-xs text-zinc-500 dark:text-zinc-400">
+              Signed in to MyTrees.family
+            </p>
+          </div>
+        </div>
 
-        <div class="mt-6 flex gap-2">
+        <!-- Requested permissions -->
+        <div v-if="requestedScopes.length" class="mt-5">
+          <p
+            class="text-xs font-medium uppercase tracking-wide text-zinc-400 dark:text-zinc-500"
+          >
+            This will let {{ clientName ?? 'this app' }}:
+          </p>
+          <ul class="mt-3 space-y-2.5">
+            <li
+              v-for="scope in requestedScopes"
+              :key="scope"
+              class="flex items-start gap-2.5 text-sm text-zinc-700 dark:text-zinc-300"
+            >
+              <Icon
+                icon="mdi:check-circle"
+                class="mt-0.5 h-5 w-5 shrink-0 text-violet-600 dark:text-violet-400"
+              />
+              <span>{{ friendlyScope(scope) }}</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Actions -->
+        <div class="mt-7 flex gap-3">
           <button
             :disabled="submitting"
-            class="flex-1 rounded-lg border px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-50"
+            class="flex-1 rounded-xl border border-zinc-300 px-4 py-2.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
             @click="submit('deny')"
           >
             Deny
           </button>
           <button
             :disabled="submitting"
-            class="flex-1 rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:opacity-50"
+            class="flex-1 rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-violet-700 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 disabled:opacity-50 dark:focus:ring-offset-zinc-900"
             @click="submit('allow')"
           >
-            Allow
+            {{ submitting ? 'Working…' : 'Allow' }}
           </button>
         </div>
       </div>
     </div>
+
+    <!-- Trust footer -->
+    <p class="mt-6 text-center text-xs text-zinc-400 dark:text-zinc-500">
+      Securely signing in with
+      <NuxtLink to="/" class="font-medium text-zinc-500 hover:text-violet-600 dark:text-zinc-400">MyTrees.family</NuxtLink>
+      ·
+      <NuxtLink to="/privacy-policy" class="hover:text-violet-600">Privacy</NuxtLink>
+      ·
+      <NuxtLink to="/terms-of-service" class="hover:text-violet-600">Terms</NuxtLink>
+    </p>
   </div>
 </template>
